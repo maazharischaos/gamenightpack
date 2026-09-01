@@ -614,7 +614,23 @@ function playerTransitionSounds(prev,r){
 }
 
 /* ============ SCREENS ============ */
-function goHome(){stopTicking();stopEngine();stopUITick();unsubscribeRoom();ME={role:null,name:null,code:null,id:null};lastRoom=null;screenHome();}
+function goHome(){
+  stopTicking();
+  stopEngine();
+  stopUITick();
+  if (typeTimer) { clearInterval(typeTimer); typeTimer = null; }
+  unsubscribeRoom();
+  
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('room') && urlParams.get('name')) {
+    returnToLauncher();
+    return;
+  }
+  
+  ME={role:null,name:null,code:null,id:null};
+  lastRoom=null;
+  screenHome();
+}
 
 function screenHome(){
   const need=!configured();
@@ -872,8 +888,9 @@ async function createRoom(forceBank){
       return;
     }
   }
-  if(usedSrc==='bank' && !setupSel.cats.length){ setupSel.cats=[...CATEGORIES]; }
-  const deck=buildDeck(setupSel.cats,setupSel.count);
+  if(usedSrc==='bank' && (!setupSel.cats || !setupSel.cats.length)){ setupSel.cats=[...CATEGORIES]; }
+  const deck=buildDeck(setupSel.cats.length ? setupSel.cats : CATEGORIES, setupSel.count);
+
   // In online mode a timer is required so rounds can auto-advance
   let tl=Math.min(30,Math.max(0,setupSel.time));
   if(setupSel.online && tl<5) tl=15;
@@ -913,24 +930,34 @@ async function joinGame(){
   const code=(document.getElementById('pcode').value||'').trim();
   if(!name){toast('Enter your name');return;}
   if(code.length!==4){toast('Enter the 4-digit code');return;}
-  const snap=await db.ref('rooms/'+code).get();
-  if(!snap.exists()){toast('Room not found');return;}
-  const existing=Object.values(snap.val().players||{});
-  if(existing.some(n=>String(n).trim().toLowerCase()===name.toLowerCase())){
-    toast('"'+name+'" is already taken — pick another name');
-    return;
+  try {
+    const snap=await db.ref('rooms/'+code).get();
+    if(!snap.exists()){toast('Room not found');return;}
+    const existing=Object.values(snap.val().players||{});
+    if(existing.some(n=>String(n).trim().toLowerCase()===name.toLowerCase())){
+      toast('"'+name+'" is already taken — pick another name');
+      return;
+    }
+    const id=uid();
+    const up={};
+    up['rooms/'+code+'/players/'+id]=name;
+    up['rooms/'+code+'/scores/'+id]=0;
+    await db.ref().update(up);
+    ME={role:'player',name,code,id};
+    subscribeRoom(code);
+  } catch(err) {
+    toast('Network connection error. Please try again.');
+    console.error('joinGame failed:', err);
   }
-  const id=uid();
-  const up={};
-  up['rooms/'+code+'/players/'+id]=name;
-  up['rooms/'+code+'/scores/'+id]=0;
-  await db.ref().update(up);
-  ME={role:'player',name,code,id};
-  subscribeRoom(code);
 }
 
 // HELPER TO RETURN TO MASTER LAUNCHER (SUPER APP)
 function returnToLauncher() {
+  stopTicking();
+  stopEngine();
+  stopUITick();
+  unsubscribeRoom();
+
   const urlParams = new URLSearchParams(window.location.search);
   const room = urlParams.get('room') || ME.code || '';
   const name = urlParams.get('name') || ME.name || '';
@@ -974,8 +1001,7 @@ function renderResults(r){
     <div style="margin-top:auto">
       ${(ME.role==='mod'||(r.online&&ME.id===r.engineId))?`
         <button class="btn btn-gold" id="again">▶ Play Again (same players)</button>`:''}
-      <button class="btn btn-gold" id="btn-launcher" style="margin-top:8px">🎮 Change Game / Launcher</button>
-      <button class="btn btn-ghost" id="home" style="margin-top:8px">🏠 Back to Start</button>
+      <button class="btn btn-gold" id="btn-launcher" style="margin-top:8px">🎮 RETURN TO LAUNCHER</button>
       ${ME.role==='mod'?`<button class="btn btn-ghost btn-sm" id="close" style="width:100%;margin-top:8px">Close room</button>`:''}
     </div>
   `;
@@ -995,7 +1021,13 @@ function renderResults(r){
   }
   const closeBtn=document.getElementById('close');
   if(closeBtn) closeBtn.onclick=async()=>{
-    if(confirm('Close the room for everyone?')){await db.ref('rooms/'+ME.code).remove();goHome();}
+    if(confirm('Close the room for everyone across the Super App?')){
+      if (db && ME.code) {
+        await db.ref('master_rooms/' + ME.code).update({ status: 'DISBANDED' });
+        await db.ref('rooms/' + ME.code).remove();
+      }
+      returnToLauncher();
+    }
   };
 }
 
@@ -1178,20 +1210,44 @@ function buzzTimerHTML(r){
 }
 
 async function onlineBuzz(){
-  unlockAudio(); sBuzz();
-  if(navigator.vibrate) navigator.vibrate(60);
+  unlockAudio();
+  if (!ME.code || !ME.id || !lastRoom) return;
   try{
     const res=await db.ref('rooms/'+ME.code+'/buzzedBy').transaction(cur=>{
       if(cur===null||cur===undefined) return ME.id;
       return;
     });
-    if(res.committed && res.snapshot.val()===ME.id){
+    if(res && res.committed && res.snapshot.val()===ME.id){
+      sBuzz();
+      if(navigator.vibrate) navigator.vibrate(60);
       await db.ref('rooms/'+ME.code+'/buzzedAt').set(firebase.database.ServerValue.TIMESTAMP);
     }else{
-      const nm=playersObj(lastRoom)[res.snapshot.val()]||'Someone';
+      const buzzedPid = res && res.snapshot ? res.snapshot.val() : null;
+      const nm=buzzedPid ? (playersObj(lastRoom)[buzzedPid] || 'Someone') : 'Someone';
       toast('Too late — '+nm+' buzzed first');
     }
   }catch(e){ toast('Connection hiccup, try again'); }
+}
+
+async function pickAnswer(val){
+  unlockAudio();
+  if(!ME.code || !ME.id || !lastRoom) return;
+  const q = currentQ(lastRoom);
+  const mySig = 'A' + lastRoom.qIndex + '_' + val;
+  if (myLockedSig === mySig) return;
+  myLockedSig = mySig;
+  
+  try {
+    await db.ref('rooms/' + ME.code + '/answers/' + ME.id).set({
+      choice: val,
+      at: serverNow()
+    });
+    sTick();
+    if (navigator.vibrate) navigator.vibrate(40);
+  } catch(e) {
+    myLockedSig = null;
+    toast('Failed to lock in answer. Retrying...');
+  }
 }
 
 /* ---------- MODERATOR ---------- */
@@ -1601,7 +1657,17 @@ async function joinFromLauncher(roomCode, pName, pId, isHostFlag) {
     id: isHostFlag ? 'mod' : (pId || uid())
   };
 
+  setupSel.name = pName;
+
   const snap = await db.ref('rooms/' + roomCode).get();
+
+  // If Host lands first from Super App, take them directly to the Setup Screen
+  if (isHostFlag) {
+    screenHostSetup();
+    return;
+  }
+
+  // Non-Host Players attach to existing room or wait for host to lock rules
   if (!snap.exists()) {
     const deck = buildDeck(CATEGORIES, 20);
     const room = {
@@ -1615,7 +1681,7 @@ async function joinFromLauncher(roomCode, pName, pId, isHostFlag) {
       dblSet: {},
       dbl: false,
       neg: 0,
-      engineId: isHostFlag ? ME.id : 'mod',
+      engineId: 'mod',
       phase: 'countdown',
       phaseAt: null,
       seq: 0,

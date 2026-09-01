@@ -1,5 +1,5 @@
-// UPDATE THIS VERSION NUMBER WHENEVER YOU DEPLOY NEW CODE
-const CACHE_NAME = 'gamenight-v2';
+// INCREMENT THIS VERSION NUMBER (e.g., v3, v4) WHENEVER YOU DEPLOY NEW CODE
+const CACHE_NAME = 'gamenight-v3';
 
 const ASSETS = [
   './',
@@ -13,7 +13,7 @@ const ASSETS = [
   './icon-512.png'
 ];
 
-// INSTALL: Force new Service Worker to activate immediately
+// INSTALL: Force the new Service Worker to activate immediately
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
@@ -21,7 +21,7 @@ self.addEventListener('install', (e) => {
   self.skipWaiting();
 });
 
-// ACTIVATE: Delete ALL old caches immediately
+// ACTIVATE: Immediately delete all outdated caches
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then((keys) => {
@@ -36,7 +36,7 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-// FETCH: Network-First strategy for HTML so fresh code is always loaded if online
+// FETCH: Network-First strategy for HTML navigation so updated code is always fetched when online
 self.addEventListener('fetch', (e) => {
   if (e.request.mode === 'navigate' || e.request.destination === 'document') {
     e.respondWith(

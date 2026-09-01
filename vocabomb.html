@@ -1213,12 +1213,13 @@
           <div id="round-stats" style="width: 100%;"></div>
           
          <div id="host-boom-controls" style="display:none; width: 100%; margin-top: 14px;">
-  <button class="btn btn-green" id="btn-replay-same">REPLAY (SAME RULES)</button>
-  <button class="btn btn-gold" id="btn-return-launcher" onclick="returnToLauncher()">🎮 CHANGE GAME / LAUNCHER</button>
-  <button class="btn btn-secondary" id="btn-end-game">END GAME (MAIN MENU)</button>
-</div>
-          <div id="non-host-boom-msg" style="display:none; font-size: 0.85rem; color: var(--gold); font-weight:800; margin-top: 14px;">
-            WAITING FOR HOST TO START NEXT GAME...
+            <button class="btn btn-green" id="btn-replay-same">REPLAY (SAME RULES)</button>
+            <button class="btn btn-gold" id="btn-return-launcher" onclick="returnToLauncher()">🎮 CHANGE GAME / LAUNCHER</button>
+            <button class="btn btn-secondary" id="btn-end-game">END GAME (MAIN MENU)</button>
+          </div>
+          <div id="non-host-boom-msg" style="display:none; width: 100%; margin-top: 14px;">
+            <div style="font-size: 0.85rem; color: var(--gold); font-weight:800; margin-bottom: 10px;">WAITING FOR HOST TO START NEXT GAME...</div>
+            <button class="btn btn-gold" id="btn-player-return-launcher" onclick="returnToLauncher()">🎮 RETURN TO LAUNCHER</button>
           </div>
         </div>
       </div>
@@ -1241,6 +1242,10 @@
 
     // HELPER TO RETURN TO MASTER LAUNCHER (SUPER APP)
 function returnToLauncher() {
+  stopActiveTurnVibration();
+  releaseScreenWakeLock();
+  if (handoffResetTimeout) clearTimeout(handoffResetTimeout);
+
   const urlParams = new URLSearchParams(window.location.search);
   const room = urlParams.get('room') || currentRoom || '';
   const name = urlParams.get('name') || myName || '';
@@ -1250,7 +1255,7 @@ function returnToLauncher() {
     db.ref(`master_rooms/${room}`).update({
       status: 'LOBBY',
       launchedGame: null
-    });
+    }).catch(err => console.error("Return to launcher status update failed:", err));
   }
 
   window.location.href = `index.html?room=${room}&name=${encodeURIComponent(name)}&isHost=${isHost}`;
@@ -1266,11 +1271,14 @@ window.addEventListener('load', () => {
 
   const splash = document.getElementById('splash-screen');
 
-  // 1. IF LAUNCHED FROM SUPER APP: Dismiss splash instantly & join directly
+  // IF LAUNCHED FROM SUPER APP: Dismiss splash instantly, hide landing screen, and bind directly
   if (autoRoom && autoName) {
     if (splash) splash.style.display = 'none';
-    
-    // Ensure room shell exists in Firebase regardless of who lands first
+    document.getElementById('welcome-screen').style.display = 'none';
+    document.getElementById('lobby-screen').style.display = 'none';
+
+    if (autoPid) myPlayerId = autoPid;
+
     if (typeof db !== 'undefined') {
       const roomRefCheck = db.ref('rooms/' + autoRoom);
       roomRefCheck.once('value').then((snap) => {
@@ -1292,17 +1300,52 @@ window.addEventListener('load', () => {
             }
           });
         }
-        if (typeof joinRoom === 'function') {
-          joinRoom(autoRoom, autoName, autoPid);
+
+        // Set inputs to auto values to bypass manual prompts
+        document.getElementById('player-name').value = autoName;
+        currentRoom = autoRoom.toUpperCase();
+        myName = autoName;
+
+        roomRef = db.ref('rooms/' + currentRoom);
+        const myPlayerRef = roomRef.child('players/' + myPlayerId);
+
+        myPlayerRef.set({
+          name: myName,
+          joinedAt: firebase.database.ServerValue.TIMESTAMP,
+          isReady: false,
+          isEliminated: false,
+          isDisconnected: false,
+          streak: 0,
+          powerup: null,
+          shields: 0
+        });
+
+        const connectedRef = db.ref(".info/connected");
+        connectedRef.on("value", (connSnap) => {
+          if (connSnap.val() === true) {
+            myPlayerRef.child('isDisconnected').onDisconnect().set(true);
+            myPlayerRef.child('isDisconnected').set(false);
+          }
+        });
+
+        if (autoHost) {
+          roomRef.child('host').set(myPlayerId);
         }
+
+        roomRef.on('value', (sSnap) => {
+          roomData = sSnap.val();
+          if (roomData) updateUI();
+          else resetToMainMenu();
+        });
+
+        document.getElementById('room-screen').style.display = 'block';
+        document.getElementById('display-room-code').innerText = currentRoom;
       });
-    } else if (typeof joinRoom === 'function') {
-      joinRoom(autoRoom, autoName, autoPid);
     }
     return;
   }
 
-  // 2. STANDALONE FALLBACK: Original splash dismiss behavior
+  // STANDALONE FALLBACK: Original splash dismiss behavior
   if (splash) {
     const dismissSplash = () => splash.classList.add('fade-out');
     setTimeout(dismissSplash, 2000);
@@ -2437,9 +2480,16 @@ if ('serviceWorker' in navigator) {
 
     document.getElementById('btn-end-game').addEventListener('click', () => {
       if (roomData.host !== myPlayerId) return;
-      roomRef.remove().then(() => {
-        resetToMainMenu();
-      });
+      if (confirm('Disband room for all players across the Super App?')) {
+        db.ref(`master_rooms/${currentRoom}`).update({ status: 'DISBANDED' }).then(() => {
+          return roomRef.remove();
+        }).then(() => {
+          returnToLauncher();
+        }).catch(err => {
+          console.error("Disband room error:", err);
+          returnToLauncher();
+        });
+      }
     });
 
     // ATOMIC TURN ADVANCEMENT ENGINE FOR POINT SURGE MODE
@@ -2947,8 +2997,12 @@ if ('serviceWorker' in navigator) {
       roomRef.child('players/' + myPlayerId + '/powerup').set(null);
     });
 
+    let isSubmittingWord = false;
+
     function submitWord() {
+      if (isSubmittingWord) return;
       try {
+        isSubmittingWord = true;
         const rawInput = document.getElementById('word-input').value;
         const word = rawInput.trim().toUpperCase().replace(/[^A-Z]/g, '');
         const cfg = roomData.config;
@@ -3105,6 +3159,8 @@ if ('serviceWorker' in navigator) {
       } catch (err) {
         console.error("Error in submitWord:", err);
         showError("System recovered from a word parsing error.");
+      } finally {
+        setTimeout(() => { isSubmittingWord = false; }, 300);
       }
     }
 

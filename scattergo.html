@@ -1227,7 +1227,13 @@ function wireHostRound(){
     const forced = Object.assign({}, S.meta, {
       round: Object.assign({}, S.meta.round, { forceEnded: true })
     });
-    await tryClaimRoundEnd(forced);
+    try {
+      await tryClaimRoundEnd(forced);
+    } catch(e) {
+      console.error("End round failed:", e);
+      btn.disabled = false;
+      toast("Couldn't end round — check your connection.");
+    }
   };
 }
 function startHostRoundTimer(){
@@ -1579,9 +1585,11 @@ let scoringInFlight = false;
 async function finishScoring(){
   if(scoringInFlight) return;
   let unjudged = 0;
-  S.reviewData.items.forEach(it=>it.answers.forEach(a=>{
-    if(a.text.trim() && a.status !== "correct" && a.status !== "wrong") unjudged++;
-  }));
+  if(S.reviewData && S.reviewData.items){
+    S.reviewData.items.forEach(it=>it.answers.forEach(a=>{
+      if(a.text.trim() && a.status !== "correct" && a.status !== "wrong") unjudged++;
+    }));
+  }
   if(unjudged > 0){
     const ok = confirm(
       unjudged + (unjudged===1 ? " answer hasn't" : " answers haven't") + " been judged yet.\n\n" +
@@ -1592,57 +1600,65 @@ async function finishScoring(){
   scoringInFlight = true;
   const btn = document.getElementById("btnFinishScoring");
   if(btn){ btn.disabled = true; btn.textContent = "Saving…"; }
-  S.reviewData.items.forEach(computeGroupsAndPoints);
+  
+  try {
+    S.reviewData.items.forEach(computeGroupsAndPoints);
 
-  const roundPoints = {};
-  Object.keys(S.players).forEach(pid => roundPoints[pid] = 0);
-  const perPlayerBreakdown = {};
-  Object.keys(S.players).forEach(pid => perPlayerBreakdown[pid] = []);
-  S.reviewData.items.forEach(item=>{
-    item.answers.forEach(a=>{
-      const pts = a.text.trim() ? (a.status==="wrong" ? 0 : a.points) : 0;
-      roundPoints[a.playerId] = (roundPoints[a.playerId]||0) + pts;
-      perPlayerBreakdown[a.playerId].push({
-        prompt: item.prompt, text: a.text, status: a.status, creative: a.creative, points: pts
+    const roundPoints = {};
+    Object.keys(S.players).forEach(pid => roundPoints[pid] = 0);
+    const perPlayerBreakdown = {};
+    Object.keys(S.players).forEach(pid => perPlayerBreakdown[pid] = []);
+    S.reviewData.items.forEach(item=>{
+      item.answers.forEach(a=>{
+        const pts = a.text.trim() ? (a.status==="wrong" ? 0 : a.points) : 0;
+        roundPoints[a.playerId] = (roundPoints[a.playerId]||0) + pts;
+        perPlayerBreakdown[a.playerId].push({
+          prompt: item.prompt, text: a.text, status: a.status, creative: a.creative, points: pts
+        });
       });
     });
-  });
 
-  const existingScores = (await stGet("sg:"+S.roomCode+":scores")) || {};
-  Object.keys(roundPoints).forEach(pid=>{
-    existingScores[pid] = (existingScores[pid]||0) + roundPoints[pid];
-  });
-
-  if(S.pendingPenalties){
-    Object.entries(S.pendingPenalties).forEach(([pid,amt])=>{
-      existingScores[pid] = (existingScores[pid]||0) - amt;
+    const existingScores = (await stGet("sg:"+S.roomCode+":scores")) || {};
+    Object.keys(roundPoints).forEach(pid=>{
+      existingScores[pid] = (existingScores[pid]||0) + roundPoints[pid];
     });
-    S.pendingPenalties = {};
-  }
-  await writeScores(existingScores);
 
-  await stSet("sg:"+S.roomCode+":results:"+S.reviewData.round, {
-    round: S.reviewData.round, letter: S.reviewData.letter,
-    perPlayer: perPlayerBreakdown, roundPoints
-  });
+    if(S.pendingPenalties){
+      Object.entries(S.pendingPenalties).forEach(([pid,amt])=>{
+        existingScores[pid] = (existingScores[pid]||0) - amt;
+      });
+      S.pendingPenalties = {};
+    }
+    await writeScores(existingScores);
 
-  const newMeta = Object.assign({}, S.meta, {
-    status: "scoreboard",
-    roundsPlayed: S.meta.roundsPlayed + 1,
-    updatedAt: serverNow()
-  });
-  const ok = await stSet("sg:"+S.roomCode+":meta", newMeta);
-  if(!ok){
-    toast("Couldn't save scores — check your connection and try again.");
-    if(btn){btn.disabled=false;btn.textContent="Finish Scoring →";}
+    await stSet("sg:"+S.roomCode+":results:"+S.reviewData.round, {
+      round: S.reviewData.round, letter: S.reviewData.letter,
+      perPlayer: perPlayerBreakdown, roundPoints
+    });
+
+    const newMeta = Object.assign({}, S.meta, {
+      status: "scoreboard",
+      roundsPlayed: S.meta.roundsPlayed + 1,
+      updatedAt: serverNow()
+    });
+    const ok = await stSet("sg:"+S.roomCode+":meta", newMeta);
+    if(!ok){
+      toast("Couldn't save scores — check your connection and try again.");
+      if(btn){btn.disabled=false;btn.textContent="Finish Scoring & Show Results →";}
+      scoringInFlight = false;
+      return;
+    }
+    S.meta = newMeta;
+    S.screen = "hostScoreboard";
+    sScoreReveal();
+    render();
+  } catch(e) {
+    console.error("finishScoring error:", e);
+    toast("An error occurred while saving scores. Please try again.");
+    if(btn){ btn.disabled = false; btn.textContent = "Finish Scoring & Show Results →"; }
+  } finally {
     scoringInFlight = false;
-    return;
   }
-  S.meta = newMeta;
-  S.screen = "hostScoreboard";
-  scoringInFlight = false;
-  sScoreReveal();
-  render();
 }
 
 function screenHostScoreboard(){
@@ -1725,6 +1741,13 @@ function wireHostScoreboard(){
 }
 
 function returnToLauncher() {
+  clearMainLoop();
+  clearIdentity();
+  try {
+    localStorage.removeItem('scattergo_identity_v1');
+    sessionStorage.clear();
+  } catch(e) {}
+
   const urlParams = new URLSearchParams(window.location.search);
   const room = urlParams.get('room') || S.roomCode || '';
   const name = urlParams.get('name') || S.playerName || '';
@@ -1738,6 +1761,46 @@ function returnToLauncher() {
   }
 
   window.location.href = `index.html?room=${room}&name=${encodeURIComponent(name)}&isHost=${isHost}`;
+}
+
+async function joinFromLauncher(roomCode, pName, pId, isHostFlag) {
+  S.roomCode = roomCode;
+  S.playerName = pName;
+  S.playerId = pId || ('p_' + Math.random().toString(36).substr(2, 9));
+  S.isHost = isHostFlag;
+  S.role = isHostFlag ? 'host' : 'player';
+
+  const ref = db.ref('scattergo/' + roomCode);
+  let snap = await ref.get();
+
+  if (!snap.exists()) {
+    // Room shell created from Super App Launcher
+    await ref.set({
+      code: roomCode,
+      hostId: S.playerId,
+      status: 'lobby',
+      players: { [S.playerId]: { name: pName, isHost: isHostFlag } },
+      createdAt: serverNow()
+    });
+  } else {
+    await ref.child('players/' + S.playerId).set({
+      name: pName,
+      isHost: isHostFlag
+    });
+  }
+
+  saveIdentity();
+
+  // ROUTING FIX: Host lands directly on Game Setup Screen; Players land in Lobby
+  if (isHostFlag) {
+    setupDraft.hostName = pName;
+    S.screen = 'hostSetup';
+  } else {
+    S.screen = 'playerLobby';
+  }
+
+  render();
+  startMainLoop();
 }
 
 function screenFinal(isHost){
@@ -1760,8 +1823,8 @@ function screenFinal(isHost){
       })() : ""}
     <div class="spacer"></div>
     <div class="stack">
-      <button class="btn btn-primary" id="btnNewGame">Start a New Game</button>
-      <button class="btn btn-secondary" id="btnReturnLauncher">🎮 Change Game / Launcher</button>
+      ${isHost ? `<button class="btn btn-primary" id="btnNewGame">Start a New Game</button>` : ''}
+      <button class="btn btn-primary" id="btnReturnLauncher">🎮 Return to Launcher</button>
     </div>
   </div>`;
 }
@@ -2138,6 +2201,8 @@ async function saveAnswers(auto, isDraft){
 
 async function submitPlayerAnswers(auto){
   if(S.submitted) return;
+  if(draftSaveTimer){ clearTimeout(draftSaveTimer); draftSaveTimer = null; }
+  draftDirty = false;
   if(!auto) sSubmit();
   const round = S.meta && S.meta.round;
   if(!round) return;
@@ -2356,6 +2421,7 @@ async function pollTick(){
 }
 
 async function tryClaimRoundEnd(meta){
+  if (!S.roomCode || !meta || !meta.round) return;
   try{
     const seqRef = db.ref("scattergo/"+S.roomCode+"/meta/round/seq");
     const expected = meta.round.seq || 0;
@@ -2364,7 +2430,7 @@ async function tryClaimRoundEnd(meta){
       if(now !== expected) return;
       return now + 1;
     });
-    if(!res.committed) return;
+    if(!res || !res.committed) return;
 
     const newMeta = Object.assign({}, meta, {
       status: "reviewing",
@@ -2372,7 +2438,11 @@ async function tryClaimRoundEnd(meta){
       updatedAt: serverNow()
     });
     const ok = await stSet("sg:"+S.roomCode+":meta", newMeta);
-    if(ok) S.meta = newMeta;
+    if(ok) {
+      S.meta = newMeta;
+    } else {
+      console.warn("Failed to set meta during round-end claim; retrying...");
+    }
   }catch(e){ console.error("round-end claim failed", e); }
 }
 

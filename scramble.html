@@ -516,14 +516,15 @@
         <div id="awards-container" style="margin-top: 10px;"></div>
       </div>
 
-      <div id="summary-host-controls" style="display: flex; flex-direction: column; gap: 6px;">
-  <button id="btn-next-round" class="btn btn-amber">START NEXT ROUND 🚀</button>
-  <button id="btn-replay-match" class="btn btn-secondary">RETURN TO LOBBY</button>
-  <button id="btn-return-launcher" class="btn btn-primary" onclick="returnToLauncher()" style="margin-top: 4px;">🎮 CHANGE GAME / LAUNCHER</button>
-  <button id="btn-exit-summary" class="btn btn-secondary" style="color: var(--red-error); border-color: rgba(255,51,85,0.3);">EXIT ROOM</button>
-</div>
-      <div id="summary-client-wait" style="text-align: center; padding: 10px; color: var(--text-muted); font-size: 0.8rem; display: none;">
-        Waiting for host to start the next round...
+     <div id="summary-host-controls" style="display: flex; flex-direction: column; gap: 6px;">
+        <button id="btn-next-round" class="btn btn-amber">START NEXT ROUND 🚀</button>
+        <button id="btn-replay-match" class="btn btn-secondary">RETURN TO LOBBY</button>
+        <button id="btn-return-launcher" class="btn btn-primary" onclick="returnToLauncher()" style="margin-top: 4px;">🎮 CHANGE GAME / LAUNCHER</button>
+        <button id="btn-exit-summary" class="btn btn-secondary" style="color: var(--red-error); border-color: rgba(255,51,85,0.3);">EXIT ROOM</button>
+      </div>
+      <div id="summary-client-wait" style="display: none; flex-direction: column; gap: 6px; text-align: center;">
+        <div style="font-size: 0.8rem; color: var(--text-muted); padding: 4px 0;">Waiting for host to start the next round...</div>
+        <button class="btn btn-primary" onclick="returnToLauncher()">🎮 RETURN TO LAUNCHER</button>
       </div>
     </div>
 
@@ -1431,9 +1432,22 @@
         document.addEventListener('pointerdown', () => sound.init(), { once: true });
         document.addEventListener('click', (e) => { if (e.target.closest('.btn')) sound.playClick(); });
 
-        document.getElementById('input-room-code').addEventListener('input', (e) => {
-          e.target.value = e.target.value.replace(/[^0-9]/g, '').trim();
-        });
+        const leaveBtn = document.getElementById('btn-leave-room');
+        if (leaveBtn) {
+          leaveBtn.addEventListener('click', () => {
+            if (GameState.isHost && NetworkEngine && NetworkEngine.db && GameState.roomCode) {
+              if (confirm('Disband room for all players across the Super App?')) {
+                NetworkEngine.db.ref(`master_rooms/${GameState.roomCode}`).update({ status: 'DISBANDED' }).then(() => {
+                  if (GameState.roomRef) GameState.roomRef.remove();
+                  returnToLauncher();
+                });
+              }
+            } else {
+              if (GameState.playersRef) GameState.playersRef.child(GameState.playerId).remove();
+              returnToLauncher();
+            }
+          });
+        }
 
         document.getElementById('btn-start-app').addEventListener('click', () => fsm.transitionTo(GAME_STATES.LOBBY));
 
@@ -1522,15 +1536,30 @@
         document.getElementById('btn-replay-match').addEventListener('click', () => StateCalculations.returnToLobby());
 
         document.getElementById('btn-exit-summary').addEventListener('click', () => {
-          if (GameState.playersRef) GameState.playersRef.child(GameState.playerId).remove();
-          sessionStorage.removeItem('scramble_panic_session');
-          fsm.transitionTo(GAME_STATES.LOBBY);
+          if (GameState.isHost && NetworkEngine && NetworkEngine.db && GameState.roomCode) {
+            if (confirm('Disband room for all players across the Super App?')) {
+              NetworkEngine.db.ref(`master_rooms/${GameState.roomCode}`).update({ status: 'DISBANDED' }).then(() => {
+                if (GameState.roomRef) GameState.roomRef.remove();
+                returnToLauncher();
+              });
+            }
+          } else {
+            if (GameState.playersRef) GameState.playersRef.child(GameState.playerId).remove();
+            sessionStorage.removeItem('scramble_panic_session');
+            returnToLauncher();
+          }
         });
       }
     };
 
     // HELPER TO RETURN TO MASTER LAUNCHER (SUPER APP)
 function returnToLauncher() {
+  try {
+    sessionStorage.removeItem('scramble_panic_session');
+    sessionStorage.removeItem('scramble_panic_pid');
+    sessionStorage.removeItem('scramble_panic_pending_queue');
+  } catch(e) {}
+
   const urlParams = new URLSearchParams(window.location.search);
   const room = urlParams.get('room') || GameState.roomCode || '';
   const name = urlParams.get('name') || GameState.playerName || '';
@@ -1558,12 +1587,19 @@ window.addEventListener('DOMContentLoaded', () => {
   const autoHost = urlParams.get('isHost') === 'true';
 
   if (autoRoom && autoName) {
+    // Hide welcome and lobby setup screens immediately
+    document.getElementById('screen-welcome').classList.remove('active');
+    document.getElementById('screen-lobby').classList.remove('active');
+
     GameState.roomCode = autoRoom;
     GameState.playerName = autoName;
     GameState.playerId = autoPid || GameState.playerId;
     GameState.isHost = autoHost;
 
-    // Ensure Firebase room shell exists regardless of which player lands first
+    // Auto-fill input elements so legacy validation passes
+    document.getElementById('input-player-name').value = autoName;
+    document.getElementById('input-room-code').value = autoRoom;
+
     if (NetworkEngine && NetworkEngine.db) {
       const roomRef = NetworkEngine.db.ref(`rooms/${autoRoom}`);
       roomRef.once('value').then(snap => {
@@ -1572,12 +1608,15 @@ window.addEventListener('DOMContentLoaded', () => {
             createdAt: firebase.database.ServerValue.TIMESTAMP,
             meta: {
               status: 'lobby',
-              hostId: GameState.playerId,
+              hostId: autoPid || GameState.playerId,
               gameMode: 'classic',
               wordCategory: 'mixed',
               durationSeconds: 120
             }
           });
+        }
+        if (autoHost) {
+          roomRef.child('meta').update({ hostId: GameState.playerId });
         }
         UIController.initRoomView();
       });
