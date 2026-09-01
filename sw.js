@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gamenight-v12'; // <--- Incremented from v1 to force cache purge
+const CACHE_NAME = 'gamenight-v13'; // <--- Incremented from v1 to force cache purge
 
 const ASSETS_TO_CACHE = [
   './',
