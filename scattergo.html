@@ -824,28 +824,30 @@ async function joinFromLauncher(roomCode, pName, pId, isHostFlag) {
   S.playerName = pName;
   S.playerId = pId || ('p_' + Math.random().toString(36).substr(2, 9));
   S.isHost = isHostFlag;
+  S.role = isHostFlag ? 'host' : 'player';
 
   const ref = db.ref('scattergo/' + roomCode);
-  const snap = await ref.get();
+  let snap = await ref.get();
 
-  if (!snap.exists() && isHostFlag) {
+  if (!snap.exists()) {
     await ref.set({
       code: roomCode,
       hostId: S.playerId,
       status: 'lobby',
-      players: { [S.playerId]: { name: pName, isHost: true } },
+      players: { [S.playerId]: { name: pName, isHost: isHostFlag } },
       createdAt: Date.now()
     });
-  } else if (snap.exists() && !isHostFlag) {
+  } else {
     await ref.child('players/' + S.playerId).set({
       name: pName,
-      isHost: false
+      isHost: isHostFlag
     });
   }
 
-  if (typeof subscribeRoom === 'function') {
-    subscribeRoom(roomCode);
-  }
+  saveIdentity();
+  S.screen = isHostFlag ? 'hostLobby' : 'playerLobby';
+  render();
+  startMainLoop();
 }
 
 let setupDraft = {
@@ -1722,6 +1724,22 @@ function wireHostScoreboard(){
   });
 }
 
+function returnToLauncher() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const room = urlParams.get('room') || S.roomCode || '';
+  const name = urlParams.get('name') || S.playerName || '';
+  const isHost = urlParams.get('isHost') === 'true' || S.isHost;
+
+  if (isHost && typeof db !== 'undefined' && room) {
+    db.ref(`master_rooms/${room}`).update({
+      status: 'LOBBY',
+      launchedGame: null
+    });
+  }
+
+  window.location.href = `index.html?room=${room}&name=${encodeURIComponent(name)}&isHost=${isHost}`;
+}
+
 function screenFinal(isHost){
   const sorted = Object.entries(S.scores).sort((a,b)=> b[1]-a[1]);
   const winner = sorted[0];
@@ -1741,7 +1759,10 @@ function screenFinal(isHost){
         return `<p class="sub" style="text-align:center; margin-top:12px; font-weight:700;">You finished #${myRank+1} with ${sorted[myRank][1]} points</p>`;
       })() : ""}
     <div class="spacer"></div>
-    <button class="btn btn-primary" id="btnNewGame">Start a New Game</button>
+    <div class="stack">
+      <button class="btn btn-primary" id="btnNewGame">Start a New Game</button>
+      <button class="btn btn-secondary" id="btnReturnLauncher">🎮 Change Game / Launcher</button>
+    </div>
   </div>`;
 }
 
@@ -1793,6 +1814,7 @@ function wireFinal(){
     el.textContent = "0";
     setTimeout(()=> animateCount(el, target, 900), 300 + i*120);
   });
+  
   const btn = document.getElementById("btnNewGame");
   if(btn) btn.onclick = ()=>{
     clearMainLoop();
@@ -1800,6 +1822,9 @@ function wireFinal(){
     S = Object.assign(S, { role:null, screen:'home', roomCode:null, playerId:null, playerName:null, meta:null, players:{}, scores:{}, localAnswers:[], lastRoundNumber:-1, submitted:false, dashCurrentIdx: 0, dashSkipped: new Set() });
     render();
   };
+
+  const btnLauncher = document.getElementById("btnReturnLauncher");
+  if(btnLauncher) btnLauncher.onclick = returnToLauncher;
 }
 
 function screenPlayerJoin(){

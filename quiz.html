@@ -929,6 +929,23 @@ async function joinGame(){
   subscribeRoom(code);
 }
 
+// HELPER TO RETURN TO MASTER LAUNCHER (SUPER APP)
+function returnToLauncher() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const room = urlParams.get('room') || ME.code || '';
+  const name = urlParams.get('name') || ME.name || '';
+  const isHost = urlParams.get('isHost') === 'true' || ME.role === 'mod' || (lastRoom && lastRoom.engineId === ME.id);
+
+  if (isHost && typeof db !== 'undefined' && room) {
+    db.ref(`master_rooms/${room}`).update({
+      status: 'LOBBY',
+      launchedGame: null
+    });
+  }
+
+  window.location.href = `index.html?room=${room}&name=${encodeURIComponent(name)}&isHost=${isHost}`;
+}
+
 /* ---------- RESULTS ---------- */
 function renderResults(r){
   stopTicking();
@@ -957,11 +974,13 @@ function renderResults(r){
     <div style="margin-top:auto">
       ${(ME.role==='mod'||(r.online&&ME.id===r.engineId))?`
         <button class="btn btn-gold" id="again">▶ Play Again (same players)</button>`:''}
-      <button class="btn btn-ghost" id="home">🏠 Back to Start</button>
+      <button class="btn btn-gold" id="btn-launcher" style="margin-top:8px">🎮 Change Game / Launcher</button>
+      <button class="btn btn-ghost" id="home" style="margin-top:8px">🏠 Back to Start</button>
       ${ME.role==='mod'?`<button class="btn btn-ghost btn-sm" id="close" style="width:100%;margin-top:8px">Close room</button>`:''}
     </div>
   `;
   document.getElementById('home').onclick=goHome;
+  document.getElementById('btn-launcher').onclick=returnToLauncher;
   const againBtn=document.getElementById('again');
   if(againBtn){
     againBtn.onclick=async()=>{
@@ -1583,15 +1602,46 @@ async function joinFromLauncher(roomCode, pName, pId, isHostFlag) {
   };
 
   const snap = await db.ref('rooms/' + roomCode).get();
-  if (!snap.exists() && isHostFlag) {
-    const deck = buildDeck(CATEGORIES, 10);
+  if (!snap.exists()) {
+    const deck = buildDeck(CATEGORIES, 20);
     const room = {
-      code: roomCode, created: firebase.database.ServerValue.TIMESTAMP, hostName: pName,
-      online: true, engineId: ME.id, phase: 'lobby', timeLimit: 15, src: 'bank', topic: 'General Knowledge',
-      started: false, finished: false, qIndex: 0, players: { [ME.id]: pName }, scores: { [ME.id]: 0 }, deck: deck
+      code: roomCode,
+      created: firebase.database.ServerValue.TIMESTAMP,
+      hostName: pName,
+      mode: 'fff',
+      online: true,
+      suspense: false,
+      dblEnabled: true,
+      dblSet: {},
+      dbl: false,
+      neg: 0,
+      engineId: isHostFlag ? ME.id : 'mod',
+      phase: 'countdown',
+      phaseAt: null,
+      seq: 0,
+      cats: CATEGORIES,
+      timeLimit: 15,
+      src: 'bank',
+      topic: null,
+      aiQ: null,
+      openEnded: false,
+      started: false,
+      finished: false,
+      qIndex: 0,
+      revealed: false,
+      revealedAt: null,
+      buzzedBy: null,
+      buzzedAt: null,
+      result: null,
+      answers: null,
+      showAnswer: false,
+      options: null,
+      players: { [ME.id]: pName },
+      scores: { [ME.id]: 0 },
+      deck: deck
     };
     await db.ref('rooms/' + roomCode).set(room);
-  } else if (snap.exists() && !isHostFlag) {
+  } else {
     const up = {};
     up['rooms/' + roomCode + '/players/' + ME.id] = pName;
     up['rooms/' + roomCode + '/scores/' + ME.id] = 0;

@@ -1212,11 +1212,11 @@
 
           <div id="round-stats" style="width: 100%;"></div>
           
-          <div id="host-boom-controls" style="display:none; width: 100%; margin-top: 14px;">
-            <button class="btn btn-green" id="btn-replay-same">REPLAY (SAME RULES)</button>
-            <button class="btn btn-secondary" id="btn-end-game">END GAME (MAIN MENU)</button>
-          </div>
-
+         <div id="host-boom-controls" style="display:none; width: 100%; margin-top: 14px;">
+  <button class="btn btn-green" id="btn-replay-same">REPLAY (SAME RULES)</button>
+  <button class="btn btn-gold" id="btn-return-launcher" onclick="returnToLauncher()">🎮 CHANGE GAME / LAUNCHER</button>
+  <button class="btn btn-secondary" id="btn-end-game">END GAME (MAIN MENU)</button>
+</div>
           <div id="non-host-boom-msg" style="display:none; font-size: 0.85rem; color: var(--gold); font-weight:800; margin-top: 14px;">
             WAITING FOR HOST TO START NEXT GAME...
           </div>
@@ -1239,19 +1239,64 @@
       });
     });
 
-    // SPLASH SCREEN AUTO-DISMISS & LAUNCHER BYPASS
+    // HELPER TO RETURN TO MASTER LAUNCHER (SUPER APP)
+function returnToLauncher() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const room = urlParams.get('room') || currentRoom || '';
+  const name = urlParams.get('name') || myName || '';
+  const isHost = urlParams.get('isHost') === 'true' || (roomData && roomData.host === myPlayerId);
+
+  if (isHost && typeof db !== 'undefined' && room) {
+    db.ref(`master_rooms/${room}`).update({
+      status: 'LOBBY',
+      launchedGame: null
+    });
+  }
+
+  window.location.href = `index.html?room=${room}&name=${encodeURIComponent(name)}&isHost=${isHost}`;
+}
+
+// SPLASH SCREEN AUTO-DISMISS & LAUNCHER BYPASS
 window.addEventListener('load', () => {
   const urlParams = new URLSearchParams(window.location.search);
   const autoRoom = urlParams.get('room');
   const autoName = urlParams.get('name');
   const autoPid  = urlParams.get('pid');
+  const autoHost = urlParams.get('isHost') === 'true';
 
   const splash = document.getElementById('splash-screen');
 
   // 1. IF LAUNCHED FROM SUPER APP: Dismiss splash instantly & join directly
   if (autoRoom && autoName) {
     if (splash) splash.style.display = 'none';
-    if (typeof joinRoom === 'function') {
+    
+    // Ensure room shell exists in Firebase regardless of who lands first
+    if (typeof db !== 'undefined') {
+      const roomRefCheck = db.ref('rooms/' + autoRoom);
+      roomRefCheck.once('value').then((snap) => {
+        if (!snap.exists()) {
+          roomRefCheck.set({
+            createdAt: firebase.database.ServerValue.TIMESTAMP,
+            gameState: 'LOBBY',
+            host: autoPid || myPlayerId,
+            config: {
+              format: 'KNOCKOUT',
+              mode: 'RANDOM',
+              powerups: true,
+              minLength: 3,
+              bottleneck: false,
+              baseTurnTime: 8,
+              bannedChar: '',
+              acceleration: false,
+              rulesLocked: false
+            }
+          });
+        }
+        if (typeof joinRoom === 'function') {
+          joinRoom(autoRoom, autoName, autoPid);
+        }
+      });
+    } else if (typeof joinRoom === 'function') {
       joinRoom(autoRoom, autoName, autoPid);
     }
     return;

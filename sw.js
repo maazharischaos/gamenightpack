@@ -1,12 +1,14 @@
-const CACHE_NAME = 'gamenight-v3';
+const CACHE_NAME = 'gamenight-v1';
 const ASSETS = [
   './',
   './index.html',
-  './manifest.json',
   './scramble.html',
+  './scattergo.html',
   './vocabomb.html',
   './quiz.html',
-  './scattergo.html'
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
 self.addEventListener('install', (e) => {
@@ -17,13 +19,7 @@ self.addEventListener('install', (e) => {
 });
 
 self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-      );
-    }).then(() => clients.claim())
-  );
+  e.waitUntil(clients.claim());
 });
 
 self.addEventListener('fetch', (e) => {

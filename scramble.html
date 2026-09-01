@@ -517,10 +517,11 @@
       </div>
 
       <div id="summary-host-controls" style="display: flex; flex-direction: column; gap: 6px;">
-        <button id="btn-next-round" class="btn btn-amber">START NEXT ROUND 🚀</button>
-        <button id="btn-replay-match" class="btn btn-secondary">RETURN TO LOBBY</button>
-        <button id="btn-exit-summary" class="btn btn-secondary" style="color: var(--red-error); border-color: rgba(255,51,85,0.3);">EXIT ROOM</button>
-      </div>
+  <button id="btn-next-round" class="btn btn-amber">START NEXT ROUND 🚀</button>
+  <button id="btn-replay-match" class="btn btn-secondary">RETURN TO LOBBY</button>
+  <button id="btn-return-launcher" class="btn btn-primary" onclick="returnToLauncher()" style="margin-top: 4px;">🎮 CHANGE GAME / LAUNCHER</button>
+  <button id="btn-exit-summary" class="btn btn-secondary" style="color: var(--red-error); border-color: rgba(255,51,85,0.3);">EXIT ROOM</button>
+</div>
       <div id="summary-client-wait" style="text-align: center; padding: 10px; color: var(--text-muted); font-size: 0.8rem; display: none;">
         Waiting for host to start the next round...
       </div>
@@ -1528,30 +1529,62 @@
       }
     };
 
-    window.addEventListener('DOMContentLoaded', () => {
-  // 1. Initialize core engines
+    // HELPER TO RETURN TO MASTER LAUNCHER (SUPER APP)
+function returnToLauncher() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const room = urlParams.get('room') || GameState.roomCode || '';
+  const name = urlParams.get('name') || GameState.playerName || '';
+  const isHost = urlParams.get('isHost') === 'true' || GameState.isHost;
+
+  if (isHost && NetworkEngine && NetworkEngine.db && room) {
+    NetworkEngine.db.ref(`master_rooms/${room}`).update({
+      status: 'LOBBY',
+      launchedGame: null
+    });
+  }
+
+  window.location.href = `index.html?room=${room}&name=${encodeURIComponent(name)}&isHost=${isHost}`;
+}
+
+window.addEventListener('DOMContentLoaded', () => {
   if (typeof NetworkEngine !== 'undefined') NetworkEngine.init();
   if (typeof UIController !== 'undefined') UIController.setupEventListeners();
   if (typeof DictionaryEngine !== 'undefined') DictionaryEngine.init();
 
-  // 2. Parse URL parameters from launcher
   const urlParams = new URLSearchParams(window.location.search);
   const autoRoom = urlParams.get('room');
   const autoName = urlParams.get('name');
   const autoPid  = urlParams.get('pid');
   const autoHost = urlParams.get('isHost') === 'true';
 
-  // 3. Bypass welcome screen if launched from super-app
   if (autoRoom && autoName) {
     GameState.roomCode = autoRoom;
     GameState.playerName = autoName;
     GameState.playerId = autoPid || GameState.playerId;
     GameState.isHost = autoHost;
 
-    // Directly open lobby view
-    UIController.initRoomView();
+    // Ensure Firebase room shell exists regardless of which player lands first
+    if (NetworkEngine && NetworkEngine.db) {
+      const roomRef = NetworkEngine.db.ref(`rooms/${autoRoom}`);
+      roomRef.once('value').then(snap => {
+        if (!snap.exists()) {
+          roomRef.set({
+            createdAt: firebase.database.ServerValue.TIMESTAMP,
+            meta: {
+              status: 'lobby',
+              hostId: GameState.playerId,
+              gameMode: 'classic',
+              wordCategory: 'mixed',
+              durationSeconds: 120
+            }
+          });
+        }
+        UIController.initRoomView();
+      });
+    } else {
+      UIController.initRoomView();
+    }
   } else {
-    // Show original welcome screen if opened standalone
     UIController.showScreen('screen-welcome');
   }
 });
