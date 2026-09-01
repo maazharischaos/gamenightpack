@@ -383,9 +383,10 @@ p.sub{
 .answer-row .pts{ font-family:var(--font-mono); font-weight:700; font-size:13px; color:var(--mint); width:34px; text-align:right; flex-shrink:0;}
 .answer-row .actions{ display:flex; gap:5px; flex-shrink:0; }
 .mini-btn{
-  width:28px; height:28px; border-radius:8px; border:1.5px solid rgba(251,246,236,0.15);
-  background: var(--ink-3); color:rgba(251,246,236,0.6); cursor:pointer; font-size:13px;
+  min-width:38px; height:38px; border-radius:10px; border:1.5px solid rgba(251,246,236,0.15);
+  background: var(--ink-3); color:rgba(251,246,236,0.6); cursor:pointer; font-size:15px;
   display:flex; align-items:center; justify-content:center; transition: all .15s;
+  touch-action: manipulation;
 }
 .mini-btn.wrong-active{ background: var(--coral); border-color:var(--coral); color:#fff; }
 .mini-btn.ok-active{ background:var(--mint); border-color:var(--mint-deep); color:#08301F; }
@@ -1758,7 +1759,7 @@ function returnToLauncher() {
     db.ref(`master_rooms/${room}`).update({
       status: 'LOBBY',
       launchedGame: null
-    });
+    }).catch(err => console.error("Scattergo master room update failed:", err));
   }
 
   window.location.href = `index.html?room=${room}&name=${encodeURIComponent(name)}&isHost=${isHost}`;

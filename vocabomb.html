@@ -1261,8 +1261,14 @@ function returnToLauncher() {
   window.location.href = `index.html?room=${room}&name=${encodeURIComponent(name)}&isHost=${isHost}`;
 }
 
-// SPLASH SCREEN AUTO-DISMISS & LAUNCHER BYPASS
-window.addEventListener('load', () => {
+// AUTO-SCROLL INPUTS ABOVE MOBILE VIRTUAL KEYBOARD
+document.addEventListener('focusin', (e) => {
+  if (e.target && e.target.tagName === 'INPUT') {
+    setTimeout(() => {
+      e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 300);
+  }
+});
   const urlParams = new URLSearchParams(window.location.search);
   const autoRoom = urlParams.get('room');
   const autoName = urlParams.get('name');

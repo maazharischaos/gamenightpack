@@ -1337,6 +1337,12 @@
           container.appendChild(card);
           const inputEl = card.querySelector('input');
 
+          inputEl.addEventListener('focus', () => {
+            setTimeout(() => {
+              card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 250);
+          });
+
           inputEl.addEventListener('input', () => {
             sound.playTypePop();
             if (inputEl.value.trim().length === w.original.length) StateCalculations.validateAnswer(w, card, inputEl, false);
