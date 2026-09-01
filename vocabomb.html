@@ -1240,7 +1240,7 @@
       });
     });
 
-    // HELPER TO RETURN TO MASTER LAUNCHER (SUPER APP)
+   // HELPER TO RETURN TO MASTER LAUNCHER (SUPER APP)
 function returnToLauncher() {
   stopActiveTurnVibration();
   releaseScreenWakeLock();
@@ -1261,105 +1261,6 @@ function returnToLauncher() {
   window.location.href = `index.html?room=${room}&name=${encodeURIComponent(name)}&isHost=${isHost}`;
 }
 
-// AUTO-SCROLL INPUTS ABOVE MOBILE VIRTUAL KEYBOARD
-document.addEventListener('focusin', (e) => {
-  if (e.target && e.target.tagName === 'INPUT') {
-    setTimeout(() => {
-      e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 300);
-  }
-});
-  const urlParams = new URLSearchParams(window.location.search);
-  const autoRoom = urlParams.get('room');
-  const autoName = urlParams.get('name');
-  const autoPid  = urlParams.get('pid');
-  const autoHost = urlParams.get('isHost') === 'true';
-
-  const splash = document.getElementById('splash-screen');
-
-  // IF LAUNCHED FROM SUPER APP: Dismiss splash instantly, hide landing screen, and bind directly
-  if (autoRoom && autoName) {
-    if (splash) splash.style.display = 'none';
-    document.getElementById('welcome-screen').style.display = 'none';
-    document.getElementById('lobby-screen').style.display = 'none';
-
-    if (autoPid) myPlayerId = autoPid;
-
-    if (typeof db !== 'undefined') {
-      const roomRefCheck = db.ref('rooms/' + autoRoom);
-      roomRefCheck.once('value').then((snap) => {
-        if (!snap.exists()) {
-          roomRefCheck.set({
-            createdAt: firebase.database.ServerValue.TIMESTAMP,
-            gameState: 'LOBBY',
-            host: autoPid || myPlayerId,
-            config: {
-              format: 'KNOCKOUT',
-              mode: 'RANDOM',
-              powerups: true,
-              minLength: 3,
-              bottleneck: false,
-              baseTurnTime: 8,
-              bannedChar: '',
-              acceleration: false,
-              rulesLocked: false
-            }
-          });
-        }
-
-        // Set inputs to auto values to bypass manual prompts
-        document.getElementById('player-name').value = autoName;
-        currentRoom = autoRoom.toUpperCase();
-        myName = autoName;
-
-        roomRef = db.ref('rooms/' + currentRoom);
-        const myPlayerRef = roomRef.child('players/' + myPlayerId);
-
-        myPlayerRef.set({
-          name: myName,
-          joinedAt: firebase.database.ServerValue.TIMESTAMP,
-          isReady: false,
-          isEliminated: false,
-          isDisconnected: false,
-          streak: 0,
-          powerup: null,
-          shields: 0
-        });
-
-        const connectedRef = db.ref(".info/connected");
-        connectedRef.on("value", (connSnap) => {
-          if (connSnap.val() === true) {
-            myPlayerRef.child('isDisconnected').onDisconnect().set(true);
-            myPlayerRef.child('isDisconnected').set(false);
-          }
-        });
-
-        if (autoHost) {
-          roomRef.child('host').set(myPlayerId);
-        }
-
-        roomRef.on('value', (sSnap) => {
-          roomData = sSnap.val();
-          if (roomData) updateUI();
-          else resetToMainMenu();
-        });
-
-        document.getElementById('room-screen').style.display = 'block';
-        document.getElementById('display-room-code').innerText = currentRoom;
-      });
-    }
-    return;
-  }
-
-  // STANDALONE FALLBACK: Original splash dismiss behavior
-  if (splash) {
-    const dismissSplash = () => splash.classList.add('fade-out');
-    setTimeout(dismissSplash, 2000);
-    splash.addEventListener('click', dismissSplash);
-    splash.addEventListener('touchstart', dismissSplash);
-  }
-});
-
 // SERVICE WORKER REGISTRATION & FAILSAFE SPLASH DISMISSAL
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -1369,7 +1270,6 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// FAILSAFE SPLASH SCREEN DISMISSAL
 window.addEventListener('load', () => {
   const splash = document.getElementById('splash-screen');
   if (splash) {
@@ -1394,7 +1294,9 @@ const firebaseConfig = {
   appId: "1:383266305677:web:596c70c7ddc304fd9994c4"
 };
 
-firebase.initializeApp(firebaseConfig);
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
 const db = firebase.database();
 
 // BUILT-IN OFFLINE CORE LEXICON FALLBACK
