@@ -1,55 +1,47 @@
-// INCREMENT THIS VERSION NUMBER (e.g., v3, v4) WHENEVER YOU DEPLOY NEW CODE
-const CACHE_NAME = 'gamenight-v3';
+const CACHE_NAME = 'gamenight-v2'; // <--- Incremented from v1 to force cache purge
 
-const ASSETS = [
+const ASSETS_TO_CACHE = [
   './',
   './index.html',
-  './scramble.html',
-  './scattergo.html',
-  './vocabomb.html',
   './quiz.html',
+  './scattergo.html',
+  './scramble.html',
+  './vocabomb.html',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'
 ];
 
-// INSTALL: Force the new Service Worker to activate immediately
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+// Install Event - Pre-cache all app assets
+self.addEventListener('install', (event) => {
+  self.skipWaiting(); // Instantly activate new service worker
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(ASSETS_TO_CACHE);
+    })
   );
-  self.skipWaiting();
 });
 
-// ACTIVATE: Immediately delete all outdated caches
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
+// Activate Event - Clean up old cache versions
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) {
-            return caches.delete(key);
+            return caches.delete(key); // Deletes old gamenight-v1 cache
           }
         })
       );
-    }).then(() => clients.claim())
+    }).then(() => self.clients.claim())
   );
 });
 
-// FETCH: Network-First strategy for HTML navigation so updated code is always fetched when online
-self.addEventListener('fetch', (e) => {
-  if (e.request.mode === 'navigate' || e.request.destination === 'document') {
-    e.respondWith(
-      fetch(e.request).then((networkResponse) => {
-        return caches.open(CACHE_NAME).then((cache) => {
-          cache.put(e.request, networkResponse.clone());
-          return networkResponse;
-        });
-      }).catch(() => caches.match(e.request))
-    );
-  } else {
-    e.respondWith(
-      caches.match(e.request).then((res) => res || fetch(e.request))
-    );
-  }
+// Fetch Event - Network first for HTML, fallback to cache
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    fetch(event.request).catch(() => {
+      return caches.match(event.request);
+    })
+  );
 });
