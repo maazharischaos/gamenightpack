@@ -809,9 +809,11 @@ function wireHome(){
 
   // IF LAUNCHED FROM SUPER APP: Intercept and join room directly
   if (autoRoom && autoName) {
-  clearIdentity(); // Prevents old saved room codes from overwriting the launcher room
-  joinFromLauncher(autoRoom, autoName, autoPid, autoHost);
-  return;
+    // Clean URL parameters immediately to prevent re-triggering on future renders
+    window.history.replaceState({}, document.title, window.location.pathname);
+    clearIdentity();
+    joinFromLauncher(autoRoom, autoName, autoPid, autoHost);
+    return;
   }
 
   // Standalone fallback bindings
@@ -824,48 +826,55 @@ function wireHome(){
 async function joinFromLauncher(roomCode, pName, pId, isHostFlag) {
   const isHost = (isHostFlag === true || isHostFlag === 'true');
 
+  // Assign state synchronously before waiting on async network requests
   S.roomCode = roomCode;
   S.playerName = pName;
   S.playerId = pId || ('p_' + Math.random().toString(36).substr(2, 9));
   S.isHost = isHost;
   S.role = isHost ? 'host' : 'player';
-
-  // Sync draft host name with launcher player name
+  S.screen = isHost ? 'hostSetup' : 'playerLobby';
+  
   setupDraft.hostName = pName;
+  saveIdentity();
+  render(); // Instantly switch screen to prevent UI bounce
 
-  const isDash = setupDraft.gameMode === "dash";
-  const initialMeta = {
-    hostId: S.playerId,
-    hostName: pName,
-    status: "lobby",
-    settings: {
-      gameMode: setupDraft.gameMode || "classic",
-      sprintPreset: setupDraft.sprintPreset || 60,
-      roundsMode: setupDraft.roundsMode || "fixed",
-      roundsCount: setupDraft.roundsCount || 5,
-      difficulty: setupDraft.difficulty || "medium",
-      timerSeconds: isDash ? (setupDraft.sprintPreset || 60) : (setupDraft.timerSeconds || 90),
-      letterMode: setupDraft.letterMode || "random"
-    },
-    roundsPlayed: 0,
-    usedIndices: { easy: [], medium: [], hard: [] },
-    round: null,
-    createdAt: typeof serverNow === 'function' ? serverNow() : Date.now(),
-    updatedAt: typeof serverNow === 'function' ? serverNow() : Date.now()
-  };
+  // Fetch existing room meta if already created
+  let existingMeta = typeof stGet === 'function' ? await stGet("sg:" + roomCode + ":meta") : null;
 
-  // Write metadata using Scattergo's storage key pattern
-  await stSet("sg:" + roomCode + ":meta", initialMeta);
-  S.meta = initialMeta;
+  if (isHost && !existingMeta) {
+    const isDash = setupDraft.gameMode === "dash";
+    existingMeta = {
+      hostId: S.playerId,
+      hostName: pName,
+      status: "lobby",
+      settings: {
+        gameMode: setupDraft.gameMode || "classic",
+        sprintPreset: setupDraft.sprintPreset || 60,
+        roundsMode: setupDraft.roundsMode || "fixed",
+        roundsCount: setupDraft.roundsCount || 5,
+        difficulty: setupDraft.difficulty || "medium",
+        timerSeconds: isDash ? (setupDraft.sprintPreset || 60) : (setupDraft.timerSeconds || 90),
+        letterMode: setupDraft.letterMode || "random"
+      },
+      roundsPlayed: 0,
+      usedIndices: { easy: [], medium: [], hard: [] },
+      round: null,
+      createdAt: typeof serverNow === 'function' ? serverNow() : Date.now(),
+      updatedAt: typeof serverNow === 'function' ? serverNow() : Date.now()
+    };
+    await stSet("sg:" + roomCode + ":meta", existingMeta);
+  }
 
-  // Add current player entry to Firebase
+  if (existingMeta) {
+    S.meta = existingMeta;
+  }
+
+  // Register player entry in database
   await db.ref('scattergo/' + roomCode + '/players/' + S.playerId).set({
     name: pName,
     isHost: isHost
   });
 
-  saveIdentity();
-  S.screen = isHost ? 'hostSetup' : 'playerLobby';
   render();
   startMainLoop();
 }
