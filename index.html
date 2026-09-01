@@ -714,26 +714,16 @@
       isLaunchingGame = true;
       triggerLoadingOverlay(icon, `LAUNCHING ${name}...`);
 
-      // Failsafe timeout to unfreeze overlay if navigation stalls
-      const failsafe = setTimeout(() => {
-        isLaunchingGame = false;
-        const overlay = document.getElementById('launch-loading-overlay');
-        if (overlay) overlay.classList.remove('active');
-      }, 6000);
-
       db.ref(`master_rooms/${currentRoomCode}`).update({
         status: 'PLAYING',
         launchedGame: file
       }).then(() => {
         setTimeout(() => {
-          clearTimeout(failsafe);
           window.location.href = `${file}?room=${currentRoomCode}&name=${encodeURIComponent(myName)}&pid=${myPid}&isHost=true`;
         }, 400);
       }).catch(err => {
-        clearTimeout(failsafe);
         isLaunchingGame = false;
-        const overlay = document.getElementById('launch-loading-overlay');
-        if (overlay) overlay.classList.remove('active');
+        document.getElementById('launch-loading-overlay').classList.remove('active');
         playErrorSfx();
         alert('Failed to launch game. Check your connection.');
         console.error('launchGame error:', err);

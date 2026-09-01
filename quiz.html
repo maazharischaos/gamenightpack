@@ -917,26 +917,7 @@ async function createRoom(forceBank){
     players:{},scores:{},deck
   };
   if(setupSel.online){ room.players[myId]=setupSel.name; room.scores[myId]=0; }
-  
-  try {
-    // 1. Write standalone game room node directly
-    await db.ref('rooms/' + code).set(room);
-
-    // 2. Sync to master_rooms for Super App tracking
-    await db.ref('master_rooms/' + code).set({
-      hostId: myId,
-      status: 'LOBBY',
-      launchedGame: 'quiz.html',
-      players: {
-        [myId]: { name: setupSel.name || 'Host', isHost: true }
-      }
-    });
-  } catch(e) {
-    console.error("Firebase Write Error:", e);
-    alert("Database connection failed: " + e.message);
-    return;
-  }
-
+  await db.ref('rooms/'+code).set(room);
   ME=setupSel.online
     ? {role:'player',name:setupSel.name,code,id:myId}
     : {role:'mod',name:setupSel.name,code,id:'mod'};
@@ -1669,16 +1650,13 @@ function renderPlayerFFF(r,myScore){
 }
 
 async function joinFromLauncher(roomCode, pName, pId, isHostFlag) {
-  // Use incoming pId from launcher if available, or fallback to stored/new ID
-  const finalPid = pId || localStorage.getItem('gamenight_pid') || ('p_' + Math.random().toString(36).substr(2, 9));
-  localStorage.setItem('gamenight_pid', finalPid);
-
   ME = {
     role: isHostFlag ? 'mod' : 'player',
     name: pName,
     code: roomCode,
-    id: isHostFlag ? 'mod' : finalPid
+    id: isHostFlag ? 'mod' : (pId || uid())
   };
+
   setupSel.name = pName;
 
   const snap = await db.ref('rooms/' + roomCode).get();
