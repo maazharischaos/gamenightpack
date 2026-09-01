@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#07090e" />
+  <title>Game Night Super-App</title>
+
+  <!-- PWA MANIFEST -->
+  <link rel="manifest" href="manifest.json" />
+
+  <!-- iOS SAFARI METAS -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Game Night" />
+  <link rel="apple-touch-icon" href="icon-512.png" />
+
+  <!-- Firebase Legacy Compat CDN -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800;900&display=swap');
+
+    :root {
+      --bg-dark: #07090e;
+      --glass-bg: rgba(18, 24, 38, 0.65);
+      --glass-card: rgba(255, 255, 255, 0.03);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(255, 200, 42, 0.5);
+      
+      --gold: #ffc82a;
+      --gold-glow: rgba(255, 200, 42, 0.35);
+      --cyan: #00f0ff;
+      --cyan-glow: rgba(0, 240, 255, 0.35);
+      --red: #ff2a55;
+      --red-glow: rgba(255, 42, 85, 0.35);
+      --mint: #10b981;
+      --mint-glow: rgba(16, 185, 129, 0.35);
+      
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 50% -10%, rgba(0, 240, 255, 0.15) 0%, transparent 60%),
+        radial-gradient(circle at 50% 110%, rgba(255, 42, 85, 0.12) 0%, transparent 60%);
+      color: var(--text-main);
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: max(20px, env(safe-area-inset-top)) 18px max(20px, env(safe-area-inset-bottom));
+      overflow-x: hidden;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 410px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* HEADER */
+    .header {
+      text-align: center;
+      padding: 8px 0 4px;
+    }
+
+    .header-badge {
+      display: inline-block;
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--gold);
+      background: rgba(255, 200, 42, 0.1);
+      border: 1px solid rgba(255, 200, 42, 0.25);
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 8px;
+    }
+
+    .header h1 {
+      font-size: 2.3rem;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      line-height: 1;
+      background: linear-gradient(180deg, #ffffff 40%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    /* GLASS CARDS */
+    .glass-panel {
+      background: var(--glass-bg);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 18px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    }
+
+    .section-title {
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* INPUT STYLING */
+    input[type="text"] {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1.5px solid var(--border-color);
+      background: rgba(11, 14, 20, 0.6);
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 800;
+      text-align: center;
+      text-transform: uppercase;
+      outline: none;
+      letter-spacing: 2px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    input[type="text"]::placeholder {
+      color: rgba(148, 163, 184, 0.4);
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 20px var(--gold-glow);
+      background: rgba(11, 14, 20, 0.85);
+    }
+
+    /* GAME CARDS LIST */
+    .game-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .game-card {
+      background: var(--glass-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .game-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; bottom: 0;
+      width: 4px;
+      border-radius: 4px 0 0 4px;
+      transition: background 0.2s ease;
+    }
+
+    .game-card:active {
+      transform: scale(0.98);
+    }
+
+    .game-card .icon-box {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      flex-shrink: 0;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .game-card .details {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .game-card .title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: 0.3px;
+    }
+
+    .game-card .desc {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .game-card .arrow {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      font-weight: 800;
+      transition: transform 0.2s ease, color 0.2s ease;
+    }
+
+    /* GAME SPECIFIC STYLES */
+    .game-card.scramble::before { background: var(--cyan); }
+    .game-card.scramble:hover, .game-card.scramble:focus { border-color: rgba(0, 240, 255, 0.4); box-shadow: 0 0 20px rgba(0, 240, 255, 0.15); }
+
+    .game-card.vocabomb::before { background: var(--red); }
+    .game-card.vocabomb:hover, .game-card.vocabomb:focus { border-color: rgba(255, 42, 85, 0.4); box-shadow: 0 0 20px rgba(255, 42, 85, 0.15); }
+
+    .game-card.quiz::before { background: var(--gold); }
+    .game-card.quiz:hover, .game-card.quiz:focus { border-color: rgba(255, 200, 42, 0.4); box-shadow: 0 0 20px rgba(255, 200, 42, 0.15); }
+
+    .game-card.scattergo::before { background: var(--mint); }
+    .game-card.scattergo:hover, .game-card.scattergo:focus { border-color: rgba(16, 185, 129, 0.4); box-shadow: 0 0 20px rgba(16, 185, 129, 0.15); }
+
+    /* BUTTONS */
+    .btn-action {
+      width: 100%;
+      padding: 14px;
+      border-radius: 14px;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      cursor: pointer;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #ffc82a 0%, #e6a800 100%);
+      color: #07090e;
+      box-shadow: 0 8px 20px var(--gold-glow);
+      transition: transform 0.12s ease, box-shadow 0.2s ease;
+    }
+
+    .btn-action:active {
+      transform: scale(0.97);
+    }
+
+    /* PWA BANNER */
+    #pwa-install-banner {
+      display: none;
+      background: linear-gradient(135deg, rgba(255,200,42,0.15), rgba(0,240,255,0.15));
+      border: 1px solid var(--gold);
+      border-radius: 18px;
+      padding: 14px;
+      text-align: center;
+      animation: fadeIn 0.4s ease;
+    }
+
+    #pwa-install-banner .banner-text {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- HEADER -->
+    <div class="header">
+      <div class="header-badge">MULTIPLAYER PACK</div>
+      <h1>GAME NIGHT</h1>
+    </div>
+
+    <!-- PWA INSTALL PROMPT -->
+    <div id="pwa-install-banner">
+      <div class="banner-text">📲 Install Super-App for Fullscreen Play</div>
+      <button class="btn-action" id="btn-pwa-install" style="padding: 10px; font-size: 0.8rem;">ADD TO HOME SCREEN</button>
+    </div>
+
+    <!-- PLAYER IDENTITY PANEL -->
+    <div class="glass-panel">
+      <label class="section-title">👤 1. Enter Your Display Name</label>
+      <input type="text" id="player-name" placeholder="YOUR NAME" maxlength="12" autocomplete="off" />
+    </div>
+
+    <!-- GAME LAUNCHER STACK -->
+    <div class="glass-panel">
+      <label class="section-title" style="margin-bottom: 12px;">🎮 2. Select Game to Host</label>
+      
+      <div class="game-stack">
+        <div class="game-card scramble" onclick="launchGame('scramble.html')">
+          <div class="icon-box">🔠</div>
+          <div class="details">
+            <span class="title">Scramble</span>
+            <span class="desc">Fast-paced word solver race</span>
+          </div>
+          <span class="arrow">›</span>
+        </div>
+
+        <div class="game-card vocabomb" onclick="launchGame('vocabomb.html')">
+          <div class="icon-box">💣</div>
+          <div class="details">
+            <span class="title">Vocabomb</span>
+            <span class="desc">Spell fast before the fuse detonates</span>
+          </div>
+          <span class="arrow">›</span>
+        </div>
+
+        <div class="game-card quiz" onclick="launchGame('quiz.html')">
+          <div class="icon-box">⚡</div>
+          <div class="details">
+            <span class="title">Quiz Night</span>
+            <span class="desc">AI-powered custom trivia battle</span>
+          </div>
+          <span class="arrow">›</span>
+        </div>
+
+        <div class="game-card scattergo" onclick="launchGame('scattergo.html')">
+          <div class="icon-box">🎲</div>
+          <div class="details">
+            <span class="title">Scattergo</span>
+            <span class="desc">Beat the clock, beat the letter</span>
+          </div>
+          <span class="arrow">›</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- JOIN EXISTING ROOM -->
+    <div class="glass-panel">
+      <label class="section-title">🔑 3. Join Existing Room</label>
+      <div style="display: flex; gap: 8px;">
+        <input type="text" id="room-code" placeholder="4-DIGIT CODE" maxlength="4" style="flex: 1;" inputmode="numeric" />
+        <button class="btn-action" style="width: 110px;" onclick="joinWithCode()">JOIN</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    /* WEB AUDIO API SFX ENGINE */
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playClickSfx() {
+      initAudio();
+      if (!audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.05);
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.05);
+      } catch(e){}
+    }
+
+    function playErrorSfx() {
+      initAudio();
+      if (!audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(180, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.15);
+      } catch(e){}
+    }
+
+    document.addEventListener('touchstart', initAudio, { once: false });
+    document.addEventListener('click', initAudio, { once: false });
+
+    /* FIREBASE INITIALIZATION */
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyAJD7Uttw1NQlU3cIPUINOUpC8SqRiWpaQ",
+      authDomain: "gamenightpack.firebaseapp.com",
+      databaseURL: "https://gamenightpack-default-rtdb.firebaseio.com",
+      projectId: "gamenightpack",
+      storageBucket: "gamenightpack.firebasestorage.app",
+      messagingSenderId: "5588271975",
+      appId: "1:5588271975:web:898050b61dcf78bdf8a5c2"
+    };
+
+    firebase.initializeApp(FIREBASE_CONFIG);
+    const db = firebase.database();
+
+    function getPlayerId() {
+      let pid = localStorage.getItem('gamenight_pid');
+      if (!pid) {
+        pid = 'p_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('gamenight_pid', pid);
+      }
+      return pid;
+    }
+
+    function generateCode() {
+      return Math.floor(1000 + Math.random() * 9000).toString();
+    }
+
+    function validateName() {
+      const nameInput = document.getElementById('player-name');
+      const name = nameInput.value.trim();
+      if (!name) {
+        playErrorSfx();
+        nameInput.focus();
+        nameInput.style.borderColor = 'var(--red)';
+        setTimeout(() => { nameInput.style.borderColor = 'var(--border-color)'; }, 1000);
+        return null;
+      }
+      return name.toUpperCase();
+    }
+
+    function launchGame(file) {
+      playClickSfx();
+      const name = validateName();
+      if (!name) return;
+
+      const code = generateCode();
+      const pid = getPlayerId();
+
+      setTimeout(() => {
+        window.location.href = `${file}?room=${code}&name=${encodeURIComponent(name)}&pid=${pid}&isHost=true`;
+      }, 80);
+    }
+
+    function joinWithCode() {
+      playClickSfx();
+      const name = validateName();
+      if (!name) return;
+
+      const codeInput = document.getElementById('room-code');
+      const code = codeInput.value.trim();
+      if (!/^[0-9]{4}$/.test(code)) {
+        playErrorSfx();
+        codeInput.focus();
+        codeInput.style.borderColor = 'var(--red)';
+        setTimeout(() => { codeInput.style.borderColor = 'var(--border-color)'; }, 1000);
+        return;
+      }
+
+      const pid = getPlayerId();
+
+      db.ref(`rooms/${code}`).once('value').then(snap => {
+        if (snap.exists()) {
+          window.location.href = `quiz.html?room=${code}&name=${encodeURIComponent(name)}&pid=${pid}&isHost=false`;
+          return;
+        }
+
+        db.ref(`scattergo/${code}`).once('value').then(snap2 => {
+          if (snap2.exists()) {
+            window.location.href = `scattergo.html?room=${code}&name=${encodeURIComponent(name)}&pid=${pid}&isHost=false`;
+            return;
+          }
+
+          window.location.href = `scramble.html?room=${code}&name=${encodeURIComponent(name)}&pid=${pid}&isHost=false`;
+        });
+      });
+    }
+
+    /* PWA INSTALL PROMPT HANDLING */
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('pwa-install-banner').style.display = 'block';
+    });
+
+    document.getElementById('btn-pwa-install').addEventListener('click', async () => {
+      playClickSfx();
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          document.getElementById('pwa-install-banner').style.display = 'none';
+        }
+        deferredPrompt = null;
+      }
+    });
+
+    /* SERVICE WORKER REGISTRATION */
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(err => {
+          console.log('ServiceWorker registration skipped: ', err);
+        });
+      });
+    }
+  </script>
+</body>
+</html>

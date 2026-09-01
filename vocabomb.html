@@ -1,0 +1,3072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>VOCABOMB</title>
+
+  <!-- PWA & Mobile Native App Metas -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#07090e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="VOCABOMB" />
+  
+  <!-- App Icons -->
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+  <link rel="apple-touch-icon" href="icon-512.png" />
+  
+  <!-- Firebase Compatibility SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@600;800;900&display=swap');
+
+    :root {
+      --bg-dark: #07090e;
+      --card-bg: rgba(18, 24, 38, 0.88);
+      --border-color: rgba(255, 255, 255, 0.1);
+      --red: #ff2a55;
+      --red-glow: rgba(255, 42, 85, 0.45);
+      --gold: #ffb800;
+      --gold-glow: rgba(255, 184, 0, 0.4);
+      --green: #10b981;
+      --green-glow: rgba(16, 185, 129, 0.4);
+      --orange: #f97316;
+      --orange-glow: rgba(249, 115, 22, 0.45);
+      --cyan: #06b6d4;
+      --cyan-glow: rgba(6, 182, 212, 0.45);
+      --purple: #a855f7;
+      --purple-glow: rgba(168, 85, 247, 0.45);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', -apple-system, sans-serif;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(255, 42, 85, 0.18) 0%, transparent 65%),
+        radial-gradient(circle at 50% 100%, rgba(7, 9, 14, 1) 0%, transparent 100%);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100dvh;
+      padding: 16px;
+      overflow-x: hidden;
+    }
+
+    #splash-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--bg-dark);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.6s ease, visibility 0.6s ease;
+      cursor: pointer;
+    }
+
+    #splash-screen.fade-out {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .splash-bomb {
+      font-size: 6.5rem;
+      animation: splashPulse 1.6s infinite ease-in-out;
+    }
+
+    .splash-text {
+      font-size: 2.8rem;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: 3px;
+      text-shadow: 0 0 25px var(--red-glow);
+      margin-top: 10px;
+    }
+
+    .splash-spark {
+      font-size: 0.9rem;
+      font-weight: 800;
+      color: var(--gold);
+      letter-spacing: 2px;
+      margin-top: 12px;
+      animation: pulse 0.8s infinite alternate;
+    }
+
+    @keyframes splashPulse {
+      0% { transform: scale(0.88) rotate(-4deg); filter: drop-shadow(0 0 10px rgba(255, 42, 85, 0.2)); }
+      50% { transform: scale(1.18) rotate(4deg); filter: drop-shadow(0 0 45px var(--red-glow)); }
+      100% { transform: scale(0.88) rotate(-4deg); filter: drop-shadow(0 0 10px rgba(255, 42, 85, 0.2)); }
+    }
+
+    .container {
+      width: 100%;
+      max-width: 420px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .game-box {
+      background: var(--card-bg);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--border-color);
+      border-radius: 28px;
+      padding: 28px 20px;
+      width: 100%;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.85);
+      text-align: center;
+      margin-bottom: 16px;
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+    }
+
+    .game-box.low-time-shake {
+      animation: panicShake 0.18s infinite alternate;
+      border-color: var(--red);
+      box-shadow: 0 0 35px var(--red-glow);
+    }
+
+    .game-box.error-shake {
+      animation: errorShake 0.35s ease-in-out;
+      border-color: var(--red);
+    }
+
+    .game-box.frozen-box {
+      border-color: var(--cyan);
+      box-shadow: 0 0 35px var(--cyan-glow);
+    }
+
+    .bomb-receive-anim {
+      animation: bombReceiveFlash 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes bombReceiveFlash {
+      0% { transform: scale(0.92); box-shadow: 0 0 50px var(--red-glow); }
+      50% { transform: scale(1.03); }
+      100% { transform: scale(1); }
+    }
+
+    .score-popup {
+      position: absolute;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: var(--gold);
+      text-shadow: 0 0 20px var(--gold-glow);
+      pointer-events: none;
+      z-index: 500;
+      animation: floatUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes floatUp {
+      0% { opacity: 0; transform: translate(-50%, 0) scale(0.7); }
+      20% { opacity: 1; transform: translate(-50%, -20px) scale(1.2); }
+      100% { opacity: 0; transform: translate(-50%, -80px) scale(1); }
+    }
+
+    h1 {
+      font-size: 2.8rem;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      color: #fff;
+      margin-bottom: 2px;
+      text-shadow: 0 0 20px var(--red-glow);
+    }
+
+    .bomb-icon {
+      font-size: 4.5rem;
+      margin: 10px 0;
+      animation: pulse 1.5s infinite alternate;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-weight: 800;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    .hero-rule-box {
+      background: rgba(11, 14, 20, 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: 18px;
+      padding: 16px;
+      margin-bottom: 24px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .tab-group {
+      display: flex;
+      background: rgba(11, 14, 20, 0.6);
+      border-radius: 16px;
+      padding: 4px;
+      margin-bottom: 20px;
+      border: 1px solid var(--border-color);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-weight: 800;
+      font-size: 0.9rem;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn.active {
+      background: var(--red);
+      color: #fff;
+      box-shadow: 0 4px 14px var(--red-glow);
+    }
+
+    .config-group {
+      text-align: left;
+      background: rgba(11, 14, 20, 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: 18px;
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+
+    .config-title {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 14px;
+    }
+
+    .briefing-disclaimer-header {
+      background: rgba(255, 42, 85, 0.18);
+      border: 2px solid var(--red);
+      box-shadow: 0 0 20px var(--red-glow);
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 900;
+      padding: 12px;
+      border-radius: 16px;
+      text-align: center;
+      margin-bottom: 16px;
+      letter-spacing: 0.5px;
+      animation: pulse 1.5s infinite alternate;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      gap: 12px;
+    }
+
+    .toggle-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .toggle-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .toggle-desc {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-top: 4px;
+      line-height: 1.35;
+    }
+
+    .toggle-row input[type="checkbox"], .toggle-row input[type="radio"] {
+      accent-color: var(--red);
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    .surge-rounds-selector {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+      margin-bottom: 16px;
+      padding-left: 28px;
+    }
+
+    .surge-rounds-selector label {
+      font-size: 0.85rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .slider-container {
+      margin-top: 6px;
+      margin-bottom: 14px;
+    }
+
+    .slider-container input[type="range"] {
+      width: 100%;
+      accent-color: var(--red);
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 18px;
+      border-radius: 16px;
+      border: 2px solid var(--border-color);
+      background: rgba(11, 14, 20, 0.8);
+      color: #fff;
+      font-size: 1.25rem;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      outline: none;
+      letter-spacing: 2px;
+      transition: all 0.2s ease;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--red);
+      box-shadow: 0 0 20px var(--red-glow);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 18px;
+      border-radius: 16px;
+      border: none;
+      background: var(--red);
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      cursor: pointer;
+      box-shadow: 0 10px 25px var(--red-glow), inset 0 2px 0 rgba(255, 255, 255, 0.2);
+      transition: all 0.15s ease;
+      margin-bottom: 10px;
+    }
+
+    .btn-green {
+      background: var(--green);
+      box-shadow: 0 10px 25px var(--green-glow);
+    }
+
+    .btn-cyan {
+      background: var(--cyan);
+      box-shadow: 0 10px 25px var(--cyan-glow);
+    }
+
+    .btn-gold {
+      background: var(--gold);
+      color: #000;
+      box-shadow: 0 10px 25px var(--gold-glow);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: none;
+      border: 1px solid var(--border-color);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn:disabled {
+      opacity: 0.3;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    #game-screen {
+      display: none;
+      width: 100%;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 10px 24px;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .active-turn {
+      background: rgba(255, 42, 85, 0.18);
+      border: 2px solid var(--red);
+      color: var(--red);
+      box-shadow: 0 0 25px var(--red-glow);
+      animation: pulse 1.2s infinite alternate;
+    }
+
+    .waiting-turn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--gold);
+    }
+
+    .modifier-tag-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 18px;
+      width: 100%;
+    }
+
+    .mod-tag-prominent {
+      background: rgba(255, 42, 85, 0.25);
+      border: 2px solid var(--red);
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 900;
+      padding: 8px 18px;
+      border-radius: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      box-shadow: 0 0 20px var(--red-glow);
+      width: 100%;
+      animation: pulse 1.5s infinite alternate;
+    }
+
+    .mod-tag-gold {
+      background: rgba(255, 184, 0, 0.2);
+      border: 2px solid var(--gold);
+      color: var(--gold);
+      font-size: 1rem;
+      font-weight: 900;
+      padding: 6px 16px;
+      border-radius: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 0 15px var(--gold-glow);
+      width: 100%;
+    }
+
+    .mod-tag {
+      background: rgba(255, 184, 0, 0.15);
+      border: 1px solid rgba(255, 184, 0, 0.4);
+      color: var(--gold);
+      font-size: 0.7rem;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+    }
+
+    .letter-stage {
+      position: relative;
+      margin: 10px 0 16px 0;
+    }
+
+    .letter-label {
+      font-size: 0.8rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .letter-display {
+      font-size: clamp(3rem, 14vw, 5.5rem);
+      font-weight: 900;
+      color: var(--gold);
+      line-height: 1;
+      margin-top: 4px;
+      text-shadow: 0 0 40px var(--gold-glow);
+      display: inline-block;
+      transition: transform 0.2s ease, text-shadow 0.2s ease;
+    }
+
+    .letter-bounce {
+      animation: popInLetter 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .fuse-track {
+      width: 100%;
+      height: 12px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .fuse-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--green), var(--gold));
+      width: 100%;
+      border-radius: 20px;
+      transition: width 0.1s linear, background 0.3s ease;
+    }
+
+    .fuse-fill.fuse-warning {
+      background: linear-gradient(90deg, var(--gold), var(--orange));
+    }
+
+    .fuse-fill.fuse-danger {
+      background: linear-gradient(90deg, var(--orange), var(--red));
+      animation: fuseBlink 0.25s infinite alternate;
+    }
+
+    @keyframes fuseBlink {
+      0% { opacity: 0.7; }
+      100% { opacity: 1; }
+    }
+
+    .history-card {
+      background: rgba(11, 14, 20, 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: 18px;
+      padding: 16px;
+      max-height: 120px;
+      overflow-y: auto;
+      text-align: left;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .player-pill {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-color);
+      padding: 8px 16px;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin: 4px;
+    }
+
+    .player-pill.ready {
+      border-color: var(--green);
+      color: var(--green);
+      background: rgba(16, 185, 129, 0.12);
+    }
+
+    .player-pill.eliminated {
+      border-color: var(--red);
+      color: var(--red);
+      background: rgba(255, 42, 85, 0.12);
+      text-decoration: line-through;
+      opacity: 0.6;
+    }
+
+    .player-pill.disconnected {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: rgba(255, 184, 0, 0.12);
+      opacity: 0.7;
+    }
+
+    .toast-msg {
+      color: var(--red);
+      font-weight: 800;
+      font-size: 0.85rem;
+      min-height: 20px;
+      margin-bottom: 12px;
+      line-height: 1.3;
+    }
+
+    .dict-status {
+      font-size: 0.75rem;
+      color: #10b981;
+      margin-bottom: 15px;
+      font-weight: 700;
+    }
+
+    #countdown-screen, #intermission-screen {
+      display: none;
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(7, 9, 14, 0.98);
+      border-radius: 28px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .countdown-num {
+      font-size: clamp(4rem, 18vw, 7rem);
+      font-weight: 900;
+      color: var(--gold);
+      text-shadow: 0 0 60px var(--gold-glow);
+      animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    #attack-warning-overlay {
+      display: none;
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(7, 9, 14, 0.98);
+      border-radius: 28px;
+      border: 2px solid var(--cyan);
+      box-shadow: 0 0 50px var(--cyan-glow);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+      z-index: 300;
+      animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .attack-title {
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: var(--cyan);
+      text-shadow: 0 0 25px var(--cyan-glow);
+      margin-bottom: 8px;
+    }
+
+    .attack-desc {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.4;
+      margin-bottom: 16px;
+    }
+
+    .attack-timer-notice {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    #boom-screen {
+      display: none;
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(7, 9, 14, 0.97);
+      border-radius: 28px;
+      border: 2px solid var(--red);
+      box-shadow: 0 0 50px var(--red-glow);
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 24px 18px;
+      text-align: center;
+      z-index: 100;
+      animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      overflow-y: auto;
+    }
+
+    .boom-title {
+      font-size: 3rem;
+      font-weight: 900;
+      color: var(--red);
+      letter-spacing: 2px;
+      text-shadow: 0 0 35px var(--red-glow);
+      margin-bottom: 2px;
+    }
+
+    .boom-desc {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 14px;
+    }
+
+    .inline-countdown-box {
+      margin-top: 10px;
+      background: rgba(255, 184, 0, 0.1);
+      border: 1px solid var(--gold);
+      border-radius: 16px;
+      padding: 16px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .inline-countdown-title {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--gold);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .leaderboard-section {
+      width: 100%;
+      margin-bottom: 16px;
+      text-align: left;
+    }
+
+    .section-header-title {
+      font-size: 0.8rem;
+      font-weight: 900;
+      color: var(--gold);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .rank-card-mvp {
+      background: linear-gradient(135deg, rgba(255, 184, 0, 0.25), rgba(217, 119, 6, 0.15));
+      border: 2px solid var(--gold);
+      box-shadow: 0 0 25px var(--gold-glow);
+      border-radius: 16px;
+      padding: 14px 16px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      animation: pulse 1.5s infinite alternate;
+    }
+
+    .rank-card-mvp .rank-name {
+      font-size: 1.25rem;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: 0.5px;
+    }
+
+    .rank-card-mvp .rank-badge {
+      font-size: 1.1rem;
+      font-weight: 900;
+      color: var(--gold);
+      background: rgba(0, 0, 0, 0.4);
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+
+    .rank-list-box {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .rank-item-row {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .rank-item-row.lvp-row {
+      border-color: rgba(255, 42, 85, 0.4);
+      background: rgba(255, 42, 85, 0.08);
+      color: var(--red);
+    }
+
+    .rank-item-row.disc-row {
+      border-color: rgba(255, 184, 0, 0.4);
+      background: rgba(255, 184, 0, 0.08);
+      color: var(--gold);
+    }
+
+    .awards-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .award-card-item {
+      background: rgba(11, 14, 20, 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 10px;
+      text-align: left;
+    }
+
+    .award-card-title {
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .award-card-val {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.2;
+    }
+
+    .award-card-sub {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .rule-detail-item {
+      margin-bottom: 10px;
+      text-align: left;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.03);
+      padding: 10px 12px;
+      border-radius: 12px;
+      border-left: 3px solid var(--gold);
+    }
+
+    .rule-detail-item b {
+      color: #fff;
+      display: block;
+      font-size: 0.88rem;
+      margin-bottom: 2px;
+    }
+
+    .powerup-box {
+      margin-bottom: 12px;
+      width: 100%;
+    }
+
+    .powerup-slot-empty {
+      background: rgba(255, 255, 255, 0.03);
+      border: 2px dashed rgba(255, 255, 255, 0.15);
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      font-weight: 800;
+      padding: 14px;
+      border-radius: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .powerup-btn {
+      background: linear-gradient(135deg, var(--gold), #d97706);
+      color: #000;
+      font-size: 0.95rem;
+      font-weight: 900;
+      padding: 14px;
+      border-radius: 14px;
+      border: none;
+      width: 100%;
+      cursor: pointer;
+      box-shadow: 0 0 20px var(--gold-glow);
+      animation: pulse 1.2s infinite alternate;
+    }
+
+    .super-powerup-btn {
+      background: linear-gradient(135deg, var(--purple), #7e22ce);
+      color: #fff;
+      box-shadow: 0 0 20px var(--purple-glow);
+    }
+
+    .round-indicator-pill {
+      background: rgba(255, 184, 0, 0.15);
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      font-size: 0.85rem;
+      font-weight: 900;
+      padding: 6px 16px;
+      border-radius: 20px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      display: inline-block;
+    }
+
+    @media (max-width: 360px) {
+      .game-box {
+        padding: 18px 12px;
+        border-radius: 20px;
+      }
+      h1 {
+        font-size: 2.2rem;
+      }
+      .btn {
+        padding: 14px;
+        font-size: 0.95rem;
+      }
+      input[type="text"] {
+        padding: 12px;
+        font-size: 1.1rem;
+      }
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.04); }
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.6); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes popInLetter {
+      0% { transform: scale(0.5); opacity: 0; text-shadow: 0 0 10px var(--gold); }
+      70% { transform: scale(1.25); text-shadow: 0 0 60px var(--gold-glow); }
+      100% { transform: scale(1); opacity: 1; text-shadow: 0 0 40px var(--gold-glow); }
+    }
+
+    @keyframes panicShake {
+      0% { transform: translate(1px, 1px) rotate(0deg); }
+      20% { transform: translate(-2px, -1px) rotate(-1deg); }
+      40% { transform: translate(-1px, 2px) rotate(1deg); }
+      60% { transform: translate(2px, 1px) rotate(0deg); }
+      80% { transform: translate(1px, -2px) rotate(1deg); }
+      100% { transform: translate(-1px, 1px) rotate(-1deg); }
+    }
+
+    @keyframes errorShake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-12px); }
+      40% { transform: translateX(12px); }
+      60% { transform: translateX(-8px); }
+      80% { transform: translateX(8px); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ANIMATED SPLASH SCREEN OVERLAY -->
+  <div id="splash-screen">
+    <div class="splash-bomb">💣</div>
+    <div class="splash-text">VOCABOMB</div>
+    <div class="splash-spark">✨ FUSING...</div>
+  </div>
+
+  <div class="container">
+    
+    <!-- 1. LANDING WELCOME SCREEN -->
+    <div id="welcome-screen" class="game-box">
+      <h1>VOCABOMB</h1>
+      <div class="bomb-icon">💣</div>
+      <div class="subtitle">SPELL FAST OR EXPLODE</div>
+      
+      <div class="hero-rule-box">
+        Write a valid word starting with the required letter and pass the bomb before it explodes! Last player standing or highest point scorer wins!
+      </div>
+
+      <div id="dict-indicator" class="dict-status">Loading 270,000+ Word Dictionary...</div>
+
+      <button class="btn" id="btn-start-app" disabled>START GAME</button>
+    </div>
+
+    <!-- 2. CREATE / JOIN ROOM CHOICE SCREEN -->
+    <div id="lobby-screen" class="game-box" style="display: none;">
+      <h1>ROOM SETUP</h1>
+      <div class="subtitle">CREATE OR JOIN A GAME</div>
+
+      <div class="tab-group">
+        <button class="tab-btn active" id="tab-create-btn">CREATE ROOM</button>
+        <button class="tab-btn" id="tab-join-btn">JOIN ROOM</button>
+      </div>
+
+      <input type="text" id="player-name" placeholder="YOUR NAME" maxlength="10" />
+
+      <div id="form-create">
+        <button class="btn" id="btn-create">CREATE NEW ROOM</button>
+      </div>
+
+      <div id="form-join" style="display: none;">
+        <input type="text" id="room-code" placeholder="ENTER 4-DIGIT ROOM CODE" maxlength="6" />
+        <button class="btn" id="btn-join">JOIN ROOM</button>
+      </div>
+    </div>
+
+    <!-- 3. HOST CONFIG & PLAYER BRIEFING SCREEN -->
+    <div id="room-screen" class="game-box" style="display: none; position: relative;">
+      <div class="subtitle">ROOM CODE</div>
+      <h2 id="display-room-code" style="color:var(--gold); font-size: 2.8rem; font-weight: 900; letter-spacing: 4px; margin-bottom: 16px;"></h2>
+      
+      <div id="host-config-panel" style="display:none;">
+        
+        <div class="config-group">
+          <div class="config-title">1. GAME FORMAT</div>
+          
+          <label class="toggle-row">
+            <div class="toggle-info">
+              <span>🏆 Knockout Mode (Battle Royale)</span>
+              <span class="toggle-desc">Players explode one by one across survival rounds until 1 winner remains.</span>
+            </div>
+            <input type="radio" name="cfgFormat" value="KNOCKOUT" checked />
+          </label>
+
+          <label class="toggle-row">
+            <div class="toggle-info">
+              <span>📊 Point Surge Mode</span>
+              <span class="toggle-desc">3 turns per player per round! Scores revealed at final round!</span>
+            </div>
+            <input type="radio" name="cfgFormat" value="SURGE" />
+          </label>
+
+          <div id="surge-rounds-box" class="surge-rounds-selector" style="display:none;">
+            <label><input type="radio" name="cfgSurgeRounds" value="5" checked /> 5 Rounds</label>
+            <label><input type="radio" name="cfgSurgeRounds" value="10" /> 10 Rounds</label>
+          </div>
+
+          <label class="toggle-row">
+            <div class="toggle-info">
+              <span>⚡ Classic Single Blitz</span>
+              <span class="toggle-desc">A single explosion ends the entire match immediately.</span>
+            </div>
+            <input type="radio" name="cfgFormat" value="CLASSIC" />
+          </label>
+        </div>
+
+        <div class="config-group">
+          <div class="config-title">2. BASE GAME MODE</div>
+          
+          <label class="toggle-row">
+            <div class="toggle-info">
+              <span>Random Letter Blitz</span>
+              <span class="toggle-desc">A completely random required letter is assigned every turn.</span>
+            </div>
+            <input type="radio" name="cfgMode" value="RANDOM" checked />
+          </label>
+
+          <label class="toggle-row">
+            <div class="toggle-info">
+              <span>Word Chain (Last Letter Rule)</span>
+              <span class="toggle-desc">Next word must start with the LAST letter of the previous word.</span>
+            </div>
+            <input type="radio" name="cfgMode" value="CHAIN" />
+          </label>
+        </div>
+
+        <div class="config-group">
+          <div class="config-title">3. GAME MODIFIERS (OPTIONAL)</div>
+          
+          <label class="toggle-row">
+            <div class="toggle-info">
+              <span>⚡ Power-Up Chaos</span>
+              <span class="toggle-desc">5-word streaks unlock standard power-ups; 8+ letter words unlock Super Power-Ups!</span>
+            </div>
+            <input type="checkbox" id="cfg-powerups" checked />
+          </label>
+
+          <label class="toggle-row">
+            <div class="toggle-info">
+              <span>Hardcore Word Length</span>
+              <span class="toggle-desc">Increases minimum allowed word length. Short fallback words are rejected.</span>
+            </div>
+            <input type="checkbox" id="cfg-hardcore" />
+          </label>
+          <div class="slider-container" id="hardcore-slider-box" style="display:none;">
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">Minimum Word Length: <b id="min-length-val" style="color:#fff;">4</b> Letters</div>
+            <input type="range" id="cfg-min-len" min="3" max="6" value="4" />
+          </div>
+
+          <label class="toggle-row">
+            <div class="toggle-info">
+              <span>The Bottleneck Trap</span>
+              <span class="toggle-desc">Ending words on hard letters (Q, Z, K, J, W, Y) shrinks next player's timer.</span>
+            </div>
+            <input type="checkbox" id="cfg-bottleneck" />
+          </label>
+
+          <div class="slider-container" style="margin-top:10px;">
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">Per-Turn Timer Cap: <b id="timer-val" style="color:#fff;">8s</b></div>
+            <input type="range" id="cfg-turn-timer" min="3" max="15" value="8" />
+          </div>
+
+          <label class="toggle-row">
+            <div class="toggle-info">
+              <span>Letter Blockade</span>
+              <span class="toggle-desc">Bans a common letter (E, A, S, T) from being used during the entire match.</span>
+            </div>
+            <input type="checkbox" id="cfg-blockade" />
+          </label>
+
+          <label class="toggle-row">
+            <div class="toggle-info">
+              <span>Hot Potato Acceleration</span>
+              <span class="toggle-desc">Turn timers automatically speed up late in the round.</span>
+            </div>
+            <input type="checkbox" id="cfg-acceleration" />
+          </label>
+        </div>
+
+        <button class="btn btn-green" id="btn-save-rules">LOCK IN RULES & ADVANCE</button>
+      </div>
+
+      <div id="player-rules-briefing" style="display:none;">
+        <div class="briefing-disclaimer-header">
+          ⚠️ CAREFULLY READ THE ACTIVE RULES BEFORE PRESSING READY!
+        </div>
+
+        <div id="briefing-list">Waiting for Host to configure game...</div>
+
+        <button class="btn btn-green" id="btn-ready" style="margin-top: 12px;">I'M READY TO PLAY!</button>
+
+        <div id="host-start-container" style="display:none; margin-top:14px;">
+          <button class="btn btn-gold" id="btn-plant-bomb">💣 PLANT THE BOMB & START!</button>
+        </div>
+      </div>
+
+      <div id="players-list" style="margin-top: 20px; margin-bottom: 24px;"></div>
+
+      <div id="countdown-screen">
+        <div id="countdown-label-text" style="font-size: 1.2rem; font-weight: 800; color: #fff; margin-bottom: 10px;">PLANTING BOMB IN</div>
+        <div id="countdown-val" class="countdown-num">3</div>
+      </div>
+    </div>
+
+    <!-- 4. GAMEPLAY SCREEN -->
+    <div id="game-screen">
+      <div id="active-game-card" class="game-box" style="position: relative;">
+        
+        <div id="attack-warning-overlay">
+          <div class="attack-title">⚠️ ATTACKED!</div>
+          <div class="attack-desc" id="attack-warning-desc">SOMEONE ATTACKED YOU!</div>
+          <div class="attack-timer-notice">⏳ TIMER PAUSED (2.0s)</div>
+        </div>
+
+        <div id="intermission-screen">
+          <div style="font-size: 0.85rem; font-weight: 900; color: var(--gold); letter-spacing: 2px; text-transform: uppercase;">ROUND RECAP</div>
+          <div id="intermission-round-num" style="font-size: 1.8rem; font-weight: 900; color: #fff; margin: 4px 0 8px 0;">ROUND 1 COMPLETE</div>
+          <div id="intermission-highlights" style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;"></div>
+          <div style="font-size: 0.85rem; font-weight: 800; color: var(--gold); margin-bottom: 4px;">NEXT ROUND STARTING IN</div>
+          <div id="surge-intermission-num" class="countdown-num">3</div>
+        </div>
+
+        <div id="surge-round-badge" class="round-indicator-pill" style="display:none;">ROUND 1</div>
+
+        <div id="turn-banner" class="status-badge waiting-turn">
+          WAITING...
+        </div>
+
+        <div id="active-modifiers-bar" class="modifier-tag-list"></div>
+
+        <div class="letter-stage">
+          <div id="letter-prompt-label" class="letter-label">REQUIRED LETTER</div>
+          <div id="required-letter" class="letter-display">-</div>
+        </div>
+
+        <div class="fuse-track">
+          <div id="turn-timer" class="fuse-fill"></div>
+        </div>
+
+        <div id="error-toast" class="toast-msg"></div>
+
+        <!-- PERMANENT INVENTORY SLOT HUD -->
+        <div id="powerup-hud" class="powerup-box">
+          <div id="powerup-slot-empty" class="powerup-slot-empty">⚡ ITEM SLOT EMPTY</div>
+          <button id="btn-use-powerup" class="powerup-btn" style="display:none;">⚡ USE POWER-UP</button>
+        </div>
+
+        <input type="text" id="word-input" placeholder="TYPE VALID WORD..." disabled autocomplete="off" />
+        <button class="btn" id="btn-submit" disabled>SUBMIT & PASS BOMB</button>
+
+        <div id="boom-screen">
+          <div id="boom-title-id" class="boom-title">💥 BOOM!</div>
+          <div class="boom-desc" id="boom-loser-text">THE BOMB EXPLODED!</div>
+          
+          <div id="inline-knockout-timer-box" class="inline-countdown-box" style="display:none;">
+            <div class="inline-countdown-title">PLANTING THE BOMB IN</div>
+            <div id="inline-countdown-num" class="countdown-num">3</div>
+          </div>
+
+          <div id="round-stats" style="width: 100%;"></div>
+          
+          <div id="host-boom-controls" style="display:none; width: 100%; margin-top: 14px;">
+            <button class="btn btn-green" id="btn-replay-same">REPLAY (SAME RULES)</button>
+            <button class="btn btn-secondary" id="btn-end-game">END GAME (MAIN MENU)</button>
+          </div>
+
+          <div id="non-host-boom-msg" style="display:none; font-size: 0.85rem; color: var(--gold); font-weight:800; margin-top: 14px;">
+            WAITING FOR HOST TO START NEXT GAME...
+          </div>
+        </div>
+      </div>
+
+      <div class="history-card">
+        <div id="history-log"><i>No words submitted yet...</i></div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // TOGGLE SURGE ROUNDS SUB-OPTION IN HOST CONFIG
+    document.querySelectorAll('input[name="cfgFormat"]').forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        const surgeBox = document.getElementById('surge-rounds-box');
+        surgeBox.style.display = (e.target.value === 'SURGE') ? 'flex' : 'none';
+      });
+    });
+
+    // SPLASH SCREEN AUTO-DISMISS & LAUNCHER BYPASS
+window.addEventListener('load', () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const autoRoom = urlParams.get('room');
+  const autoName = urlParams.get('name');
+  const autoPid  = urlParams.get('pid');
+
+  const splash = document.getElementById('splash-screen');
+
+  // 1. IF LAUNCHED FROM SUPER APP: Dismiss splash instantly & join directly
+  if (autoRoom && autoName) {
+    if (splash) splash.style.display = 'none';
+    if (typeof joinRoom === 'function') {
+      joinRoom(autoRoom, autoName, autoPid);
+    }
+    return;
+  }
+
+  // 2. STANDALONE FALLBACK: Original splash dismiss behavior
+  if (splash) {
+    const dismissSplash = () => splash.classList.add('fade-out');
+    setTimeout(dismissSplash, 2000);
+    splash.addEventListener('click', dismissSplash);
+    splash.addEventListener('touchstart', dismissSplash);
+  }
+});
+
+// SERVICE WORKER REGISTRATION
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => {
+      console.log('ServiceWorker registration skipped: ', err);
+    });
+  });
+}
+
+   const firebaseConfig = {
+  apiKey: "AIzaSyAJD7Uttw1NQlU3cIPUINOUpC8SqRiWpaQ",
+  authDomain: "gamenightpack.firebaseapp.com",
+  databaseURL: "https://gamenightpack-default-rtdb.firebaseio.com",
+  projectId: "gamenightpack",
+  storageBucket: "gamenightpack.firebasestorage.app",
+  messagingSenderId: "5588271975",
+  appId: "1:5588271975:web:898050b61dcf78bdf8a5c2"
+};
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // BUILT-IN OFFLINE CORE LEXICON FALLBACK
+    const CORE_FALLBACK_LEXICON = [
+      "APPLE","BALL","CAT","DOG","EAGLE","FISH","GIRAFFE","HOUSE","ICE","JACKET","KITE","LION","MOON","NEST","ORANGE","PIANO","QUEEN","RIVER","SUN","TREE","UMBRELLA","VIOLIN","WATER","XRAY","YACHT","ZEBRA","BOMB","FIRE","GAME","PLAY","WORD","FAST","TIME","BOOM","WORD","MATCH","BEAR","BIRD","DUCK","FROG","GOAT","HAWK","LAMB","MULE","SEAL","SWAN","WOLF","ACORN","BREAD","CAKE","DOUGH","FLOUR","GRAPE","HONEY","JUICE","LEMON","MELON","ONION","PEACH","RICE","SUGAR","TOAST","WINE","BEACH","CLOUD","EARTH","FLAME","FROST","GRASS","LIGHT","NIGHT","OCEAN","PLANT","RIVER","STONE","STORM","WORLD","BRAIN","CHEST","HEART","JOINT","NERVE","SKULL","TOOTH","VOICE","AUNT","BABY","CHILD","DADDY","FAMILY","MOTHER","SISTER","UNCLE","BRICK","CHAIR","CLOCK","DOOR","GLASS","KNIFE","PAPER","TABLE","WATCH"
+    ];
+
+    let DICTIONARY = new Set(CORE_FALLBACK_LEXICON);
+    const HARD_LETTERS = ['Q', 'Z', 'K', 'J', 'W', 'Y'];
+    const COMMON_LETTERS = ['E', 'A', 'S', 'T', 'O', 'I', 'R'];
+
+    function getRandomLetter(excludeChar = '') {
+      const letters = 'ABCDEFGHIJKLMNOPQRSTUVWYZ'; // 'X' EXCLUDED FROM RANDOM POOL
+      let l = letters[Math.floor(Math.random() * letters.length)];
+      if (excludeChar && l === excludeChar) {
+        while (l === excludeChar) {
+          l = letters[Math.floor(Math.random() * letters.length)];
+        }
+      }
+      return l;
+    }
+
+    const STANDARD_POWERUPS = [
+      { id: 'FREEZE', name: '❄️ FREEZE FRAME', type: 'ATTACK', isSuper: false },
+      { id: 'TRAP', name: '🔤 HARD LETTER TRAP', type: 'ATTACK', isSuper: false },
+      { id: 'XCURSE', name: '☠️ X-CURSE TRAP', type: 'ATTACK', isSuper: false },
+      { id: 'PINCH', name: '⏳ TIME PINCH (-2s)', type: 'ATTACK', isSuper: false },
+      { id: 'SHIELD', name: '🛡️ SHIELD PASS', type: 'DEFENSE', isSuper: false },
+      { id: 'SURGE', name: '➕ TIME SURGE (+3s)', type: 'DEFENSE', isSuper: false },
+      { id: 'REVERSE', name: '🔁 REVERSE PASS', type: 'DEFENSE', isSuper: false }
+    ];
+
+    const SUPER_POWERUPS = [
+      { id: 'PANIC', name: '🔥 PANIC CLOCK (2x SPEED)', type: 'ATTACK', isSuper: true },
+      { id: 'THIEF', name: '⌛ TIME THIEF (-3s)', type: 'ATTACK', isSuper: true },
+      { id: 'DOUBLE_SHIELD', name: '🛡️ DOUBLE SHIELD (2x)', type: 'DEFENSE', isSuper: true }
+    ];
+
+    fetch('https://raw.githubusercontent.com/dwyl/english-words/master/words_alpha.txt')
+      .then(response => response.text())
+      .then(text => {
+        const words = text.split('\n');
+        for (let i = 0; i < words.length; i++) {
+          const w = words[i].trim().toUpperCase();
+          if (w.length >= 3) DICTIONARY.add(w);
+        }
+        document.getElementById('dict-indicator').innerText = `✓ 270,000+ Word Dictionary Loaded`;
+        document.getElementById('btn-start-app').disabled = false;
+      })
+      .catch(err => {
+        document.getElementById('dict-indicator').innerText = `✓ Offline Dictionary Ready (${DICTIONARY.size} Words)`;
+        document.getElementById('btn-start-app').disabled = false;
+      });
+
+    let myPlayerId = 'p_' + Math.random().toString(36).substr(2, 9);
+    let myName = '';
+    let currentRoom = '';
+    let roomRef = null;
+    let roomData = null;
+    let audioCtx = null;
+    let handledBoom = false;
+    let serverTimeOffset = 0;
+    let vibrationInterval = null;
+    let countdownStarted = false;
+    let lastRenderedLetter = '';
+    let lastUIState = '';
+    let wakeLockObj = null;
+    let isProcessingHandoff = false;
+    let handoffResetTimeout = null;
+    let lastTickedSecond = -1;
+    let prevActivePlayerId = null;
+    let lastActivePlayerIdForInput = null;
+
+    // FIREBASE OBJECT-TO-ARRAY NORMALIZER
+    function getNormalizedPlayerOrder() {
+      if (!roomData || !roomData.playerOrder) return [];
+      let order = roomData.playerOrder;
+      if (!Array.isArray(order)) {
+        order = Object.values(order);
+      }
+      return order.filter(pid => roomData.players && roomData.players[pid] && !roomData.players[pid].isDisconnected && !roomData.players[pid].isEliminated);
+    }
+
+    db.ref('.info/serverTimeOffset').on('value', (snap) => {
+      serverTimeOffset = snap.val() || 0;
+    });
+
+    function getServerTime() {
+      return Date.now() + serverTimeOffset;
+    }
+
+    async function requestScreenWakeLock() {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLockObj = await navigator.wakeLock.request('screen');
+        }
+      } catch(e){}
+    }
+
+    function releaseScreenWakeLock() {
+      if (wakeLockObj !== null) {
+        wakeLockObj.release().then(() => { wakeLockObj = null; }).catch(e=>{});
+      }
+    }
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playSound(freq, duration, type = 'sine') {
+      initAudio();
+      if (!audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch(e){}
+    }
+
+    function playTing() { playSound(880, 0.3, 'sine'); }
+    function playTick() { playSound(400, 0.05, 'square'); }
+    function playCountdownTick() { playSound(600, 0.08, 'sine'); }
+    function playGoChime() { playSound(1200, 0.25, 'sine'); }
+    function playSafeTone() { playSound(523.25, 0.4, 'triangle'); }
+    function playThud() { playSound(140, 0.2, 'triangle'); }
+    function playPowerupSfx() { playSound(1046.5, 0.5, 'sawtooth'); }
+
+    function playExplosionSound() {
+      initAudio();
+      if (!audioCtx) return;
+      try {
+        const t = audioCtx.currentTime;
+        const bufferSize = audioCtx.sampleRate * 1.2;
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = Math.random() * 2 - 1;
+        }
+
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = buffer;
+
+        const noiseFilter = audioCtx.createBiquadFilter();
+        noiseFilter.type = 'lowpass';
+        noiseFilter.frequency.setValueAtTime(800, t);
+        noiseFilter.frequency.exponentialRampToValueAtTime(50, t + 1.2);
+
+        const noiseGain = audioCtx.createGain();
+        noiseGain.gain.setValueAtTime(1.0, t);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 1.2);
+
+        noise.connect(noiseFilter);
+        noiseFilter.connect(noiseGain);
+        noiseGain.connect(audioCtx.destination);
+
+        const osc = audioCtx.createOscillator();
+        const oscGain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+
+        osc.frequency.setValueAtTime(180, t);
+        osc.frequency.exponentialRampToValueAtTime(25, t + 1.5);
+
+        oscGain.gain.setValueAtTime(0.9, t);
+        oscGain.gain.exponentialRampToValueAtTime(0.001, t + 1.5);
+
+        osc.connect(oscGain);
+        oscGain.connect(audioCtx.destination);
+
+        noise.start(t);
+        osc.start(t);
+        noise.stop(t + 1.2);
+        osc.stop(t + 1.5);
+      } catch(e){}
+    }
+
+    function triggerSuccessConfetti() {
+      if (typeof confetti === 'function') {
+        confetti({
+          particleCount: 40,
+          spread: 60,
+          origin: { y: 0.65 },
+          colors: ['#10b981', '#34d399', '#6ee7b7', '#ffffff']
+        });
+      }
+    }
+
+    // FLOATING SCORE POPUP
+    function showScorePopup(points) {
+      const card = document.getElementById('active-game-card');
+      const popup = document.createElement('div');
+      popup.className = 'score-popup';
+      popup.innerText = `+${points} PTS!`;
+      card.appendChild(popup);
+      setTimeout(() => popup.remove(), 1200);
+    }
+
+    function startActiveTurnVibration() {
+      if (!vibrationInterval && "vibrate" in navigator) {
+        vibrationInterval = setInterval(() => {
+          navigator.vibrate(80);
+        }, 350);
+      }
+    }
+
+    function stopActiveTurnVibration() {
+      if (vibrationInterval) {
+        clearInterval(vibrationInterval);
+        vibrationInterval = null;
+      }
+      if ("vibrate" in navigator) navigator.vibrate(0);
+    }
+
+    function showError(msg) {
+      const toast = document.getElementById('error-toast');
+      const gameCard = document.getElementById('active-game-card');
+      
+      toast.innerText = msg;
+
+      gameCard.classList.remove('error-shake');
+      void gameCard.offsetWidth;
+      gameCard.classList.add('error-shake');
+
+      setTimeout(() => {
+        gameCard.classList.remove('error-shake');
+      }, 400);
+
+      setTimeout(() => { toast.innerText = ''; }, 2500);
+    }
+
+    document.addEventListener('touchstart', initAudio, { once: false });
+    document.addEventListener('click', initAudio, { once: false });
+
+    document.getElementById('btn-start-app').addEventListener('click', () => {
+      initAudio();
+      document.getElementById('welcome-screen').style.display = 'none';
+      document.getElementById('lobby-screen').style.display = 'block';
+    });
+
+    document.getElementById('tab-create-btn').addEventListener('click', () => {
+      document.getElementById('tab-create-btn').className = 'tab-btn active';
+      document.getElementById('tab-join-btn').className = 'tab-btn';
+      document.getElementById('form-create').style.display = 'block';
+      document.getElementById('form-join').style.display = 'none';
+    });
+
+    document.getElementById('tab-join-btn').addEventListener('click', () => {
+      document.getElementById('tab-join-btn').className = 'tab-btn active';
+      document.getElementById('tab-create-btn').className = 'tab-btn';
+      document.getElementById('form-join').style.display = 'block';
+      document.getElementById('form-create').style.display = 'none';
+    });
+
+    document.getElementById('cfg-hardcore').addEventListener('change', (e) => {
+      document.getElementById('hardcore-slider-box').style.display = e.target.checked ? 'block' : 'none';
+    });
+    document.getElementById('cfg-min-len').addEventListener('input', (e) => {
+      document.getElementById('min-length-val').innerText = e.target.value;
+    });
+    document.getElementById('cfg-turn-timer').addEventListener('input', (e) => {
+      document.getElementById('timer-val').innerText = e.target.value + 's';
+    });
+
+    function joinRoom(roomCode) {
+      myName = document.getElementById('player-name').value.trim().toUpperCase();
+      currentRoom = roomCode.toUpperCase();
+
+      if (!myName || !currentRoom) {
+        alert('Please enter your name!');
+        return;
+      }
+
+      roomRef = db.ref('rooms/' + currentRoom);
+
+      roomRef.once('value').then((snapshot) => {
+        const data = snapshot.val();
+        
+        if (data && data.players) {
+          const names = Object.values(data.players).map(p => p.name.toUpperCase());
+          if (names.includes(myName)) {
+            alert(`Name '${myName}' is already taken in this room! Please pick a different name.`);
+            return;
+          }
+        }
+
+        const myPlayerRef = roomRef.child('players/' + myPlayerId);
+        const isGameInProgress = data && (data.gameState === 'PLAYING' || data.gameState === 'BOOM');
+        const isSurgeMode = data && data.config?.format === 'SURGE';
+
+        let catchupScore = 0;
+        if (isSurgeMode && data.surgeScores) {
+          const scores = Object.values(data.surgeScores)
+            .map(s => Number.isFinite(s.totalPoints) ? s.totalPoints : 0);
+          if (scores.length > 0) {
+            catchupScore = Math.min(...scores);
+            if (!Number.isFinite(catchupScore)) catchupScore = 0;
+          }
+        }
+
+        myPlayerRef.set({
+          name: myName,
+          joinedAt: firebase.database.ServerValue.TIMESTAMP,
+          isReady: false,
+          isEliminated: (isGameInProgress && !isSurgeMode) ? true : false,
+          isDisconnected: false,
+          streak: 0,
+          powerup: null,
+          shields: 0
+        });
+
+        if (isSurgeMode) {
+          roomRef.child(`surgeScores/${myPlayerId}`).transaction((curr) => {
+            return curr ? curr : {
+              name: myName,
+              totalPoints: catchupScore,
+              longestWord: '',
+              highestWordScore: 0,
+              totalTimeTaken: 0,
+              turnCount: 0,
+              explosions: 0
+            };
+          });
+
+          if (isGameInProgress) {
+            roomRef.child('playerOrder').transaction((order) => {
+              let arr = order ? (Array.isArray(order) ? order : Object.values(order)) : [];
+              if (!arr.includes(myPlayerId)) {
+                arr.push(myPlayerId);
+              }
+              return arr;
+            });
+          }
+        }
+
+        const connectedRef = db.ref(".info/connected");
+        connectedRef.on("value", (snap) => {
+          if (snap.val() === true) {
+            myPlayerRef.child('isDisconnected').onDisconnect().set(true);
+            myPlayerRef.child('isDisconnected').set(false);
+          }
+        });
+
+        roomRef.child('host').transaction((currentHost) => {
+          return currentHost ? currentHost : myPlayerId;
+        });
+
+        roomRef.on('value', (snap) => {
+          roomData = snap.val();
+          if (roomData) updateUI();
+          else resetToMainMenu();
+        });
+
+        document.getElementById('lobby-screen').style.display = 'none';
+        document.getElementById('room-screen').style.display = 'block';
+        document.getElementById('display-room-code').innerText = currentRoom;
+      });
+    }
+
+    document.getElementById('btn-create').addEventListener('click', () => {
+      const randomRoom = Math.floor(1000 + Math.random() * 9000).toString();
+      joinRoom(randomRoom);
+    });
+
+    document.getElementById('btn-join').addEventListener('click', () => {
+      const code = document.getElementById('room-code').value.trim();
+      if (!code) {
+        alert('Please enter a Room Code!');
+        return;
+      }
+      joinRoom(code);
+    });
+
+    document.getElementById('btn-save-rules').addEventListener('click', () => {
+      const cfgFormat = document.querySelector('input[name="cfgFormat"]:checked').value;
+      const cfgMode = document.querySelector('input[name="cfgMode"]:checked').value;
+      const cfgPowerups = document.getElementById('cfg-powerups').checked;
+      const isHardcore = document.getElementById('cfg-hardcore').checked;
+      const minLength = isHardcore ? parseInt(document.getElementById('cfg-min-len').value) : 3;
+      const isBottleneck = document.getElementById('cfg-bottleneck').checked;
+      const baseTurnTime = parseInt(document.getElementById('cfg-turn-timer').value);
+      const isBlockade = document.getElementById('cfg-blockade').checked;
+      const isAcceleration = document.getElementById('cfg-acceleration').checked;
+      const surgeMaxRounds = parseInt(document.querySelector('input[name="cfgSurgeRounds"]:checked')?.value || 5);
+
+      const bannedChar = isBlockade ? COMMON_LETTERS[Math.floor(Math.random() * COMMON_LETTERS.length)] : '';
+
+      roomRef.child('config').set({
+        format: cfgFormat,
+        mode: cfgMode,
+        powerups: cfgPowerups,
+        minLength: minLength,
+        bottleneck: isBottleneck,
+        baseTurnTime: baseTurnTime,
+        bannedChar: bannedChar,
+        acceleration: isAcceleration,
+        surgeMaxRounds: surgeMaxRounds,
+        rulesLocked: true
+      });
+    });
+
+    document.getElementById('btn-ready').addEventListener('click', () => {
+      const currentReady = roomData.players[myPlayerId]?.isReady || false;
+      roomRef.child('players/' + myPlayerId + '/isReady').set(!currentReady);
+    });
+
+    document.getElementById('btn-plant-bomb').addEventListener('click', () => {
+      if (roomData.host !== myPlayerId) return;
+      runHostCountdown();
+    });
+
+    function startSurvivalRound(activePlayers, startingPlayerId, labelText = "PLANTING BOMB IN") {
+      let count = 3;
+      document.getElementById('countdown-label-text').innerText = labelText;
+      roomRef.update({ gameState: 'COUNTDOWN', countdownVal: count });
+      playCountdownTick();
+
+      const timer = setInterval(() => {
+        count--;
+        if (count > 0) {
+          playCountdownTick();
+          roomRef.update({ countdownVal: count });
+        } else {
+          clearInterval(timer);
+          playGoChime();
+          countdownStarted = false;
+
+          let totalFuseSeconds = 0;
+          if (activePlayers.length >= 3) {
+            totalFuseSeconds = 65 + Math.floor(Math.random() * 20) + Math.floor(Math.random() * 21);
+          } else {
+            totalFuseSeconds = 40 + Math.floor(Math.random() * 26);
+          }
+
+          const banned = roomData.config?.bannedChar || '';
+          const startingLetter = getRandomLetter(banned);
+          const startNow = getServerTime();
+
+          const updates = {
+            gameState: 'PLAYING',
+            activePlayerId: startingPlayerId,
+            playerOrder: activePlayers,
+            requiredLetter: startingLetter,
+            currentTurnTimeCap: roomData.config.baseTurnTime * 1000,
+            globalFuseEndTime: startNow + (totalFuseSeconds * 1000),
+            turnEndTime: startNow + (roomData.config.baseTurnTime * 1000),
+            isFrozen: false,
+            freezeEndTime: 0,
+            isPanicClock: false,
+            activeAttackWarning: null,
+            lastSubmittedWord: null,
+            surgeTurnToken: 1
+          };
+
+          if (roomData.config.format === 'SURGE' && !roomData.surgeRound) {
+            updates.surgeRound = 1;
+            updates.surgeTurnsInRound = 0;
+            updates.surgeBaseOrder = activePlayers;
+
+            updates.roundSecretFuseEndTime = startNow + Math.floor(15000 + Math.random() * 25000);
+            updates.hasRoundFuseFired = false;
+
+            const initialScores = {};
+            activePlayers.forEach(pid => {
+              initialScores[pid] = {
+                name: roomData.players[pid]?.name || 'Player',
+                totalPoints: 0,
+                longestWord: '',
+                highestWordScore: 0,
+                totalTimeTaken: 0,
+                turnCount: 0,
+                explosions: 0
+              };
+            });
+            updates.surgeScores = initialScores;
+          }
+
+          roomRef.update(updates);
+        }
+      }, 700);
+    }
+
+    function runHostCountdown() {
+      if (countdownStarted) return;
+      countdownStarted = true;
+
+      const activePlayerIds = Object.entries(roomData.players)
+        .filter(([pid, p]) => !p.isDisconnected)
+        .map(([pid]) => pid);
+
+      if (activePlayerIds.length === 0) return;
+
+      startSurvivalRound(activePlayerIds, activePlayerIds[0], "PLANTING BOMB IN");
+    }
+
+    function resetToMainMenu() {
+      releaseScreenWakeLock();
+      stopActiveTurnVibration();
+      if (roomRef) roomRef.off();
+      roomRef = null;
+      roomData = null;
+      lastRenderedLetter = '';
+      lastUIState = '';
+      prevActivePlayerId = null;
+      lastActivePlayerIdForInput = null;
+      if (handoffResetTimeout) {
+        clearTimeout(handoffResetTimeout);
+        handoffResetTimeout = null;
+      }
+      document.getElementById('boom-screen').style.display = 'none';
+      document.getElementById('game-screen').style.display = 'none';
+      document.getElementById('room-screen').style.display = 'none';
+      document.getElementById('lobby-screen').style.display = 'none';
+      document.getElementById('welcome-screen').style.display = 'block';
+    }
+
+    function updateUI() {
+      if (lastUIState !== roomData.gameState) {
+        document.getElementById('word-input').value = '';
+        lastUIState = roomData.gameState;
+      }
+
+      // ALWAYS WIPE INPUT BOX WHENEVER TURN SWITCHES OR INTERMISSION BEGINS
+      if (lastActivePlayerIdForInput !== roomData.activePlayerId || roomData.isSurgeIntermission) {
+        document.getElementById('word-input').value = '';
+        lastActivePlayerIdForInput = roomData.activePlayerId;
+      }
+
+      const isHost = roomData.host === myPlayerId;
+      
+      if (roomData.gameState === 'PLAYING') {
+        requestScreenWakeLock();
+      } else {
+        releaseScreenWakeLock();
+      }
+
+      const hostData = roomData.players ? roomData.players[roomData.host] : null;
+      if (!hostData || hostData.isDisconnected) {
+        const onlinePids = Object.entries(roomData.players || {})
+          .filter(([pid, p]) => !p.isDisconnected)
+          .map(([pid]) => pid);
+
+        if (onlinePids.length > 0 && onlinePids[0] === myPlayerId) {
+          roomRef.child('host').set(myPlayerId);
+        }
+      }
+
+      if (roomData.players) {
+        const pList = document.getElementById('players-list');
+        pList.innerHTML = '';
+        Object.entries(roomData.players).forEach(([pid, p]) => {
+          let statusClass = p.isReady ? 'ready' : '';
+          let statusText = p.isReady ? ' ✓ READY' : '';
+          
+          if (p.isDisconnected) {
+            statusClass = 'disconnected';
+            statusText = ' 🔌 DISCONNECTED';
+          } else if (p.isEliminated) {
+            statusClass = 'eliminated';
+            statusText = ' 💀 ELIMINATED';
+          }
+          pList.innerHTML += `<span class="player-pill ${statusClass}">${p.name}${statusText}</span>`;
+        });
+      }
+
+      const rulesLocked = roomData.config?.rulesLocked || false;
+
+      // SYNC HOST CONFIG RADIO CONTROLS WHEN CONFIG IS LOADED/UPDATED
+      if (roomData.config) {
+        const surgeBox = document.getElementById('surge-rounds-box');
+        if (surgeBox) {
+          surgeBox.style.display = (roomData.config.format === 'SURGE') ? 'flex' : 'none';
+        }
+        if (roomData.config.surgeMaxRounds) {
+          const surgeRadio = document.querySelector(`input[name="cfgSurgeRounds"][value="${roomData.config.surgeMaxRounds}"]`);
+          if (surgeRadio) surgeRadio.checked = true;
+        }
+        if (roomData.config.format) {
+          const fmtRadio = document.querySelector(`input[name="cfgFormat"][value="${roomData.config.format}"]`);
+          if (fmtRadio) fmtRadio.checked = true;
+        }
+      }
+
+      if (isHost && roomData.gameState !== 'PLAYING' && roomData.gameState !== 'COUNTDOWN' && roomData.gameState !== 'BOOM') {
+        document.getElementById('host-config-panel').style.display = rulesLocked ? 'none' : 'block';
+        document.getElementById('player-rules-briefing').style.display = rulesLocked ? 'block' : 'none';
+      } else if (!isHost && roomData.gameState !== 'PLAYING' && roomData.gameState !== 'COUNTDOWN' && roomData.gameState !== 'BOOM') {
+        document.getElementById('host-config-panel').style.display = 'none';
+        document.getElementById('player-rules-briefing').style.display = 'block';
+      }
+
+      // FULLY SYNCHRONIZED BRIEFING SCREEN MIRRORING HOST CONFIG LAYOUT
+      if (roomData.config) {
+        const cfg = roomData.config;
+        const maxR = cfg.surgeMaxRounds || 5;
+        let html = '';
+        let fmtText = '🏆 Knockout Mode (Battle Royale)';
+        let fmtDesc = 'Players explode one by one across survival rounds until 1 winner remains.';
+        if (cfg.format === 'SURGE') {
+          fmtText = `📊 Point Surge Mode (${maxR}-Round Points)`;
+          fmtDesc = `3 turns per player per round across ${maxR} rounds! Scores revealed at Round ${maxR}!`;
+        } else if (cfg.format === 'CLASSIC') {
+          fmtText = '⚡ Classic Single Blitz';
+          fmtDesc = 'A single explosion ends the match immediately.';
+        }
+
+        html += `<div class="rule-detail-item"><b>1. GAME FORMAT: ${fmtText}</b>${fmtDesc}</div>`;
+        html += `<div class="rule-detail-item"><b>2. BASE GAME MODE: ${cfg.mode === 'CHAIN' ? 'Word Chain (Last Letter Rule)' : 'Random Letter Blitz'}</b>${cfg.mode === 'CHAIN' ? 'Each word must start with the final letter of the previous player\'s word.' : 'A completely random required letter is assigned on every turn.'}</div>`;
+
+        let modText = '<b>3. ACTIVE GAME MODIFIERS:</b>';
+        modText += `<br/>• Turn Timer: <b>${cfg.baseTurnTime}s</b>`;
+        modText += `<br/>• Min Word Length: <b>${cfg.minLength} Letters</b>`;
+        if (cfg.powerups) modText += `<br/>• ⚡ Power-Up Chaos: <b>ENABLED</b>`;
+        if (cfg.bottleneck) modText += `<br/>• ⚡ Bottleneck Trap: <b>ENABLED</b>`;
+        if (cfg.bannedChar) modText += `<br/>• 🚫 Letter Blockade: <b>NO '${cfg.bannedChar}'</b>`;
+        if (cfg.acceleration) modText += `<br/>• 🔥 Acceleration: <b>ENABLED</b>`;
+
+        html += `<div class="rule-detail-item">${modText}</div>`;
+        document.getElementById('briefing-list').innerHTML = html;
+      }
+
+      const myReadyState = roomData.players[myPlayerId]?.isReady || false;
+      const rBtn = document.getElementById('btn-ready');
+      rBtn.innerText = myReadyState ? 'YOU ARE READY! (TAP TO UNREADY)' : "I'M READY TO PLAY!";
+      rBtn.className = myReadyState ? 'btn btn-secondary' : 'btn btn-green';
+
+      if (roomData.players && rulesLocked && roomData.gameState !== 'PLAYING' && roomData.gameState !== 'COUNTDOWN' && roomData.gameState !== 'BOOM') {
+        const pArray = Object.values(roomData.players);
+        const allReady = pArray.length >= 2 && pArray.every(p => p.isReady === true);
+
+        if (allReady && isHost) {
+          document.getElementById('host-start-container').style.display = 'block';
+        } else {
+          document.getElementById('host-start-container').style.display = 'none';
+        }
+      }
+
+      if (roomData.gameState === 'COUNTDOWN' && !roomData.isMidKnockout) {
+        document.getElementById('countdown-screen').style.display = 'flex';
+        document.getElementById('countdown-val').innerText = roomData.countdownVal || 3;
+      } else {
+        document.getElementById('countdown-screen').style.display = 'none';
+      }
+
+      if (roomData.gameState === 'LOBBY' && document.getElementById('game-screen').style.display === 'block') {
+        document.getElementById('game-screen').style.display = 'none';
+        document.getElementById('room-screen').style.display = 'block';
+      }
+
+      if (roomData.gameState === 'PLAYING') {
+        handledBoom = false;
+        document.getElementById('boom-screen').style.display = 'none';
+        document.getElementById('room-screen').style.display = 'none';
+        document.getElementById('game-screen').style.display = 'block';
+
+        const isSurge = roomData.config?.format === 'SURGE';
+        const maxRounds = roomData.config?.surgeMaxRounds || 5;
+        const surgeBadge = document.getElementById('surge-round-badge');
+        if (isSurge && roomData.surgeRound) {
+          surgeBadge.style.display = 'inline-block';
+          surgeBadge.innerText = `ROUND ${roomData.surgeRound} / ${maxRounds}`;
+        } else {
+          surgeBadge.style.display = 'none';
+        }
+
+        const isIntermission = roomData.isSurgeIntermission || false;
+        const intermissionScreen = document.getElementById('intermission-screen');
+        if (isIntermission) {
+          intermissionScreen.style.display = 'flex';
+          document.getElementById('intermission-round-num').innerText = `ROUND ${(roomData.surgeRound || 2) - 1} / ${maxRounds} COMPLETE`;
+          const lastHighlights = roomData.lastRoundHighlights || { longestWord: 'N/A', closestCall: 'N/A' };
+          document.getElementById('intermission-highlights').innerHTML = `
+            <div><b>🔤 Longest Word:</b> ${lastHighlights.longestWord}</div>
+            <div style="margin-top:6px;"><b>💥 Closest Call:</b> ${lastHighlights.closestCall}</div>
+          `;
+        } else {
+          intermissionScreen.style.display = 'none';
+        }
+
+        const isMyTurn = roomData.activePlayerId === myPlayerId;
+        const activeName = roomData.players[roomData.activePlayerId]?.name || 'Player';
+
+        // SPATIAL BOMB HANDOFF FLASH ANIMATION
+        const gameCard = document.getElementById('active-game-card');
+        if (prevActivePlayerId !== roomData.activePlayerId) {
+          if (isMyTurn && prevActivePlayerId !== null) {
+            gameCard.classList.remove('bomb-receive-anim');
+            void gameCard.offsetWidth;
+            gameCard.classList.add('bomb-receive-anim');
+          }
+          prevActivePlayerId = roomData.activePlayerId;
+        }
+
+        const letterElem = document.getElementById('required-letter');
+        if (lastRenderedLetter !== roomData.requiredLetter) {
+          lastRenderedLetter = roomData.requiredLetter;
+          letterElem.innerText = roomData.requiredLetter;
+          letterElem.classList.remove('letter-bounce');
+          void letterElem.offsetWidth;
+          letterElem.classList.add('letter-bounce');
+        }
+
+        document.getElementById('letter-prompt-label').innerText = roomData.config.mode === 'CHAIN' ? 'LAST LETTER REQUIRED' : 'START WITH LETTER';
+
+        const tagContainer = document.getElementById('active-modifiers-bar');
+        tagContainer.innerHTML = '';
+        const cfg = roomData.config;
+        if (cfg.bannedChar) {
+          tagContainer.innerHTML += `<div class="mod-tag-prominent">🚫 NO '${cfg.bannedChar}' ALLOWED</div>`;
+        }
+        if (cfg.minLength > 3) {
+          tagContainer.innerHTML += `<div class="mod-tag-gold">📏 ${cfg.minLength}+ LETTERS MINIMUM</div>`;
+        }
+        if (roomData.isPanicClock) {
+          tagContainer.innerHTML += `<div class="mod-tag-prominent">🔥 2X PANIC CLOCK ACTIVE</div>`;
+        }
+        if (cfg.bottleneck) {
+          tagContainer.innerHTML += `<span class="mod-tag">⚡ BOTTLENECK ACTIVE</span>`;
+        }
+
+        const banner = document.getElementById('turn-banner');
+        const input = document.getElementById('word-input');
+        const btn = document.getElementById('btn-submit');
+
+        const nowServer = getServerTime();
+        const warning = roomData.activeAttackWarning;
+        const isWarningActive = warning && nowServer < warning.pauseEndTime;
+        const warningOverlay = document.getElementById('attack-warning-overlay');
+
+        if (isWarningActive && warning.targetId === myPlayerId) {
+          warningOverlay.style.display = 'flex';
+          document.getElementById('attack-warning-desc').innerHTML = `<b>${warning.attackerName}</b> USED <b>${warning.powerupName}</b> ON YOU!`;
+          input.value = '';
+        } else {
+          warningOverlay.style.display = 'none';
+        }
+
+        const isCurrentlyFrozen = roomData.isFrozen && nowServer < roomData.freezeEndTime && !isWarningActive;
+
+        if (isCurrentlyFrozen) {
+          gameCard.classList.add('frozen-box');
+        } else {
+          gameCard.classList.remove('frozen-box');
+        }
+
+        if (isMyTurn) {
+          if (banner.innerText !== 'YOUR TURN! QUICK!') {
+            playTing();
+          }
+          banner.innerText = isCurrentlyFrozen ? '❄️ YOU ARE FROZEN! WAIT!' : (isWarningActive ? '⚠️ ATTACKED! TIMER PAUSED...' : 'YOUR TURN! QUICK!');
+          banner.className = 'status-badge active-turn';
+          input.disabled = isCurrentlyFrozen || isWarningActive || isIntermission;
+          btn.disabled = isCurrentlyFrozen || isWarningActive || isIntermission;
+
+          if (!isCurrentlyFrozen && !isWarningActive && !isIntermission) {
+            startActiveTurnVibration();
+            setTimeout(() => { 
+              if (document.activeElement !== input) {
+                input.focus({ preventScroll: true }); 
+              }
+            }, 50);
+          }
+        } else {
+          banner.innerText = isCurrentlyFrozen ? `❄️ ${activeName} IS FROZEN!` : `${activeName} HAS THE BOMB!`;
+          banner.className = 'status-badge waiting-turn';
+          input.disabled = true;
+          btn.disabled = true;
+          stopActiveTurnVibration();
+        }
+
+        // PERMANENT INVENTORY SLOT HUD
+        const myData = roomData.players[myPlayerId];
+        const emptySlot = document.getElementById('powerup-slot-empty');
+        const powerupBtn = document.getElementById('btn-use-powerup');
+
+        if (cfg.powerups && myData && myData.powerup && !myData.isEliminated) {
+          emptySlot.style.display = 'none';
+          powerupBtn.style.display = 'block';
+          const pu = myData.powerup;
+          powerupBtn.innerText = `${pu.isSuper ? '🔮' : '⚡'} USE ${pu.name}`;
+          powerupBtn.className = pu.isSuper ? 'powerup-btn super-powerup-btn' : 'powerup-btn';
+
+          if (pu.type === 'DEFENSE') {
+            powerupBtn.disabled = !isMyTurn || isWarningActive || isIntermission;
+          } else {
+            const remTime = roomData.turnEndTime - nowServer;
+            powerupBtn.disabled = isMyTurn || remTime < 1500 || isCurrentlyFrozen || isWarningActive || isIntermission;
+          }
+        } else {
+          emptySlot.style.display = 'block';
+          powerupBtn.style.display = 'none';
+        }
+
+        const log = document.getElementById('history-log');
+        if (roomData.usedWords) {
+          const wordsArr = Object.values(roomData.usedWords);
+          log.innerHTML = wordsArr.reverse().map(w => `<div>• <b>${w.word}</b> (${w.by})</div>`).join('');
+        } else {
+          log.innerHTML = '<div><i>No words submitted yet...</i></div>';
+        }
+      }
+
+      if (roomData.gameState === 'BOOM' && !handledBoom) {
+        handledBoom = true;
+        stopActiveTurnVibration();
+        document.getElementById('active-game-card').classList.remove('low-time-shake', 'frozen-box');
+        
+        const isVictim = roomData.loserId === myPlayerId;
+
+        if (isVictim) {
+          playExplosionSound();
+          if ("vibrate" in navigator) navigator.vibrate([300, 100, 500, 100, 1000]);
+        } else {
+          playSafeTone();
+        }
+
+        const loser = roomData.players[roomData.loserId]?.name || 'Someone';
+        const isKnockout = roomData.config?.format === 'KNOCKOUT';
+        const isSurge = roomData.config?.format === 'SURGE';
+        const isGameOver = roomData.isGameOver || false;
+
+        document.getElementById('boom-title-id').innerText = isGameOver ? '👑 GAME OVER!' : '💥 BOOM!';
+        
+        if (isSurge && !isGameOver) {
+          document.getElementById('boom-loser-text').innerText = `${loser} DETONATED THE BOMB! (-500 PTS)`;
+        } else {
+          document.getElementById('boom-loser-text').innerText = isGameOver ? `${roomData.winnerName} IS THE MVP!` : `${loser} WAS ELIMINATED!`;
+        }
+
+        const inlineTimerBox = document.getElementById('inline-knockout-timer-box');
+        const inlineTimerNum = document.getElementById('inline-countdown-num');
+        inlineTimerBox.style.display = 'none';
+
+        let statsHtml = '';
+
+        if (isGameOver || (!isKnockout && !isSurge)) {
+          if (isSurge && roomData.surgeScores) {
+            const surgeArray = Object.entries(roomData.surgeScores || {}).map(([pid, score]) => ({
+              pid,
+              name: score.name || 'Player',
+              totalPoints: Number.isFinite(score.totalPoints) ? score.totalPoints : 0,
+              longestWord: score.longestWord || '',
+              highestWordScore: score.highestWordScore || 0,
+              totalTimeTaken: score.totalTimeTaken || 0,
+              turnCount: score.turnCount || 0,
+              explosions: score.explosions || 0
+            }));
+
+            surgeArray.sort((a, b) => {
+              if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+              if (b.longestWord.length !== a.longestWord.length) return b.longestWord.length - a.longestWord.length;
+              if (b.highestWordScore !== a.highestWordScore) return b.highestWordScore - a.highestWordScore;
+              const avgA = a.turnCount > 0 ? a.totalTimeTaken / a.turnCount : 99999;
+              const avgB = b.turnCount > 0 ? b.totalTimeTaken / b.turnCount : 99999;
+              return avgA - avgB;
+            });
+
+            const mvpPlayer = surgeArray[0];
+
+            statsHtml += `
+              <div class="leaderboard-section">
+                <div class="section-header-title">🏆 FINAL POINT SURGE STANDINGS</div>
+                <div class="rank-card-mvp">
+                  <div>
+                    <div style="font-size:0.75rem; color:var(--gold); font-weight:900; letter-spacing:1px; text-transform:uppercase;">WINNER / MVP</div>
+                    <div class="rank-name">${mvpPlayer ? mvpPlayer.name : 'WINNER'}</div>
+                    <div style="font-size:0.85rem; color:var(--gold); font-weight:800; margin-top:2px;">${mvpPlayer ? mvpPlayer.totalPoints : 0} PTS</div>
+                  </div>
+                  <div class="rank-badge">👑 #1</div>
+                </div>
+                <div class="rank-list-box">
+            `;
+
+            surgeArray.forEach((r, idx) => {
+              if (idx > 0) {
+                const isDisc = roomData.players[r.pid]?.isDisconnected;
+                statsHtml += `
+                  <div class="rank-item-row ${isDisc ? 'disc-row' : ''}">
+                    <span>${idx + 1}. ${r.name} (${r.totalPoints} PTS)</span>
+                    <span style="font-weight:900;">${isDisc ? '🔌 DISCONNECTED' : `#${idx + 1}`}</span>
+                  </div>
+                `;
+              }
+            });
+
+            statsHtml += `</div></div>`;
+          } else if (roomData.eliminationRankings) {
+            const ranks = Object.values(roomData.eliminationRankings).reverse();
+            const mvpPlayer = ranks[0];
+
+            statsHtml += `
+              <div class="leaderboard-section">
+                <div class="section-header-title">🏆 CHAMPION & RANKINGS</div>
+                <div class="rank-card-mvp">
+                  <div>
+                    <div style="font-size:0.75rem; color:var(--gold); font-weight:900; letter-spacing:1px; text-transform:uppercase;">WINNER / MVP</div>
+                    <div class="rank-name">${mvpPlayer ? mvpPlayer.name : 'WINNER'}</div>
+                  </div>
+                  <div class="rank-badge">👑 #1</div>
+                </div>
+                <div class="rank-list-box">
+            `;
+
+            ranks.forEach((r, idx) => {
+              if (idx > 0) {
+                const isDisc = r.isDisconnected;
+                const isLvp = idx === ranks.length - 1 && !isDisc;
+                let badgeLabel = `#${idx + 1}`;
+                if (isDisc) badgeLabel = '🔌 DISCONNECTED';
+                else if (isLvp) badgeLabel = '💀 LVP';
+
+                statsHtml += `
+                  <div class="rank-item-row ${isDisc ? 'disc-row' : (isLvp ? 'lvp-row' : '')}">
+                    <span>${idx + 1}. ${r.name}</span>
+                    <span style="font-weight:900;">${badgeLabel}</span>
+                  </div>
+                `;
+              }
+            });
+
+            statsHtml += `</div></div>`;
+          }
+
+          if (roomData.usedWords) {
+            const wordsArr = Object.values(roomData.usedWords);
+            const longestWord = wordsArr.reduce((max, curr) => curr.word.length > max.word.length ? curr : max, wordsArr[0]);
+            const fastestWord = wordsArr.reduce((min, curr) => (curr.timeTaken || 99999) < (min.timeTaken || 99999) ? curr : min, wordsArr[0]);
+            const closestCall = wordsArr.reduce((min, curr) => (curr.timeRemaining || 99999) < (min.timeRemaining || 99999) ? curr : min, wordsArr[0]);
+
+            const playerSpeeds = {};
+            wordsArr.forEach(w => {
+              if (!playerSpeeds[w.by]) playerSpeeds[w.by] = { total: 0, count: 0 };
+              playerSpeeds[w.by].total += (w.timeTaken || 0);
+              playerSpeeds[w.by].count += 1;
+            });
+
+            let speedDemonName = '';
+            let speedDemonAvg = 99999;
+            Object.entries(playerSpeeds).forEach(([name, p]) => {
+              const avg = p.total / p.count;
+              if (avg < speedDemonAvg) {
+                speedDemonAvg = avg;
+                speedDemonName = name;
+              }
+            });
+
+            statsHtml += `
+              <div class="leaderboard-section">
+                <div class="section-header-title">⚡ GAME HIGHLIGHTS & AWARDS</div>
+                <div class="awards-grid">
+                  <div class="award-card-item">
+                    <div class="award-card-title">🔤 LEXICON MASTER</div>
+                    <div class="award-card-val">${longestWord.word}</div>
+                    <div class="award-card-sub">${longestWord.by} (${longestWord.word.length} letters)</div>
+                  </div>
+            `;
+
+            if (fastestWord && fastestWord.timeTaken) {
+              statsHtml += `
+                <div class="award-card-item">
+                  <div class="award-card-title">⚡ REFLEX MASTER</div>
+                  <div class="award-card-val">${(fastestWord.timeTaken / 1000).toFixed(2)}s</div>
+                  <div class="award-card-sub">${fastestWord.by}</div>
+                </div>
+              `;
+            }
+
+            if (speedDemonName) {
+              statsHtml += `
+                <div class="award-card-item">
+                  <div class="award-card-title">⏱️ SPEED DEMON</div>
+                  <div class="award-card-val">${(speedDemonAvg / 1000).toFixed(2)}s</div>
+                  <div class="award-card-sub">${speedDemonName} (Avg per turn)</div>
+                </div>
+              `;
+            }
+
+            if (closestCall && closestCall.timeRemaining) {
+              statsHtml += `
+                <div class="award-card-item">
+                  <div class="award-card-title">💥 CLOSE CALL</div>
+                  <div class="award-card-val">${(closestCall.timeRemaining / 1000).toFixed(2)}s left</div>
+                  <div class="award-card-sub">${closestCall.by}</div>
+                </div>
+              `;
+            }
+
+            statsHtml += `</div></div>`;
+          }
+        }
+
+        document.getElementById('round-stats').innerHTML = statsHtml;
+
+        if (isKnockout && !isGameOver) {
+          setTimeout(() => {
+            inlineTimerBox.style.display = 'flex';
+            let cCount = 3;
+            inlineTimerNum.innerText = cCount;
+            playCountdownTick();
+
+            const inlineTimer = setInterval(() => {
+              cCount--;
+              if (cCount > 0) {
+                inlineTimerNum.innerText = cCount;
+                playCountdownTick();
+              } else if (cCount === 0) {
+                inlineTimerNum.innerText = "GO!";
+                playGoChime();
+              } else {
+                clearInterval(inlineTimer);
+                if (isHost) {
+                  const survivingIds = getNormalizedPlayerOrder().filter(pid => pid !== roomData.loserId);
+                  const loserIndex = roomData.playerOrder.indexOf(roomData.loserId);
+                  const nextIndex = loserIndex % Math.max(1, survivingIds.length);
+                  const nextPlayerId = survivingIds[nextIndex];
+
+                  roomRef.child('players/' + roomData.loserId + '/isEliminated').set(true);
+
+                  let totalFuseSeconds = survivingIds.length >= 3 
+                    ? (65 + Math.floor(Math.random() * 20) + Math.floor(Math.random() * 21))
+                    : (40 + Math.floor(Math.random() * 26));
+
+                  const banned = roomData.config?.bannedChar || '';
+                  const startingLetter = getRandomLetter(banned);
+                  const startNow = getServerTime();
+
+                  roomRef.update({
+                    gameState: 'PLAYING',
+                    activePlayerId: nextPlayerId,
+                    playerOrder: survivingIds,
+                    requiredLetter: startingLetter,
+                    currentTurnTimeCap: roomData.config.baseTurnTime * 1000,
+                    globalFuseEndTime: startNow + (totalFuseSeconds * 1000),
+                    turnEndTime: startNow + (roomData.config.baseTurnTime * 1000),
+                    isFrozen: false,
+                    freezeEndTime: 0,
+                    isPanicClock: false,
+                    activeAttackWarning: null
+                  });
+                }
+              }
+            }, 800);
+          }, 1500);
+        }
+
+        if (isHost && (isGameOver || (!isKnockout && !isSurge))) {
+          document.getElementById('host-boom-controls').style.display = 'block';
+          document.getElementById('non-host-boom-msg').style.display = 'none';
+        } else if (!isHost && (isGameOver || (!isKnockout && !isSurge))) {
+          document.getElementById('host-boom-controls').style.display = 'none';
+          document.getElementById('non-host-boom-msg').style.display = 'block';
+        } else {
+          document.getElementById('host-boom-controls').style.display = 'none';
+          document.getElementById('non-host-boom-msg').style.display = 'none';
+        }
+
+        document.getElementById('boom-screen').style.display = 'flex';
+      }
+    }
+
+    document.getElementById('btn-replay-same').addEventListener('click', () => {
+      if (roomData.host !== myPlayerId) return;
+      
+      const updates = { 
+        gameState: 'LOBBY', 
+        isGameOver: false, 
+        eliminationRankings: null, 
+        usedWords: null, 
+        activeAttackWarning: null,
+        surgeRound: null,
+        surgeTurnsInRound: null,
+        surgeScores: null,
+        surgeBaseOrder: null,
+        lastSubmittedWord: null,
+        surgeTurnToken: null,
+        isSurgeIntermission: false,
+        intermissionEndTime: null,
+        roundSecretFuseEndTime: null,
+        hasRoundFuseFired: null
+      };
+
+      Object.entries(roomData.players).forEach(([pid, p]) => {
+        if (!p.isDisconnected) {
+          updates[`players/${pid}/isReady`] = false;
+          updates[`players/${pid}/isEliminated`] = false;
+          updates[`players/${pid}/streak`] = 0;
+          updates[`players/${pid}/powerup`] = null;
+          updates[`players/${pid}/shields`] = 0;
+        }
+      });
+
+      roomRef.update(updates);
+    });
+
+    document.getElementById('btn-end-game').addEventListener('click', () => {
+      if (roomData.host !== myPlayerId) return;
+      roomRef.remove().then(() => {
+        resetToMainMenu();
+      });
+    });
+
+    // ATOMIC TURN ADVANCEMENT ENGINE FOR POINT SURGE MODE
+    function advanceSurgeTurn(explodedPlayerId = null, submittedWord = null) {
+      if (!roomRef || !roomData) return;
+
+      const currentToken = roomData.surgeTurnToken || 1;
+
+      roomRef.child('surgeTurnToken').transaction((val) => {
+        if (val === null) return 2;
+        if (val === currentToken) {
+          return val + 1;
+        }
+        return val;
+      }, (error, committed, snapshot) => {
+        if (committed) {
+          executeSurgeTurnLogic(explodedPlayerId, submittedWord);
+        }
+      });
+    }
+
+    function executeSurgeTurnLogic(explodedPlayerId, submittedWord) {
+      const nowServer = getServerTime();
+      const cfg = roomData.config;
+      const activeOrder = getNormalizedPlayerOrder();
+
+      if (activeOrder.length === 0) return;
+
+      let turnsInRound = (roomData.surgeTurnsInRound || 0) + 1;
+      let currentRound = roomData.surgeRound || 1;
+
+      if (explodedPlayerId) {
+        roomRef.child(`surgeScores/${explodedPlayerId}`).transaction((score) => {
+          if (!score) score = { name: roomData.players[explodedPlayerId]?.name || 'Player', totalPoints: 0, longestWord: '', highestWordScore: 0, totalTimeTaken: 0, turnCount: 0, explosions: 0 };
+          score.totalPoints = (score.totalPoints || 0) - 500;
+          score.explosions = (score.explosions || 0) + 1;
+          score.turnCount = (score.turnCount || 0) + 1;
+          return score;
+        });
+      }
+
+      // ROUND COMPLETES AFTER 3 TURNS PER PLAYER (N * 3 TURNS)
+      const maxRoundTurns = activeOrder.length * 3;
+      const maxRounds = cfg.surgeMaxRounds || 5;
+
+      if (turnsInRound >= maxRoundTurns) {
+        // ROUND COMPLETE
+        turnsInRound = 0;
+        currentRound += 1;
+
+        const wordsArr = roomData.usedWords ? Object.values(roomData.usedWords) : [];
+        const longest = wordsArr.reduce((max, curr) => (curr.word || '').length > (max.word || '').length ? curr : max, { word: 'N/A', by: 'None' });
+        const closest = wordsArr.reduce((min, curr) => (curr.timeRemaining || 99999) < (min.timeRemaining || 99999) ? curr : min, { timeRemaining: 0, by: 'None' });
+
+        const highlights = {
+          longestWord: `${longest.word} (${longest.by})`,
+          closestCall: `${(closest.timeRemaining / 1000).toFixed(2)}s left (${closest.by})`
+        };
+
+        if (currentRound > maxRounds) {
+          // CALCULATE MVP CHAMPION FOR SURGE GAME OVER
+          const surgeArray = Object.entries(roomData.surgeScores || {}).map(([pid, score]) => ({
+            pid,
+            name: score.name || 'Player',
+            totalPoints: Number.isFinite(score.totalPoints) ? score.totalPoints : 0,
+            longestWord: score.longestWord || '',
+            highestWordScore: score.highestWordScore || 0,
+            totalTimeTaken: score.totalTimeTaken || 0,
+            turnCount: score.turnCount || 0,
+            explosions: score.explosions || 0
+          }));
+
+          surgeArray.sort((a, b) => {
+            if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+            if (b.longestWord.length !== a.longestWord.length) return b.longestWord.length - a.longestWord.length;
+            if (b.highestWordScore !== a.highestWordScore) return b.highestWordScore - a.highestWordScore;
+            const avgA = a.turnCount > 0 ? a.totalTimeTaken / a.turnCount : 99999;
+            const avgB = b.turnCount > 0 ? b.totalTimeTaken / b.turnCount : 99999;
+            return avgA - avgB;
+          });
+
+          const winnerName = surgeArray[0] ? surgeArray[0].name : 'SURGE CHAMPION';
+
+          roomRef.update({
+            gameState: 'BOOM',
+            isGameOver: true,
+            winnerName: winnerName,
+            lastRoundHighlights: highlights
+          });
+          return;
+        }
+
+        // FULL ROSTER RE-SYNC PREVENTS DISCONNECTED PLAYER PERMANENT EXCLUSION
+        const fullRosterPids = Object.keys(roomData.players || {});
+        const currentOrderPids = getNormalizedPlayerOrder();
+        const baseOrder = fullRosterPids.filter(pid => currentOrderPids.includes(pid));
+        const rotatedOrder = baseOrder.length > 0 ? baseOrder.slice(1).concat(baseOrder.slice(0, 1)) : activeOrder;
+        const nextPlayerId = rotatedOrder[0];
+
+        const banned = roomData.config?.bannedChar || '';
+        const nextLetter = getRandomLetter(banned);
+
+        const intermissionDuration = 3000;
+        const intermissionEnd = nowServer + intermissionDuration;
+        const baseTurnMs = (cfg.baseTurnTime || 8) * 1000;
+
+        // TIMESTAMP-DRIVEN INTERMISSION SYNC + DELAYED FUSE ACTIVATION + NEW SECRET ROUND FUSE
+        roomRef.update({
+          isSurgeIntermission: true,
+          intermissionEndTime: intermissionEnd,
+          surgeRound: currentRound,
+          surgeTurnsInRound: 0,
+          surgeBaseOrder: rotatedOrder,
+          playerOrder: rotatedOrder,
+          lastRoundHighlights: highlights,
+          activePlayerId: nextPlayerId,
+          requiredLetter: nextLetter,
+          turnEndTime: intermissionEnd + baseTurnMs,
+          roundSecretFuseEndTime: intermissionEnd + Math.floor(15000 + Math.random() * 25000),
+          hasRoundFuseFired: false
+        });
+
+      } else {
+        // NEXT TURN IN CURRENT ROUND
+        const currentIndex = activeOrder.indexOf(roomData.activePlayerId);
+        const nextIndex = (currentIndex + 1) % activeOrder.length;
+        const nextPlayerId = activeOrder[nextIndex];
+        
+        const banned = roomData.config?.bannedChar || '';
+        let nextLetter = getRandomLetter(banned);
+
+        if (cfg.mode === 'CHAIN') {
+          if (!explodedPlayerId && submittedWord && submittedWord.length > 0) {
+            let trailingLetter = submittedWord[submittedWord.length - 1];
+            
+            // WORD CHAIN + LETTER BLOCKADE REROLL DEADLOCK FIX
+            if (banned && trailingLetter === banned) {
+              nextLetter = getRandomLetter(banned);
+            } else {
+              nextLetter = trailingLetter;
+            }
+          } else {
+            nextLetter = roomData.requiredLetter || getRandomLetter(banned);
+          }
+        }
+
+        roomRef.update({
+          surgeTurnsInRound: turnsInRound,
+          activePlayerId: nextPlayerId,
+          requiredLetter: nextLetter,
+          turnEndTime: nowServer + (cfg.baseTurnTime * 1000),
+          isFrozen: false,
+          isPanicClock: false
+        });
+      }
+    }
+
+    function checkGameTimers() {
+      if (!roomData || roomData.gameState !== 'PLAYING') {
+        isProcessingHandoff = false;
+        return;
+      }
+
+      const nowServer = getServerTime();
+      const isHost = roomData.host === myPlayerId;
+
+      // AUTOMATIC INTERMISSION RECOVERY VIA SERVER TIMESTAMP + DYNAMIC 3-2-1 COUNTDOWN
+      if (roomData.isSurgeIntermission) {
+        const remMs = Math.max(0, roomData.intermissionEndTime - nowServer);
+        const remSec = Math.max(1, Math.ceil(remMs / 1000));
+        const numElem = document.getElementById('surge-intermission-num');
+
+        if (numElem && numElem.innerText !== String(remSec)) {
+          numElem.innerText = remSec;
+          numElem.classList.remove('letter-bounce');
+          void numElem.offsetWidth;
+          numElem.classList.add('letter-bounce');
+          playCountdownTick();
+        }
+
+        if (nowServer >= roomData.intermissionEndTime) {
+          if (isHost || roomData.activePlayerId === myPlayerId) {
+            playGoChime();
+            roomRef.update({
+              isSurgeIntermission: false,
+              isFrozen: false,
+              isPanicClock: false
+            });
+          }
+        }
+        return; // PAUSE TIMER EVALUATIONS DURING INTERMISSION
+      }
+
+      const activePlayer = roomData.players ? roomData.players[roomData.activePlayerId] : null;
+
+      if (isHost && activePlayer && activePlayer.isDisconnected && !isProcessingHandoff) {
+        isProcessingHandoff = true;
+        showError(`⚠️ ${activePlayer.name} DISCONNECTED! PASSING BOMB...`);
+
+        if (handoffResetTimeout) clearTimeout(handoffResetTimeout);
+        handoffResetTimeout = setTimeout(() => { isProcessingHandoff = false; }, 3000);
+        
+        const activeOrderList = getNormalizedPlayerOrder();
+        const survivingIds = activeOrderList.filter(pid => pid !== roomData.activePlayerId);
+
+        if (survivingIds.length === 0) {
+          roomRef.update({
+            gameState: 'LOBBY',
+            isGameOver: false,
+            usedWords: null
+          }).finally(() => { isProcessingHandoff = false; });
+          return;
+        } else if (survivingIds.length === 1 && roomData.config?.format !== 'SURGE') {
+          const winnerName = roomData.players[survivingIds[0]]?.name || 'Winner';
+          const rankings = roomData.eliminationRankings ? Object.values(roomData.eliminationRankings) : [];
+          rankings.push({ pid: roomData.activePlayerId, name: activePlayer.name, isDisconnected: true });
+          rankings.push({ pid: survivingIds[0], name: winnerName });
+
+          roomRef.update({
+            gameState: 'BOOM',
+            loserId: roomData.activePlayerId,
+            eliminationRankings: rankings,
+            isGameOver: true,
+            winnerName: winnerName
+          }).finally(() => { isProcessingHandoff = false; });
+        } else if (survivingIds.length > 1) {
+          const currentIndex = activeOrderList.indexOf(roomData.activePlayerId);
+          const nextIndex = currentIndex % survivingIds.length;
+          const nextPlayerId = survivingIds[nextIndex];
+
+          const banned = roomData.config?.bannedChar || '';
+          const nextLetter = getRandomLetter(banned);
+
+          roomRef.update({
+            activePlayerId: nextPlayerId,
+            playerOrder: survivingIds,
+            requiredLetter: nextLetter,
+            turnEndTime: nowServer + (roomData.config.baseTurnTime * 1000)
+          }).finally(() => {
+            isProcessingHandoff = false;
+          });
+        }
+        return;
+      }
+
+      const warning = roomData.activeAttackWarning;
+      const warningActive = warning && nowServer < warning.pauseEndTime;
+
+      if (isHost && warning && nowServer >= warning.pauseEndTime) {
+        roomRef.update({ activeAttackWarning: null });
+      }
+
+      const cap = roomData.currentTurnTimeCap || (roomData.config.baseTurnTime * 1000);
+      
+      let effectiveNow = nowServer;
+      if (warningActive) {
+        effectiveNow = warning.pauseEndTime - 2000;
+      }
+
+      const remainingTurnTime = Math.max(0, roomData.turnEndTime - effectiveNow);
+      const percent = Math.max(0, Math.min(100, (remainingTurnTime / cap) * 100));
+      
+      const timerFill = document.getElementById('turn-timer');
+      timerFill.style.width = percent + '%';
+
+      // STAGE-BASED FUSE ESCALATION
+      if (percent < 20) {
+        timerFill.className = 'fuse-fill fuse-danger';
+      } else if (percent < 50) {
+        timerFill.className = 'fuse-fill fuse-warning';
+      } else {
+        timerFill.className = 'fuse-fill';
+      }
+
+      const gameCard = document.getElementById('active-game-card');
+      if (percent < 30 && roomData.activePlayerId === myPlayerId && !warningActive) {
+        gameCard.classList.add('low-time-shake');
+      } else {
+        gameCard.classList.remove('low-time-shake');
+      }
+
+      const isSurge = roomData.config?.format === 'SURGE';
+      const timeExpired = remainingTurnTime <= 0 || (!isSurge && nowServer >= roomData.globalFuseEndTime);
+      const secretFuseExpired = isSurge && !roomData.hasRoundFuseFired && roomData.roundSecretFuseEndTime && nowServer >= roomData.roundSecretFuseEndTime;
+
+      if ((timeExpired || secretFuseExpired) && !warningActive && !roomData.isSurgeIntermission) {
+        if (isHost || (roomData.activePlayerId === myPlayerId && nowServer > roomData.turnEndTime + 1000)) {
+          if (isSurge) {
+            playExplosionSound();
+            if (secretFuseExpired) {
+              showError("💥 RANDOM ROUND BOMB EXPIRED! (-500 PTS)");
+              roomRef.update({ hasRoundFuseFired: true });
+            } else {
+              showError("💥 BOMB EXPIRED! (-500 PTS)");
+            }
+            advanceSurgeTurn(roomData.activePlayerId, null);
+          } else {
+            roomRef.child('gameState').transaction((currState) => {
+              if (currState === 'PLAYING') {
+                const loserId = roomData.activePlayerId;
+                const loserName = roomData.players[loserId]?.name || 'Player';
+                
+                const rankings = roomData.eliminationRankings ? Object.values(roomData.eliminationRankings) : [];
+                rankings.push({ pid: loserId, name: loserName });
+
+                const isKnockout = roomData.config?.format === 'KNOCKOUT';
+                const activePlayers = getNormalizedPlayerOrder().filter(pid => pid !== loserId);
+
+                if (!isKnockout || activePlayers.length === 1) {
+                  let winnerName = 'Winner';
+                  if (activePlayers.length === 1) {
+                    winnerName = roomData.players[activePlayers[0]]?.name || 'Winner';
+                    rankings.push({ pid: activePlayers[0], name: winnerName });
+                  }
+
+                  roomRef.update({
+                    gameState: 'BOOM',
+                    loserId: loserId,
+                    eliminationRankings: rankings,
+                    isGameOver: true,
+                    winnerName: winnerName
+                  });
+                } else {
+                  roomRef.update({
+                    gameState: 'BOOM',
+                    loserId: loserId,
+                    eliminationRankings: rankings,
+                    isGameOver: false
+                  });
+                }
+                return 'BOOM';
+              }
+              return currState;
+            });
+          }
+        }
+      }
+
+      if (roomData.activePlayerId === myPlayerId && !warningActive && !roomData.isSurgeIntermission) {
+        const currentSecond = Math.floor(remainingTurnTime / 1000);
+        if (currentSecond !== lastTickedSecond && remainingTurnTime > 0) {
+          lastTickedSecond = currentSecond;
+          playTick();
+        }
+      }
+    }
+
+    setInterval(checkGameTimers, 100);
+
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) checkGameTimers();
+    });
+
+    document.getElementById('btn-use-powerup').addEventListener('click', () => {
+      const myData = roomData.players[myPlayerId];
+      if (!myData || !myData.powerup) return;
+
+      const pu = myData.powerup;
+      const nowServer = getServerTime();
+      const activePlayerId = roomData.activePlayerId;
+
+      if (pu.type === 'ATTACK' && activePlayerId === myPlayerId) {
+        showError("CANNOT USE ATTACK POWER-UPS ON YOURSELF!");
+        return;
+      }
+
+      const activeData = roomData.players[activePlayerId];
+      const activeName = activeData?.name || 'Player';
+
+      playPowerupSfx();
+
+      const targetShields = activeData?.shields || 0;
+      if (pu.type === 'ATTACK' && targetShields > 0) {
+        roomRef.child(`players/${activePlayerId}/shields`).set(targetShields - 1);
+        showError(`🛡️ ${activeName}'S SHIELD BLOCKED YOUR ${pu.name}!`);
+        roomRef.child('players/' + myPlayerId + '/powerup').set(null);
+        return;
+      }
+
+      const remaining = Math.max(0, roomData.turnEndTime - nowServer);
+      let typingTime = remaining;
+
+      // ATTACK PAUSE EXTENDS SECRET FUSE TIME TO PREVENT EXPIRATION DRIFT
+      const secretFuseBonus = 2000;
+      let fuseUpdate = {};
+      if (roomData.roundSecretFuseEndTime) {
+        fuseUpdate.roundSecretFuseEndTime = roomData.roundSecretFuseEndTime + secretFuseBonus;
+      }
+
+      if (pu.id === 'FREEZE') {
+        typingTime = Math.max(3500, remaining);
+        roomRef.update({
+          ...fuseUpdate,
+          isFrozen: true,
+          freezeEndTime: nowServer + 4000,
+          turnEndTime: nowServer + 2000 + typingTime + 2000,
+          activeAttackWarning: {
+            attackerName: myName,
+            targetId: activePlayerId,
+            powerupName: pu.name,
+            pauseEndTime: nowServer + 2000
+          }
+        });
+        showError(`YOU ICE-COLD FROZE ${activeName}'S KEYBOARD! 🥶`);
+      } else if (pu.id === 'TRAP') {
+        const hardLetter = HARD_LETTERS[Math.floor(Math.random() * HARD_LETTERS.length)];
+        typingTime = Math.max(3500, remaining);
+        roomRef.update({
+          ...fuseUpdate,
+          requiredLetter: hardLetter,
+          turnEndTime: nowServer + 2000 + typingTime,
+          activeAttackWarning: {
+            attackerName: myName,
+            targetId: activePlayerId,
+            powerupName: `HARD LETTER TRAP ('${hardLetter}')`,
+            pauseEndTime: nowServer + 2000
+          }
+        });
+        showError(`YOU SLAPPED A FAT '${hardLetter}' DIRECTLY ON ${activeName}!`);
+      } else if (pu.id === 'XCURSE') {
+        typingTime = Math.max(3500, remaining);
+        roomRef.update({
+          ...fuseUpdate,
+          requiredLetter: 'X',
+          turnEndTime: nowServer + 2000 + typingTime,
+          activeAttackWarning: {
+            attackerName: myName,
+            targetId: activePlayerId,
+            powerupName: `☠️ X-CURSE TRAP ('X')`,
+            pauseEndTime: nowServer + 2000
+          }
+        });
+        showError(`YOU CURSED ${activeName} WITH THE LETTER 'X'! ☠️`);
+      } else if (pu.id === 'PINCH') {
+        typingTime = Math.max(3500, remaining - 2000);
+        roomRef.update({
+          ...fuseUpdate,
+          turnEndTime: nowServer + 2000 + typingTime,
+          activeAttackWarning: {
+            attackerName: myName,
+            targetId: activePlayerId,
+            powerupName: pu.name,
+            pauseEndTime: nowServer + 2000
+          }
+        });
+        showError(`YOU ROBBED 2 SECONDS FROM ${activeName}'S CLOCK!`);
+      } else if (pu.id === 'PANIC') {
+        typingTime = Math.max(3500, Math.floor(remaining / 2));
+        roomRef.update({
+          ...fuseUpdate,
+          isPanicClock: true,
+          turnEndTime: nowServer + 2000 + typingTime,
+          activeAttackWarning: {
+            attackerName: myName,
+            targetId: activePlayerId,
+            powerupName: pu.name,
+            pauseEndTime: nowServer + 2000
+          }
+        });
+        showError(`SUPER POWER-UP! PANIC CLOCK ACTIVATED ON ${activeName}! 🔥`);
+      } else if (pu.id === 'THIEF') {
+        typingTime = Math.max(3500, remaining - 3000);
+        roomRef.update({
+          ...fuseUpdate,
+          turnEndTime: nowServer + 2000 + typingTime,
+          activeAttackWarning: {
+            attackerName: myName,
+            targetId: activePlayerId,
+            powerupName: pu.name,
+            pauseEndTime: nowServer + 2000
+          }
+        });
+        showError(`SUPER POWER-UP! STOLE 3 SECONDS FROM ${activeName}! ⌛`);
+      } else if (pu.id === 'DOUBLE_SHIELD') {
+        roomRef.child(`players/${myPlayerId}/shields`).set(2);
+        showError(`SUPER POWER-UP! DOUBLE SHIELD ACTIVATED (2X IMMUNITY)! 🛡️`);
+      } else if (pu.id === 'SURGE') {
+        roomRef.update({
+          turnEndTime: roomData.turnEndTime + 3000
+        });
+        showError(`TIME SURGE ACTIVATED! +3s ADDED TO YOUR CLOCK!`);
+      } else if (pu.id === 'SHIELD') {
+        roomRef.child(`players/${myPlayerId}/shields`).set(1);
+        showError(`SHIELD PASS ACTIVATED! IMMUNE TO NEXT ATTACK! 🛡️`);
+      } else if (pu.id === 'REVERSE') {
+        if (roomData.config?.format !== 'SURGE') {
+          const activeOrder = getNormalizedPlayerOrder();
+          const reversedOrder = activeOrder.reverse();
+          const currentIndex = reversedOrder.indexOf(myPlayerId);
+          const nextIndex = (currentIndex + 1) % reversedOrder.length;
+          const nextPlayerId = reversedOrder[nextIndex];
+          const banned = roomData.config?.bannedChar || '';
+          const nextLetter = getRandomLetter(banned);
+
+          roomRef.update({
+            playerOrder: reversedOrder,
+            activePlayerId: nextPlayerId,
+            requiredLetter: nextLetter,
+            turnEndTime: nowServer + (roomData.config.baseTurnTime * 1000)
+          });
+          showError(`NO U! REVERSED DIRECTION AND REFUSED THE BOMB!`);
+        }
+      }
+
+      roomRef.child('players/' + myPlayerId + '/powerup').set(null);
+    });
+
+    function submitWord() {
+      try {
+        const rawInput = document.getElementById('word-input').value;
+        const word = rawInput.trim().toUpperCase().replace(/[^A-Z]/g, '');
+        const cfg = roomData.config;
+
+        if (!word) {
+          showError("Please enter valid letters (A-Z)!");
+          return;
+        }
+
+        if (word.length < cfg.minLength) {
+          showError(`Words MUST be at least ${cfg.minLength} letters!`);
+          return;
+        }
+
+        if (word[0] !== roomData.requiredLetter) {
+          showError(`Word MUST start with required letter '${roomData.requiredLetter}'!`);
+          return;
+        }
+
+        if (cfg.bannedChar && word.includes(cfg.bannedChar)) {
+          showError(`Letter '${cfg.bannedChar}' is BANNED this round!`);
+          return;
+        }
+
+        if (DICTIONARY.size > 0 && !DICTIONARY.has(word)) {
+          showError(`'${word}' is not a valid English word!`);
+          return;
+        }
+
+        const existingWords = roomData.usedWords ? Object.values(roomData.usedWords).map(w => w.word) : [];
+        if (existingWords.includes(word)) {
+          showError('Word already used in this round!');
+          return;
+        }
+
+        playThud();
+        triggerSuccessConfetti();
+
+        let myStreak = (roomData.players[myPlayerId]?.streak || 0) + 1;
+        let newPowerup = roomData.players[myPlayerId]?.powerup || null;
+
+        let availableStandard = STANDARD_POWERUPS;
+        if (cfg.format === 'SURGE') {
+          availableStandard = STANDARD_POWERUPS.filter(p => p.id !== 'REVERSE');
+        }
+
+        if (cfg.powerups && word.length >= 8) {
+          const randomSuper = SUPER_POWERUPS[Math.floor(Math.random() * SUPER_POWERUPS.length)];
+          newPowerup = randomSuper;
+          showError(`8+ LETTER WORD! UNLOCKED SUPER POWER-UP: ${randomSuper.name}! 🔮`);
+        } else if (cfg.powerups && myStreak % 5 === 0) {
+          const randomPu = availableStandard[Math.floor(Math.random() * availableStandard.length)];
+          if (newPowerup && !newPowerup.isSuper) {
+            showError(`STREAK REFRESHED! Power-up replaced with ${randomPu.name}!`);
+          } else if (!newPowerup) {
+            showError(`5-WORD STREAK! Unlocked ${randomPu.name}!`);
+          }
+          if (!newPowerup || !newPowerup.isSuper) {
+            newPowerup = randomPu;
+          }
+        }
+
+        roomRef.child('players/' + myPlayerId).update({
+          streak: myStreak,
+          powerup: newPowerup
+        });
+
+        const turnTimeCap = roomData.currentTurnTimeCap || (cfg.baseTurnTime * 1000);
+        const nowServer = getServerTime();
+        const rawRemainingTime = Math.max(0, roomData.turnEndTime - nowServer);
+        
+        // CLAMPED REMAINING TIME PREVENTS POWER-UP POINT INFLATION EXPLOITS
+        const remainingTime = Math.min(rawRemainingTime, turnTimeCap);
+        const timeTaken = Math.max(0, turnTimeCap - remainingTime);
+
+        if (cfg.format === 'SURGE') {
+          const wordLengthPoints = word.length * 100;
+          const speedBonusPoints = Math.max(0, Math.floor((remainingTime / 100) * 10));
+          const totalEarnedPoints = wordLengthPoints + speedBonusPoints;
+
+          // TRIGGER FLOATING SCORE POPUP
+          showScorePopup(totalEarnedPoints);
+
+          roomRef.child(`surgeScores/${myPlayerId}`).transaction((score) => {
+            if (!score) score = { name: myName, totalPoints: 0, longestWord: '', highestWordScore: 0, totalTimeTaken: 0, turnCount: 0, explosions: 0 };
+            score.totalPoints = (score.totalPoints || 0) + totalEarnedPoints;
+            if (word.length > (score.longestWord || '').length) score.longestWord = word;
+            if (totalEarnedPoints > (score.highestWordScore || 0)) score.highestWordScore = totalEarnedPoints;
+            score.totalTimeTaken = (score.totalTimeTaken || 0) + timeTaken;
+            score.turnCount = (score.turnCount || 0) + 1;
+            return score;
+          });
+        }
+
+        roomRef.child('usedWords').push({
+          word: word,
+          by: myName,
+          timeTaken: timeTaken,
+          timeRemaining: remainingTime
+        });
+
+        document.getElementById('word-input').value = '';
+
+        if (cfg.format === 'SURGE') {
+          roomRef.update({ lastSubmittedWord: word });
+          advanceSurgeTurn(null, word);
+        } else {
+          const activeOrder = getNormalizedPlayerOrder();
+          const currentIndex = activeOrder.indexOf(myPlayerId);
+          const nextIndex = (currentIndex + 1) % activeOrder.length;
+          const nextPlayerId = activeOrder[nextIndex];
+
+          const banned = cfg.bannedChar || '';
+          let nextLetter = '';
+          if (cfg.mode === 'CHAIN') {
+            let trailingLetter = word.length > 0 ? word[word.length - 1] : getRandomLetter(banned);
+            
+            // WORD CHAIN + LETTER BLOCKADE REROLL DEADLOCK FIX
+            if (banned && trailingLetter === banned) {
+              nextLetter = getRandomLetter(banned);
+              showError(`🚫 '${banned}' IS BANNED! REROLLED LETTER TO '${nextLetter}'`);
+            } else {
+              nextLetter = trailingLetter;
+            }
+          } else {
+            nextLetter = getRandomLetter(banned);
+          }
+
+          if (!nextLetter || typeof nextLetter !== 'string' || nextLetter.length === 0) {
+            nextLetter = getRandomLetter(banned);
+          }
+
+          let nextTurnCap = cfg.baseTurnTime * 1000;
+          const fuseRemaining = roomData.globalFuseEndTime - nowServer;
+
+          if (cfg.acceleration && fuseRemaining < 25000) {
+            const passedCount = existingWords.length + 1;
+            nextTurnCap = Math.max(2500, (cfg.baseTurnTime * 1000) - (passedCount * 500));
+          }
+
+          if (cfg.bottleneck && HARD_LETTERS.includes(word[word.length - 1])) {
+            nextTurnCap = Math.max(2000, nextTurnCap - 1000);
+          }
+
+          roomRef.update({
+            activePlayerId: nextPlayerId,
+            requiredLetter: nextLetter,
+            currentTurnTimeCap: nextTurnCap,
+            turnEndTime: nowServer + nextTurnCap,
+            isFrozen: false,
+            isPanicClock: false
+          });
+        }
+      } catch (err) {
+        console.error("Error in submitWord:", err);
+        showError("System recovered from a word parsing error.");
+      }
+    }
+
+    document.getElementById('btn-submit').addEventListener('click', submitWord);
+    document.getElementById('word-input').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') submitWord();
+    });
+  </script>
+</body>
+</html>
