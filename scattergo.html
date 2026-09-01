@@ -809,8 +809,9 @@ function wireHome(){
 
   // IF LAUNCHED FROM SUPER APP: Intercept and join room directly
   if (autoRoom && autoName) {
-    joinFromLauncher(autoRoom, autoName, autoPid, autoHost);
-    return;
+  clearIdentity(); // Prevents old saved room codes from overwriting the launcher room
+  joinFromLauncher(autoRoom, autoName, autoPid, autoHost);
+  return;
   }
 
   // Standalone fallback bindings
@@ -846,7 +847,7 @@ async function joinFromLauncher(roomCode, pName, pId, isHostFlag) {
   }
 
   saveIdentity();
-  S.screen = isHostFlag ? 'hostLobby' : 'playerLobby';
+S.screen = isHostFlag ? 'hostSetup' : 'playerLobby';
   render();
   startMainLoop();
 }
