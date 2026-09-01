@@ -822,32 +822,50 @@ function wireHome(){
 }
 
 async function joinFromLauncher(roomCode, pName, pId, isHostFlag) {
+  const isHost = (isHostFlag === true || isHostFlag === 'true');
+
   S.roomCode = roomCode;
   S.playerName = pName;
   S.playerId = pId || ('p_' + Math.random().toString(36).substr(2, 9));
-  S.isHost = isHostFlag;
-  S.role = isHostFlag ? 'host' : 'player';
+  S.isHost = isHost;
+  S.role = isHost ? 'host' : 'player';
 
-  const ref = db.ref('scattergo/' + roomCode);
-  let snap = await ref.get();
+  // Sync draft host name with launcher player name
+  setupDraft.hostName = pName;
 
-  if (!snap.exists()) {
-    await ref.set({
-      code: roomCode,
-      hostId: S.playerId,
-      status: 'lobby',
-      players: { [S.playerId]: { name: pName, isHost: isHostFlag } },
-      createdAt: Date.now()
-    });
-  } else {
-    await ref.child('players/' + S.playerId).set({
-      name: pName,
-      isHost: isHostFlag
-    });
-  }
+  const isDash = setupDraft.gameMode === "dash";
+  const initialMeta = {
+    hostId: S.playerId,
+    hostName: pName,
+    status: "lobby",
+    settings: {
+      gameMode: setupDraft.gameMode || "classic",
+      sprintPreset: setupDraft.sprintPreset || 60,
+      roundsMode: setupDraft.roundsMode || "fixed",
+      roundsCount: setupDraft.roundsCount || 5,
+      difficulty: setupDraft.difficulty || "medium",
+      timerSeconds: isDash ? (setupDraft.sprintPreset || 60) : (setupDraft.timerSeconds || 90),
+      letterMode: setupDraft.letterMode || "random"
+    },
+    roundsPlayed: 0,
+    usedIndices: { easy: [], medium: [], hard: [] },
+    round: null,
+    createdAt: typeof serverNow === 'function' ? serverNow() : Date.now(),
+    updatedAt: typeof serverNow === 'function' ? serverNow() : Date.now()
+  };
+
+  // Write metadata using Scattergo's storage key pattern
+  await stSet("sg:" + roomCode + ":meta", initialMeta);
+  S.meta = initialMeta;
+
+  // Add current player entry to Firebase
+  await db.ref('scattergo/' + roomCode + '/players/' + S.playerId).set({
+    name: pName,
+    isHost: isHost
+  });
 
   saveIdentity();
-S.screen = isHostFlag ? 'hostSetup' : 'playerLobby';
+  S.screen = isHost ? 'hostSetup' : 'playerLobby';
   render();
   startMainLoop();
 }
