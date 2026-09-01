@@ -1360,7 +1360,7 @@ document.addEventListener('focusin', (e) => {
   }
 });
 
-// SERVICE WORKER REGISTRATION
+// SERVICE WORKER REGISTRATION & FAILSAFE SPLASH DISMISSAL
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(err => {
@@ -1369,7 +1369,22 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-   const firebaseConfig = {
+// FAILSAFE SPLASH SCREEN DISMISSAL
+window.addEventListener('load', () => {
+  const splash = document.getElementById('splash-screen');
+  if (splash) {
+    const dismissSplash = () => {
+      splash.style.opacity = '0';
+      splash.style.pointerEvents = 'none';
+      setTimeout(() => { splash.style.display = 'none'; }, 500);
+    };
+    splash.addEventListener('click', dismissSplash);
+    splash.addEventListener('touchstart', dismissSplash);
+    setTimeout(dismissSplash, 2000);
+  }
+});
+
+const firebaseConfig = {
   apiKey: "AIzaSyBeYg5e99uvqvBcRlkETgbg36VV_Sllclg",
   authDomain: "gamenightpack-44f16.firebaseapp.com",
   databaseURL: "https://gamenightpack-44f16-default-rtdb.firebaseio.com",
@@ -1379,11 +1394,11 @@ if ('serviceWorker' in navigator) {
   appId: "1:383266305677:web:596c70c7ddc304fd9994c4"
 };
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-    // BUILT-IN OFFLINE CORE LEXICON FALLBACK
-    const CORE_FALLBACK_LEXICON = [
+// BUILT-IN OFFLINE CORE LEXICON FALLBACK
+const CORE_FALLBACK_LEXICON = [
       "APPLE","BALL","CAT","DOG","EAGLE","FISH","GIRAFFE","HOUSE","ICE","JACKET","KITE","LION","MOON","NEST","ORANGE","PIANO","QUEEN","RIVER","SUN","TREE","UMBRELLA","VIOLIN","WATER","XRAY","YACHT","ZEBRA","BOMB","FIRE","GAME","PLAY","WORD","FAST","TIME","BOOM","WORD","MATCH","BEAR","BIRD","DUCK","FROG","GOAT","HAWK","LAMB","MULE","SEAL","SWAN","WOLF","ACORN","BREAD","CAKE","DOUGH","FLOUR","GRAPE","HONEY","JUICE","LEMON","MELON","ONION","PEACH","RICE","SUGAR","TOAST","WINE","BEACH","CLOUD","EARTH","FLAME","FROST","GRASS","LIGHT","NIGHT","OCEAN","PLANT","RIVER","STONE","STORM","WORLD","BRAIN","CHEST","HEART","JOINT","NERVE","SKULL","TOOTH","VOICE","AUNT","BABY","CHILD","DADDY","FAMILY","MOTHER","SISTER","UNCLE","BRICK","CHAIR","CLOCK","DOOR","GLASS","KNIFE","PAPER","TABLE","WATCH"
     ];
 

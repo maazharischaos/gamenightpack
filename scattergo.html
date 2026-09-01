@@ -509,6 +509,7 @@ p.sub{
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
+<script>
 (function(){
 "use strict";
 
@@ -522,8 +523,10 @@ const FIREBASE_CONFIG = {
   messagingSenderId: "383266305677",
   appId: "1:383266305677:web:596c70c7ddc304fd9994c4"
 };
-};
-firebase.initializeApp(FIREBASE_CONFIG);
+
+if (!firebase.apps.length) {
+  firebase.initializeApp(FIREBASE_CONFIG);
+}
 const db = firebase.database();
 
 let serverOffset = 0;
