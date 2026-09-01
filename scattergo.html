@@ -644,6 +644,7 @@ async function checkStorage(){
 
 function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4); }
 function roomCode(){
+  if (typeof S !== 'undefined' && S.roomCode) return S.roomCode;
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let s = "";
   for(let i=0;i<4;i++) s += chars[Math.floor(Math.random()*chars.length)];
@@ -948,10 +949,11 @@ async function createRoom(){
   try{
     await checkStorage();
     const editingExisting = !!(S.roomCode && S.meta && S.meta.status === "lobby");
-    const code = editingExisting ? S.roomCode : roomCode();
-    const hostId = editingExisting ? S.playerId : uid();
+    // Preserve existing launcher room code if present
+    const code = S.roomCode || roomCode();
+    const hostId = S.playerId || uid();
     const isDash = setupDraft.gameMode === "dash";
-    const meta = editingExisting ? Object.assign({}, S.meta, {
+    const meta = (editingExisting && S.meta) ? Object.assign({}, S.meta, {
       hostName: setupDraft.hostName || "Host",
       settings: {
         gameMode: setupDraft.gameMode || "classic",
