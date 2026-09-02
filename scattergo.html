@@ -834,17 +834,17 @@ async function joinFromLauncher(roomCode, pName, pId, isHostFlag) {
   S.isHost = isHost;
   S.role = isHost ? 'host' : 'player';
 
-  // Route Host to setup and Players to lobby immediately
-  S.screen = isHost ? 'hostSetup' : 'playerLobby';
+  // If host, go directly to setup; if player, stay on home/loading until meta is verified
+  S.screen = isHost ? 'hostSetup' : 'home';
   if (isHost) setupDraft.hostName = pName;
 
   saveIdentity();
-  render(); // Render immediately to prevent screen-flash
+  render();
 
-  // Register state into Scattergo store
+  // 1. Register player state immediately into Scattergo store
   await stSet("sg:" + S.roomCode + ":players:" + S.playerId, { name: pName, isHost: isHost, joinedAt: serverNow() });
 
-  // Read master room snapshot to guarantee no missing connected players are dropped
+  // 2. Read master room snapshot to guarantee no missing connected players are dropped
   if (typeof db !== 'undefined' && S.roomCode) {
     try {
       const snap = await db.ref(`master_rooms/${S.roomCode}/players`).get();
@@ -864,7 +864,18 @@ async function joinFromLauncher(roomCode, pName, pId, isHostFlag) {
       console.error("Master room player sync failed:", e);
     }
 
-    // Listener for disbanded room or lobby state changes
+    // 3. Add direct Firebase listener on scattergo meta node so non-host updates immediately when Host creates/updates room
+    db.ref("scattergo/" + S.roomCode + "/meta").on("value", (snap) => {
+      if (snap.exists()) {
+        S.meta = snap.val();
+        if (!S.isHost && (S.screen === 'home' || S.screen === 'playerLobby')) {
+          S.screen = (S.meta.status === "playing") ? "playerRound" : "playerLobby";
+          render();
+        }
+      }
+    });
+
+    // 4. Listener for master_rooms status to auto-return to launcher if disbanded
     db.ref(`master_rooms/${S.roomCode}/status`).on('value', snap => {
       const status = snap.val();
       if (status === 'LOBBY' || status === 'DISBANDED' || !status) {
@@ -2538,10 +2549,13 @@ async function handlePlayerPoll(prevStatus, prevRoundNum, playersChanged){
     if(S.screen !== "playerFinal"){ S.screen = "playerFinal"; render(); }
     return;
   }
+
+  // FIXED: Transition non-host players out of 'home' (loading screen) as soon as lobby status is detected
   if(status === "lobby"){
-    if(S.screen !== "playerLobby" || playersChanged){
+    if(S.screen === "home" || S.screen !== "playerLobby" || playersChanged){
       if(playersChanged && S.screen === "playerLobby") sJoin();
-      S.screen = "playerLobby"; render();
+      S.screen = "playerLobby"; 
+      render();
     }
   }
 }
