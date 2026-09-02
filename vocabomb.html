@@ -679,39 +679,57 @@
       letter-spacing: 1px;
     }
 
-    /* 1. FULL-SCREEN STANDINGS SCREEN FIX */
+    /* TRUE FULL-SCREEN OVERLAY & PINNED BOTTOM BUTTONS FOR STANDINGS SCREEN */
     #boom-screen {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(7, 9, 14, 0.97);
+      width: 100vw;
+      height: 100dvh;
+      background: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(255, 42, 85, 0.2) 0%, transparent 70%),
+        radial-gradient(circle at 50% 100%, rgba(7, 9, 14, 1) 0%, transparent 100%);
       border: none;
       border-radius: 0;
-      box-shadow: 0 0 50px var(--red-glow);
+      box-shadow: none;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
-      padding: 24px 18px;
+      justify-content: space-between;
+      padding: 20px 16px calc(20px + env(safe-area-inset-bottom)) 16px;
       text-align: center;
-      z-index: 1000;
+      z-index: 10000;
       animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      overflow: hidden;
+    }
+
+    .boom-scroll-area {
+      flex: 1;
+      width: 100%;
+      max-width: 500px;
       overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-bottom: 16px;
+      -webkit-overflow-scrolling: touch;
     }
 
     .boom-title {
-      font-size: 3rem;
+      font-size: 3.2rem;
       font-weight: 900;
       color: var(--red);
       letter-spacing: 2px;
       text-shadow: 0 0 35px var(--red-glow);
       margin-bottom: 2px;
+      margin-top: 10px;
     }
 
     .boom-desc {
-      font-size: 1.1rem;
+      font-size: 1.15rem;
       font-weight: 800;
       color: #fff;
-      margin-bottom: 14px;
+      margin-bottom: 16px;
     }
 
     .inline-countdown-box {
@@ -918,21 +936,24 @@
       display: inline-block;
     }
 
-    /* 3 & 4. COMPACT BUTTON ROWS STYLING */
+    /* LARGE, PINNED COMPACT BUTTON ROWS STYLING */
     .compact-btn-row {
       display: flex;
-      gap: 8px;
+      gap: 12px;
       width: 100%;
-      margin-top: 14px;
+      max-width: 500px;
+      padding-top: 12px;
+      flex-shrink: 0;
     }
 
     .compact-btn-row .btn {
       flex: 1;
-      padding: 12px 6px;
-      font-size: 0.8rem;
+      padding: 18px 10px;
+      font-size: 0.95rem;
+      font-weight: 900;
       margin-bottom: 0;
-      border-radius: 12px;
-      letter-spacing: 0px;
+      border-radius: 16px;
+      letter-spacing: 0.5px;
       white-space: nowrap;
     }
 
@@ -953,8 +974,8 @@
         font-size: 1.1rem;
       }
       .compact-btn-row .btn {
-        font-size: 0.72rem;
-        padding: 10px 4px;
+        font-size: 0.82rem;
+        padding: 14px 6px;
       }
     }
 
@@ -1223,31 +1244,6 @@
 
         <input type="text" id="word-input" placeholder="TYPE VALID WORD..." disabled autocomplete="off" />
         <button class="btn" id="btn-submit" disabled>SUBMIT & PASS BOMB</button>
-
-        <div id="boom-screen">
-          <div id="boom-title-id" class="boom-title">💥 BOOM!</div>
-          <div class="boom-desc" id="boom-loser-text">THE BOMB EXPLODED!</div>
-          
-          <div id="inline-knockout-timer-box" class="inline-countdown-box" style="display:none;">
-            <div class="inline-countdown-title">PLANTING THE BOMB IN</div>
-            <div id="inline-countdown-num" class="countdown-num">3</div>
-          </div>
-
-          <div id="round-stats" style="width: 100%;"></div>
-          
-          <!-- 3. COMPACT HOST CONTROL BUTTONS -->
-          <div id="host-boom-controls" class="compact-btn-row" style="display:none;">
-            <button class="btn btn-green" id="btn-replay-same">🔄 REPLAY</button>
-            <button class="btn btn-gold" id="btn-game-lobby" onclick="returnToGameLobby()">🏠 GAME LOBBY</button>
-            <button class="btn btn-secondary" id="btn-return-launcher" onclick="returnToLauncher()">🎮 LAUNCHER</button>
-          </div>
-
-          <!-- 4. COMPACT NON-HOST PLAYER CONTROL BUTTONS -->
-          <div id="non-host-boom-msg" class="compact-btn-row" style="display:none;">
-            <button class="btn btn-secondary" disabled>⏳ CONTINUING...</button>
-            <button class="btn btn-gold" id="btn-leave-lobby" onclick="leaveLobby()">🚪 LEAVE LOBBY</button>
-          </div>
-        </div>
       </div>
 
       <div class="history-card">
@@ -1255,6 +1251,34 @@
       </div>
     </div>
 
+  </div>
+
+  <!-- TRUE FULL-SCREEN OVERLAY (UNNESTED FROM GAME CARD) -->
+  <div id="boom-screen">
+    <div class="boom-scroll-area">
+      <div id="boom-title-id" class="boom-title">💥 BOOM!</div>
+      <div class="boom-desc" id="boom-loser-text">THE BOMB EXPLODED!</div>
+      
+      <div id="inline-knockout-timer-box" class="inline-countdown-box" style="display:none;">
+        <div class="inline-countdown-title">PLANTING THE BOMB IN</div>
+        <div id="inline-countdown-num" class="countdown-num">3</div>
+      </div>
+
+      <div id="round-stats" style="width: 100%;"></div>
+    </div>
+    
+    <!-- 3. COMPACT HOST CONTROL BUTTONS -->
+    <div id="host-boom-controls" class="compact-btn-row" style="display:none;">
+      <button class="btn btn-green" id="btn-replay-same">🔄 REPLAY</button>
+      <button class="btn btn-gold" id="btn-game-lobby" onclick="returnToGameLobby()">🏠 GAME LOBBY</button>
+      <button class="btn btn-secondary" id="btn-return-launcher" onclick="returnToLauncher()">🎮 LAUNCHER</button>
+    </div>
+
+    <!-- 4. COMPACT NON-HOST PLAYER CONTROL BUTTONS -->
+    <div id="non-host-boom-msg" class="compact-btn-row" style="display:none;">
+      <button class="btn btn-secondary" disabled>⏳ CONTINUING...</button>
+      <button class="btn btn-gold" id="btn-leave-lobby" onclick="leaveLobby()">🚪 LEAVE LOBBY</button>
+    </div>
   </div>
 
   <script>
