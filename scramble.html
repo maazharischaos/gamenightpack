@@ -903,23 +903,31 @@
           }
         });
 
-        // Sync players from master_rooms so launcher-joined players immediately show up in Scramble lobby
+        // Direct instant write on load to bypass database locks
         if (typeof db !== 'undefined' && roomCode) {
-          db.ref(`master_rooms/${roomCode}/players`).on('value', mSnap => {
-            const masterPlayers = mSnap.val() || {};
-            Object.keys(masterPlayers).forEach(pid => {
-              const p = masterPlayers[pid];
-              if (GameState.playersRef) {
-                GameState.playersRef.child(pid).update({
-                  name: p.name || 'UNKNOWN',
-                  isHost: !!p.isHost,
-                  online: true
-                });
-              }
-            });
+          const myRef = GameState.playersRef.child(GameState.playerId);
+          myRef.update({
+            name: GameState.playerName || 'PLAYER',
+            isHost: GameState.isHost,
+            isReady: false,
+            online: true,
+            score: 0,
+            solvedCount: 0
           });
 
-          // Listen to master_rooms status for auto-return when Host disbands or leaves
+          // Sync incoming players instantly via child_added stream
+          db.ref(`master_rooms/${roomCode}/players`).on('child_added', pSnap => {
+            const pid = pSnap.key;
+            const p = pSnap.val() || {};
+            if (GameState.playersRef && pid) {
+              GameState.playersRef.child(pid).update({
+                name: p.name || 'UNKNOWN',
+                isHost: !!p.isHost,
+                online: true
+              });
+            }
+          });
+
           db.ref(`master_rooms/${roomCode}/status`).on('value', snap => {
             const status = snap.val();
             if (status === 'LOBBY' || status === 'DISBANDED' || !status) {
@@ -1415,9 +1423,9 @@
           subtitle.textContent = isTournamentEnd ? "TOURNAMENT STANDINGS & AWARDS" : "ROUND STANDINGS";
         }
 
-        // 1. ROUND STANDINGS (Shown after every round, hidden on final standings)
+        // 1. ROUND STANDINGS (Visible mid-match, hidden when tournament ends)
         const roundList = document.getElementById('podium-list');
-        const roundLabel = roundList ? roundList.previousElementSibling : null;
+        const roundLabel = document.querySelector('#screen-summary .input-label:nth-of-type(1)');
         
         if (isTournamentEnd) {
           if (roundList) roundList.style.display = 'none';
@@ -1439,21 +1447,30 @@
           if (roundLabel) roundLabel.style.display = 'block';
         }
 
-        // 2. TOURNAMENT CUMULATIVE STANDINGS (Accumulation of all rounds)
+        // 2. TOURNAMENT CUMULATIVE STANDINGS (Hidden mid-match, revealed on END GAME)
         const tourneyList = document.getElementById('tournament-list');
-        tourneyList.innerHTML = '';
-        
-        // Sort players by cumulative score across all rounds
-        const tourneySorted = [...players].sort((a, b) => ((b.cumulativeScore || 0) + (b.score || 0)) - ((a.cumulativeScore || 0) + (a.score || 0)));
-        tourneySorted.forEach((p, idx) => {
-          const item = document.createElement('div');
-          item.className = `podium-item ${idx === 0 && isTournamentEnd ? 'mvp' : ''}`;
-          item.innerHTML = `
-            <div><span style="font-weight:900;">#${idx + 1}</span> <b>${p.name || 'UNKNOWN'}</b> ${idx === 0 && isTournamentEnd ? '👑 CHAMPION' : ''}</div>
-            <div style="font-weight:900; color:var(--amber-warm);">${(p.cumulativeScore || 0) + (p.score || 0)} TOTAL PTS</div>
-          `;
-          tourneyList.appendChild(item);
-        });
+        const tourneyLabel = document.querySelector('#screen-summary .input-label:nth-of-type(2)');
+
+        if (isTournamentEnd) {
+          if (tourneyList) {
+            tourneyList.style.display = 'flex';
+            tourneyList.innerHTML = '';
+            const tourneySorted = [...players].sort((a, b) => ((b.cumulativeScore || 0) + (b.score || 0)) - ((a.cumulativeScore || 0) + (a.score || 0)));
+            tourneySorted.forEach((p, idx) => {
+              const item = document.createElement('div');
+              item.className = `podium-item ${idx === 0 ? 'mvp' : ''}`;
+              item.innerHTML = `
+                <div><span style="font-weight:900;">#${idx + 1}</span> <b>${p.name || 'UNKNOWN'}</b> ${idx === 0 ? '👑 CHAMPION' : ''}</div>
+                <div style="font-weight:900; color:var(--amber-warm);">${(p.cumulativeScore || 0) + (p.score || 0)} TOTAL PTS</div>
+              `;
+              tourneyList.appendChild(item);
+            });
+          }
+          if (tourneyLabel) tourneyLabel.style.display = 'block';
+        } else {
+          if (tourneyList) tourneyList.style.display = 'none';
+          if (tourneyLabel) tourneyLabel.style.display = 'none';
+        }
 
         // 3. AWARDS (Only revealed when Host explicitly Ends the Tournament)
         const awardsContainer = document.getElementById('awards-container');
