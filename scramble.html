@@ -795,36 +795,41 @@
       },
 
       generateMatchWords(category = 'mixed') {
-        // Track used words so no word EVER repeats across rounds
         if (!GameState.usedWordHistory) GameState.usedWordHistory = new Set();
 
-        // Convert the 270,000+ dictionary Set into an array of clean, playable words
-        const allWords = Array.from(this.dictionary).map(w => w.toUpperCase());
+        const COMMON_WORD_LIST = {
+          easy: ["GAME","BIRD","FISH","MOON","STAR","BEAR","LION","RAIN","FIRE","SNOW","BOAT","TREE","FROG","DUCK","ROCK","WIND","KING","LAMP","GOLD","SHIP","ROAD","PARK","CAKE","DOOR","HAND","FOOT","FACE","RING","BELL","BOOK","DESK","FOOD","MILK","RICE","TEAM","BALL","HERO","MINT","WAVE","TOWN"],
+          medium: ["PLANET","SILENT","LISTEN","CASTLE","ROCKET","FLOWER","GARDEN","DRAGON","SUMMER","WINTER","FOREST","BRIDGE","PIRATE","GUITAR","PENCIL","MAGNET","SILVER","CAMERA","CANDLE","WINDOW","ORANGE","YELLOW","MONKEY","TIGER","RIVER","SHARK","BEACH","CIRCUS","DOCTOR","ANIMAL"],
+          hard: ["SCRAMBLE","DIAMOND","VICTORY","CHAMPION","MYSTERY","PHANTOM","TRIUMPH","JOURNEY","WARRIOR","TREASURE","VOLCANO","EXPLORER","PYRAMID","UNICORN","MONSTER","THUNDER","LIGHTNING","KINGDOM","CAPTAIN","HEROIC"]
+        };
 
-        // Filter dictionary by word length and exclude uncommon/obscure terms
-        const easyPool = allWords.filter(w => w.length === 4 && !GameState.usedWordHistory.has(w));
-        const medPool = allWords.filter(w => w.length === 6 && !GameState.usedWordHistory.has(w));
-        const hardPool = allWords.filter(w => w.length >= 7 && w.length <= 9 && !GameState.usedWordHistory.has(w));
+        const filterUnused = (arr) => arr.filter(w => !GameState.usedWordHistory.has(w.toUpperCase()));
+
+        let easyPool = filterUnused(COMMON_WORD_LIST.easy);
+        let medPool = filterUnused(COMMON_WORD_LIST.medium);
+        let hardPool = filterUnused(COMMON_WORD_LIST.hard);
+
+        if (easyPool.length < 12) easyPool = COMMON_WORD_LIST.easy;
+        if (medPool.length < 12) medPool = COMMON_WORD_LIST.medium;
+        if (hardPool.length < 12) hardPool = COMMON_WORD_LIST.hard;
 
         let selectedList = [];
 
         if (category === 'easy') {
-          selectedList = this.shuffleArray(easyPool).slice(0, 12).map(w => ({ original: w, points: 100 }));
+          selectedList = this.shuffleArray(easyPool).slice(0, 12).map(w => ({ original: w.toUpperCase(), points: 100 }));
         } else if (category === 'medium') {
-          selectedList = this.shuffleArray(medPool).slice(0, 12).map(w => ({ original: w, points: 250 }));
+          selectedList = this.shuffleArray(medPool).slice(0, 12).map(w => ({ original: w.toUpperCase(), points: 250 }));
         } else if (category === 'hard') {
-          selectedList = this.shuffleArray(hardPool).slice(0, 12).map(w => ({ original: w, points: 500 }));
+          selectedList = this.shuffleArray(hardPool).slice(0, 12).map(w => ({ original: w.toUpperCase(), points: 500 }));
         } else {
-          const easyPicks = this.shuffleArray(easyPool).slice(0, 4).map(w => ({ original: w, points: 100 }));
-          const medPicks = this.shuffleArray(medPool).slice(0, 5).map(w => ({ original: w, points: 250 }));
-          const hardPicks = this.shuffleArray(hardPool).slice(0, 3).map(w => ({ original: w, points: 500 }));
+          const easyPicks = this.shuffleArray(easyPool).slice(0, 4).map(w => ({ original: w.toUpperCase(), points: 100 }));
+          const medPicks = this.shuffleArray(medPool).slice(0, 5).map(w => ({ original: w.toUpperCase(), points: 250 }));
+          const hardPicks = this.shuffleArray(hardPool).slice(0, 3).map(w => ({ original: w.toUpperCase(), points: 500 }));
           selectedList = [...easyPicks, ...medPicks, ...hardPicks];
         }
 
-        // Record picked words into session memory so they are never picked again
         selectedList.forEach(item => GameState.usedWordHistory.add(item.original));
 
-        // Shuffle selected cards and assign 2 Golden Words randomly
         const shuffled = this.shuffleArray(selectedList);
         const randomGoldIndices = this.shuffleArray([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]).slice(0, 2);
         shuffled.forEach((item, idx) => {
@@ -904,18 +909,13 @@
             const masterPlayers = mSnap.val() || {};
             Object.keys(masterPlayers).forEach(pid => {
               const p = masterPlayers[pid];
-              GameState.playersRef.child(pid).once('value', pSnap => {
-                if (!pSnap.exists()) {
-                  GameState.playersRef.child(pid).set({
-                    name: p.name || 'UNKNOWN',
-                    isHost: !!p.isHost,
-                    isReady: false,
-                    online: true,
-                    score: 0,
-                    solvedCount: 0
-                  });
-                }
-              });
+              if (GameState.playersRef) {
+                GameState.playersRef.child(pid).update({
+                  name: p.name || 'UNKNOWN',
+                  isHost: !!p.isHost,
+                  online: true
+                });
+              }
             });
           });
 
@@ -1091,6 +1091,9 @@
           cardEl.classList.add('solved');
           cardEl.insertAdjacentHTML('beforeend', `<span style="position:absolute; right:12px; bottom:10px; color:var(--cyan-neon); font-size:1.1rem; font-weight:900;">✓</span>`);
           inputEl.disabled = true;
+
+          const countEl = document.getElementById('submit-solved-count');
+          if (countEl) countEl.textContent = GameState.playerState.solvedCount;
 
           triggerConfetti('medium');
 
@@ -1412,18 +1415,29 @@
           subtitle.textContent = isTournamentEnd ? "TOURNAMENT STANDINGS & AWARDS" : "ROUND STANDINGS";
         }
 
-        // 1. ROUND STANDINGS (Shown after every round)
+        // 1. ROUND STANDINGS (Shown after every round, hidden on final standings)
         const roundList = document.getElementById('podium-list');
-        roundList.innerHTML = '';
-        players.forEach((p, idx) => {
-          const item = document.createElement('div');
-          item.className = `podium-item ${idx === 0 ? 'mvp' : ''}`;
-          item.innerHTML = `
-            <div><span style="font-weight:900;">#${idx + 1}</span> <b>${p.name || 'UNKNOWN'}</b> ${p.isEliminated ? '💀' : ''}</div>
-            <div style="font-weight:900; color:var(--cyan-neon);">${p.score || 0} PTS</div>
-          `;
-          roundList.appendChild(item);
-        });
+        const roundLabel = roundList ? roundList.previousElementSibling : null;
+        
+        if (isTournamentEnd) {
+          if (roundList) roundList.style.display = 'none';
+          if (roundLabel) roundLabel.style.display = 'none';
+        } else {
+          if (roundList) {
+            roundList.style.display = 'flex';
+            roundList.innerHTML = '';
+            players.forEach((p, idx) => {
+              const item = document.createElement('div');
+              item.className = `podium-item ${idx === 0 ? 'mvp' : ''}`;
+              item.innerHTML = `
+                <div><span style="font-weight:900;">#${idx + 1}</span> <b>${p.name || 'UNKNOWN'}</b> ${p.isEliminated ? '💀' : ''}</div>
+                <div style="font-weight:900; color:var(--cyan-neon);">${p.score || 0} PTS</div>
+              `;
+              roundList.appendChild(item);
+            });
+          }
+          if (roundLabel) roundLabel.style.display = 'block';
+        }
 
         // 2. TOURNAMENT CUMULATIVE STANDINGS (Accumulation of all rounds)
         const tourneyList = document.getElementById('tournament-list');
