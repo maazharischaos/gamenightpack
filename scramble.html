@@ -334,7 +334,7 @@
 
     <video id="wake-lock-video" muted playsinline loop style="display:none; position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;"></video>
 
-    <div id="reconnecting-overlay" class="modal-overlay" style="z-index: 2000;">
+    <div id="reconnecting-overlay" class="modal-overlay" style="display: none; z-index: 2000;">
       <div class="modal-card" style="max-width: 300px;">
         <div class="btn-spinner" style="width: 28px; height: 28px; border-width: 3px; margin: 0 auto 12px auto; border-top-color: var(--cyan-neon);"></div>
         <h3 style="font-size: 1.1rem; font-weight: 900; color: var(--cyan-neon); margin-bottom: 4px;">RECONNECTING...</h3>
@@ -488,10 +488,17 @@
       </div>
 
      <div id="summary-host-controls" style="display: flex; flex-direction: column; gap: 6px;">
-        <button id="btn-next-round" class="btn btn-amber">START NEXT ROUND 🚀</button>
-        <button id="btn-replay-match" class="btn btn-secondary">RETURN TO LOBBY</button>
-        <button id="btn-return-launcher" class="btn btn-primary" onclick="returnToLauncher()" style="margin-top: 4px;">🎮 CHANGE GAME / LAUNCHER</button>
-        <button id="btn-exit-summary" class="btn btn-secondary" style="color: var(--red-error); border-color: rgba(255,51,85,0.3);">EXIT ROOM</button>
+        <!-- MID-MATCH BUTTONS (Shown after individual rounds) -->
+        <div id="mid-round-controls" style="display: flex; flex-direction: column; gap: 6px; width: 100%;">
+          <button id="btn-next-round" class="btn btn-amber">START NEXT ROUND 🚀</button>
+          <button id="btn-end-tournament" class="btn btn-primary" style="background: var(--red-error); border-color: var(--red-error); color: #fff;">🏆 END GAME</button>
+        </div>
+
+        <!-- FINAL STANDINGS BUTTONS (Shown after Host presses End Game) -->
+        <div id="final-tournament-controls" style="display: none; flex-direction: column; gap: 6px; width: 100%;">
+          <button id="btn-return-launcher-final" class="btn btn-primary" onclick="returnToLauncher()">🎮 GAME LAUNCHER</button>
+          <button id="btn-replay-match" class="btn btn-secondary">🏠 RETURN TO LOBBY</button>
+        </div>
       </div>
       <div id="summary-client-wait" style="display: none; flex-direction: column; gap: 6px; text-align: center;">
         <div style="font-size: 0.8rem; color: var(--text-muted); padding: 4px 0;">Waiting for host to start the next round...</div>
@@ -891,8 +898,28 @@
           }
         });
 
-        // Listen to master_rooms status for auto-return when Host disbands or leaves
+        // Sync players from master_rooms so launcher-joined players immediately show up in Scramble lobby
         if (typeof db !== 'undefined' && roomCode) {
+          db.ref(`master_rooms/${roomCode}/players`).on('value', mSnap => {
+            const masterPlayers = mSnap.val() || {};
+            Object.keys(masterPlayers).forEach(pid => {
+              const p = masterPlayers[pid];
+              GameState.playersRef.child(pid).once('value', pSnap => {
+                if (!pSnap.exists()) {
+                  GameState.playersRef.child(pid).set({
+                    name: p.name || 'UNKNOWN',
+                    isHost: !!p.isHost,
+                    isReady: false,
+                    online: true,
+                    score: 0,
+                    solvedCount: 0
+                  });
+                }
+              });
+            });
+          });
+
+          // Listen to master_rooms status for auto-return when Host disbands or leaves
           db.ref(`master_rooms/${roomCode}/status`).on('value', snap => {
             const status = snap.val();
             if (status === 'LOBBY' || status === 'DISBANDED' || !status) {
@@ -908,6 +935,7 @@
           GameState.matchDuration = meta.durationSeconds || 120;
           GameState.gameMode = meta.gameMode || 'classic';
           GameState.wordCategory = meta.wordCategory || 'mixed';
+          GameState.isTournamentOver = !!meta.isTournamentOver;
           if (meta.hostId) GameState.isHost = (meta.hostId === GameState.playerId);
 
           if (meta.status === 'countdown' && (fsm.currentState === GAME_STATES.ROOM || fsm.currentState === GAME_STATES.ROUND_END)) {
@@ -915,8 +943,12 @@
             fsm.transitionTo(GAME_STATES.COUNTDOWN, { startTime: meta.startTime, endTime: meta.endTime });
           } else if (meta.status === 'playing' && fsm.currentState !== GAME_STATES.PLAYING) {
             fsm.transitionTo(GAME_STATES.PLAYING, { startTime: meta.startTime, endTime: meta.endTime });
-          } else if (meta.status === 'summary' && fsm.currentState !== GAME_STATES.ROUND_END) {
-            fsm.transitionTo(GAME_STATES.ROUND_END);
+          } else if (meta.status === 'summary') {
+            if (fsm.currentState !== GAME_STATES.ROUND_END) {
+              fsm.transitionTo(GAME_STATES.ROUND_END);
+            } else {
+              StateCalculations.processRoundSummary();
+            }
           } else if (meta.status === 'lobby' && fsm.currentState !== GAME_STATES.ROOM) {
             StateCalculations.resetLocalState();
             fsm.transitionTo(GAME_STATES.ROOM);
@@ -1366,14 +1398,21 @@
 
       renderSummaryData(playersObj) {
         const players = Object.keys(playersObj).map(k => ({ id: k, ...playersObj[k] }));
+        const isTournamentEnd = GameState.isTournamentOver || false;
 
+        // Sort players by single-round performance
         players.sort((a, b) => {
           if ((b.solvedCount || 0) !== (a.solvedCount || 0)) return (b.solvedCount || 0) - (a.solvedCount || 0);
           if ((b.score || 0) !== (a.score || 0)) return (b.score || 0) - (a.score || 0);
           return (a.submittedAt || Infinity) - (b.submittedAt || Infinity);
         });
 
-        // 1. TOP PRIORITY: ROUND & TOURNAMENT STANDINGS FIRST
+        const subtitle = document.getElementById('summary-subtitle');
+        if (subtitle) {
+          subtitle.textContent = isTournamentEnd ? "TOURNAMENT STANDINGS & AWARDS" : "ROUND STANDINGS";
+        }
+
+        // 1. ROUND STANDINGS (Shown after every round)
         const roundList = document.getElementById('podium-list');
         roundList.innerHTML = '';
         players.forEach((p, idx) => {
@@ -1386,47 +1425,70 @@
           roundList.appendChild(item);
         });
 
+        // 2. TOURNAMENT CUMULATIVE STANDINGS (Accumulation of all rounds)
         const tourneyList = document.getElementById('tournament-list');
         tourneyList.innerHTML = '';
+        
+        // Sort players by cumulative score across all rounds
         const tourneySorted = [...players].sort((a, b) => ((b.cumulativeScore || 0) + (b.score || 0)) - ((a.cumulativeScore || 0) + (a.score || 0)));
         tourneySorted.forEach((p, idx) => {
           const item = document.createElement('div');
-          item.className = 'podium-item';
+          item.className = `podium-item ${idx === 0 && isTournamentEnd ? 'mvp' : ''}`;
           item.innerHTML = `
-            <div><span style="font-weight:900;">#${idx + 1}</span> <b>${p.name || 'UNKNOWN'}</b></div>
+            <div><span style="font-weight:900;">#${idx + 1}</span> <b>${p.name || 'UNKNOWN'}</b> ${idx === 0 && isTournamentEnd ? '👑 CHAMPION' : ''}</div>
             <div style="font-weight:900; color:var(--amber-warm);">${(p.cumulativeScore || 0) + (p.score || 0)} TOTAL PTS</div>
           `;
           tourneyList.appendChild(item);
         });
 
-        // 2. AWARDS RENDERED BELOW STANDINGS WITH SAFE TELEMETRY PARSING
+        // 3. AWARDS (Only revealed when Host explicitly Ends the Tournament)
         const awardsContainer = document.getElementById('awards-container');
         awardsContainer.innerHTML = '';
 
-        const validSolvers = players.filter(p => (p.solvedCount || 0) > 0 && p.submittedAt);
-        const speedWinner = validSolvers.sort((a, b) => (a.submittedAt || Infinity) - (b.submittedAt || Infinity))[0];
-        
-        const accuracyWinner = [...players].sort((a, b) => (a.wrongAttempts || 0) - (b.wrongAttempts || 0))[0];
+        if (isTournamentEnd) {
+          const validSolvers = players.filter(p => (p.solvedCount || 0) > 0 && p.submittedAt);
+          const speedWinner = validSolvers.sort((a, b) => (a.submittedAt || Infinity) - (b.submittedAt || Infinity))[0];
+          const accuracyWinner = [...players].sort((a, b) => (a.wrongAttempts || 0) - (b.wrongAttempts || 0))[0];
 
-        if (speedWinner && speedWinner.name) {
-          awardsContainer.innerHTML += `
-            <div class="award-card">
-              <div style="font-weight:900; color:var(--amber-warm);">⚡ SPEED DEMON</div>
-              <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">${speedWinner.name} had the fastest round completion!</div>
-            </div>
-          `;
-        }
-        if (accuracyWinner && accuracyWinner.name) {
-          awardsContainer.innerHTML += `
-            <div class="award-card">
-              <div style="font-weight:900; color:var(--cyan-neon);">🎯 ACCURACY ACE</div>
-              <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">${accuracyWinner.name} made the fewest errors this round!</div>
-            </div>
-          `;
+          awardsContainer.innerHTML = `<div class="input-label" style="margin-top: 14px;">🏆 TOURNAMENT AWARDS</div>`;
+
+          if (speedWinner && speedWinner.name) {
+            awardsContainer.innerHTML += `
+              <div class="award-card" style="background: rgba(255, 200, 42, 0.1); border: 1px solid var(--amber-warm); padding: 10px; border-radius: 12px; margin-top: 6px;">
+                <div style="font-weight:900; color:var(--amber-warm);">⚡ SPEED DEMON</div>
+                <div style="font-size:0.78rem; color:#fff; margin-top:2px;"><b>${speedWinner.name}</b> had the fastest overall completions!</div>
+              </div>
+            `;
+          }
+          if (accuracyWinner && accuracyWinner.name) {
+            awardsContainer.innerHTML += `
+              <div class="award-card" style="background: rgba(0, 240, 255, 0.1); border: 1px solid var(--cyan-neon); padding: 10px; border-radius: 12px; margin-top: 6px;">
+                <div style="font-weight:900; color:var(--cyan-neon);">🎯 ACCURACY ACE</div>
+                <div style="font-size:0.78rem; color:#fff; margin-top:2px;"><b>${accuracyWinner.name}</b> made the fewest wrong attempts!</div>
+              </div>
+            `;
+          }
         }
 
-        document.getElementById('summary-host-controls').style.display = GameState.isHost ? 'flex' : 'none';
-        document.getElementById('summary-client-wait').style.display = GameState.isHost ? 'none' : 'block';
+        // Toggle Control Panels & Buttons
+        if (GameState.isHost) {
+          document.getElementById('summary-host-controls').style.display = 'flex';
+          document.getElementById('summary-client-wait').style.display = 'none';
+
+          const midControls = document.getElementById('mid-round-controls');
+          const finalControls = document.getElementById('final-tournament-controls');
+
+          if (isTournamentEnd) {
+            if (midControls) midControls.style.display = 'none';
+            if (finalControls) finalControls.style.display = 'flex';
+          } else {
+            if (midControls) midControls.style.display = 'flex';
+            if (finalControls) finalControls.style.display = 'none';
+          }
+        } else {
+          document.getElementById('summary-host-controls').style.display = 'none';
+          document.getElementById('summary-client-wait').style.display = 'flex';
+        }
       },
 
       setupEventListeners() {
@@ -1534,22 +1596,23 @@
         });
 
         document.getElementById('btn-next-round').addEventListener('click', () => StateCalculations.startNextRound());
-        document.getElementById('btn-replay-match').addEventListener('click', () => StateCalculations.returnToLobby());
-
-        document.getElementById('btn-exit-summary').addEventListener('click', () => {
-          if (GameState.isHost && NetworkEngine && NetworkEngine.db && GameState.roomCode) {
-            if (confirm('Disband room for all players across the Super App?')) {
-              NetworkEngine.db.ref(`master_rooms/${GameState.roomCode}`).update({ status: 'DISBANDED' }).then(() => {
-                if (GameState.roomRef) GameState.roomRef.remove();
-                returnToLauncher();
-              });
+        
+        const endTourneyBtn = document.getElementById('btn-end-tournament');
+        if (endTourneyBtn) {
+          endTourneyBtn.addEventListener('click', () => {
+            if (!GameState.isHost) return;
+            if (confirm('End the game and reveal the final standings and awards to everyone?')) {
+              if (GameState.roomRef) {
+                GameState.roomRef.child('meta').update({
+                  status: 'summary',
+                  isTournamentOver: true
+                });
+              }
             }
-          } else {
-            if (GameState.playersRef) GameState.playersRef.child(GameState.playerId).remove();
-            sessionStorage.removeItem('scramble_panic_session');
-            returnToLauncher();
-          }
-        });
+          });
+        }
+
+        document.getElementById('btn-replay-match').addEventListener('click', () => StateCalculations.returnToLobby());
       }
     };
 
