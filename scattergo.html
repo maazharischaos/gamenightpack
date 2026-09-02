@@ -706,6 +706,7 @@ function fmtTime(ms){
 
 const LS_KEY = "scattergo_identity_v1";
 let S = {
+  isLauncherLaunch: false,
   role: null,
   screen: 'home',
   roomCode: null,
@@ -776,13 +777,16 @@ function screenHome(){
   const autoName = urlParams.get('name');
 
   // IF LAUNCHED FROM SUPER APP: Return a loading view instead of home screen
-  if (autoRoom && autoName) {
+  if ((autoRoom && autoName) || S.isLauncherLaunch) {
     return `
     <div class="screen">
       <div class="spacer"></div>
       <div class="logo-wrap">
         <div class="logo-word">Scatter<span class="accent">go</span></div>
-        <div class="logo-tagline" style="margin-top:12px;">CONNECTING TO LOBBY...</div>
+        <div class="logo-tagline" style="margin-top:12px;">${S.meta && S.meta.hostName ? esc(S.meta.hostName) + ' IS SETTING UP...' : 'CONNECTING TO LOBBY...'}</div>
+      </div>
+      <div class="wait-wrap" style="flex:none; padding:20px 0;">
+        <div class="spinner"></div>
       </div>
       <div class="spacer"></div>
     </div>`;
@@ -830,9 +834,12 @@ function wireHome(){
 }
 
 async function joinFromLauncher(roomCode, pName, pId, isHostFlag) {
-  // Parse incoming boolean parameter accurately
   const isHost = (isHostFlag === true || isHostFlag === 'true');
 
+  // Purge any stale room sessions stored in localStorage
+  clearIdentity();
+
+  S.isLauncherLaunch = true;
   S.roomCode = String(roomCode).trim();
   S.playerName = pName;
   S.playerId = pId || localStorage.getItem('gamenight_pid') || ('p_' + Math.random().toString(36).substr(2, 9));
@@ -840,15 +847,15 @@ async function joinFromLauncher(roomCode, pName, pId, isHostFlag) {
   S.isHost = isHost;
   S.role = isHost ? 'host' : 'player';
 
-  // If host, go directly to setup; if player, stay on home/loading until meta is verified
   S.screen = isHost ? 'hostSetup' : 'home';
   if (isHost) setupDraft.hostName = pName;
 
   saveIdentity();
   render();
 
-  // 1. Register player state immediately into Scattergo store
-  await stSet("sg:" + S.roomCode + ":players:" + S.playerId, { name: pName, isHost: isHost, isReady: false, joinedAt: serverNow() });
+  // 1. Register player state directly in Firebase
+  const playerRef = db.ref("scattergo/" + S.roomCode + "/players/" + S.playerId);
+  await playerRef.set({ name: pName, isHost: isHost, isReady: false, joinedAt: serverNow() });
 
   // 2. Read master room snapshot to guarantee no missing connected players are dropped
   if (typeof db !== 'undefined' && S.roomCode) {
@@ -857,7 +864,7 @@ async function joinFromLauncher(roomCode, pName, pId, isHostFlag) {
       if (snap.exists()) {
         const mPlayers = snap.val() || {};
         for (const [pid, pData] of Object.entries(mPlayers)) {
-          if (pData && pData.name) {
+          if (pData && pData.name && pid !== S.playerId) {
             await stSet("sg:" + S.roomCode + ":players:" + pid, {
               name: pData.name,
               isHost: !!pData.isHost,
@@ -871,18 +878,32 @@ async function joinFromLauncher(roomCode, pName, pId, isHostFlag) {
       console.error("Master room player sync failed:", e);
     }
 
-    // 3. Add direct Firebase listener on scattergo meta node so non-host updates immediately when Host creates/updates room
+    // 3. Attach REALTIME listener for room players (instant ready-state updates)
+    db.ref("scattergo/" + S.roomCode + "/players").on("value", (snap) => {
+      if (snap.exists()) {
+        S.players = snap.val() || {};
+        render(); // Instantly update UI when anyone taps "I'M READY"
+      }
+    });
+
+    // 4. Attach REALTIME listener for room meta (instant setup-to-lobby transitions)
     db.ref("scattergo/" + S.roomCode + "/meta").on("value", (snap) => {
       if (snap.exists()) {
         S.meta = snap.val();
-        if (!S.isHost && (S.screen === 'home' || S.screen === 'playerLobby')) {
-          S.screen = (S.meta.status === "playing") ? "playerRound" : "playerLobby";
+        if (!S.isHost) {
+          if (S.meta.status === "lobby_setup" || !S.meta.status) {
+            S.screen = "home";
+          } else if (S.meta.status === "lobby") {
+            S.screen = "playerLobby";
+          } else if (S.meta.status === "playing") {
+            S.screen = "playerRound";
+          }
           render();
         }
       }
     });
 
-    // 4. Listener for master_rooms status to auto-return to launcher if disbanded
+    // 5. Listener for master_rooms status to auto-return to launcher if disbanded
     db.ref(`master_rooms/${S.roomCode}/status`).on('value', snap => {
       const status = snap.val();
       if (status === 'LOBBY' || status === 'DISBANDED' || !status) {
@@ -2078,10 +2099,10 @@ function wirePlayerLobby() {
   const readyBtn = document.getElementById("btnToggleReady");
   if (readyBtn) {
     readyBtn.onclick = async () => {
-      readyBtn.disabled = true;
       const currentReady = S.players[S.playerId] ? !!S.players[S.playerId].isReady : false;
-      await stSet("sg:" + S.roomCode + ":players:" + S.playerId + ":isReady", !currentReady);
       sTap();
+      // Write directly to Firebase Realtime Database path
+      await db.ref("scattergo/" + S.roomCode + "/players/" + S.playerId + "/isReady").set(!currentReady);
     };
   }
 }
