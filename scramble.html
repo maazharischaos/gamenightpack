@@ -895,15 +895,15 @@
     /* =========================================================================
        5. FIREBASE NETWORK ENGINE
        ========================================================================= */
- const firebaseConfig = {
-  apiKey: "AIzaSyBeYg5e99uvqvBcRlkETgbg36VV_Sllclg",
-  authDomain: "gamenightpack-44f16.firebaseapp.com",
-  databaseURL: "https://gamenightpack-44f16-default-rtdb.firebaseio.com",
-  projectId: "gamenightpack-44f16",
-  storageBucket: "gamenightpack-44f16.firebasestorage.app",
-  messagingSenderId: "383266305677",
-  appId: "1:383266305677:web:596c70c7ddc304fd9994c4"
-};
+    const firebaseConfig = {
+      apiKey: "AIzaSyBeYg5e99uvqvBcRlkETgbg36VV_Sllclg",
+      authDomain: "gamenightpack-44f16.firebaseapp.com",
+      databaseURL: "https://gamenightpack-44f16-default-rtdb.firebaseio.com",
+      projectId: "gamenightpack-44f16",
+      storageBucket: "gamenightpack-44f16.firebasestorage.app",
+      messagingSenderId: "383266305677",
+      appId: "1:383266305677:web:596c70c7ddc304fd9994c4"
+    };
 
     const NetworkEngine = {
       db: null, isMock: false, serverTimeOffset: 0, heartbeatInterval: null,
@@ -990,7 +990,9 @@
           GameState.gameMode = meta.gameMode || 'classic';
           GameState.wordCategory = meta.wordCategory || 'mixed';
           GameState.isTournamentOver = !!meta.isTournamentOver;
-          if (meta.hostId) {
+          
+          // Safeguard host authority: only override if hostId is present and unambiguous
+          if (meta.hostId && meta.hostId.trim() !== '') {
             GameState.isHost = (meta.hostId === GameState.playerId);
           }
 
@@ -1781,15 +1783,22 @@ function returnToLauncher() {
 })();
 
 window.addEventListener('DOMContentLoaded', () => {
-  if (typeof NetworkEngine !== 'undefined') NetworkEngine.init();
-  if (typeof UIController !== 'undefined') UIController.setupEventListeners();
-  if (typeof DictionaryEngine !== 'undefined') DictionaryEngine.init();
-
   const urlParams = new URLSearchParams(window.location.search);
   const autoRoom = urlParams.get('room');
   const autoName = urlParams.get('name');
   const autoPid  = urlParams.get('pid');
   const autoHost = urlParams.get('isHost') === 'true';
+
+  // Lock identities immediately before initializing engine or listeners
+  if (autoPid) {
+    GameState.playerId = autoPid;
+    sessionStorage.setItem('scramble_panic_pid', autoPid);
+  }
+  GameState.isHost = autoHost;
+
+  if (typeof NetworkEngine !== 'undefined') NetworkEngine.init();
+  if (typeof UIController !== 'undefined') UIController.setupEventListeners();
+  if (typeof DictionaryEngine !== 'undefined') DictionaryEngine.init();
 
   if (autoRoom && autoName) {
     document.getElementById('screen-welcome').classList.remove('active');
@@ -1797,8 +1806,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
     GameState.roomCode = autoRoom;
     GameState.playerName = autoName;
-    GameState.playerId = autoPid || GameState.playerId;
-    GameState.isHost = autoHost;
 
     document.getElementById('input-player-name').value = autoName;
     document.getElementById('input-room-code').value = autoRoom;
@@ -1811,7 +1818,7 @@ window.addEventListener('DOMContentLoaded', () => {
             createdAt: firebase.database.ServerValue.TIMESTAMP,
             meta: {
               status: 'lobby',
-              hostId: autoPid || GameState.playerId,
+              hostId: GameState.playerId,
               gameMode: 'classic',
               wordCategory: 'mixed',
               durationSeconds: 120
@@ -1820,8 +1827,9 @@ window.addEventListener('DOMContentLoaded', () => {
         }
         if (autoHost) {
           roomRef.child('meta').update({ hostId: GameState.playerId });
-          // Explicitly register host status in player state immediately
           roomRef.child(`players/${GameState.playerId}`).update({ isHost: true });
+        } else {
+          roomRef.child(`players/${GameState.playerId}`).update({ isHost: false });
         }
         UIController.initRoomView();
       });

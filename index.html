@@ -461,14 +461,14 @@
 
     /* FIREBASE INITIALIZATION */
     const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyBeYg5e99uvqvBcRlkETgbg36VV_Sllclg",
-  authDomain: "gamenightpack-44f16.firebaseapp.com",
-  databaseURL: "https://gamenightpack-44f16-default-rtdb.firebaseio.com",
-  projectId: "gamenightpack-44f16",
-  storageBucket: "gamenightpack-44f16.firebasestorage.app",
-  messagingSenderId: "383266305677",
-  appId: "1:383266305677:web:596c70c7ddc304fd9994c4"
-};
+      apiKey: "AIzaSyBeYg5e99uvqvBcRlkETgbg36VV_Sllclg",
+      authDomain: "gamenightpack-44f16.firebaseapp.com",
+      databaseURL: "https://gamenightpack-44f16-default-rtdb.firebaseio.com",
+      projectId: "gamenightpack-44f16",
+      storageBucket: "gamenightpack-44f16.firebasestorage.app",
+      messagingSenderId: "383266305677",
+      appId: "1:383266305677:web:596c70c7ddc304fd9994c4"
+    };
 
     firebase.initializeApp(FIREBASE_CONFIG);
     const db = firebase.database();
@@ -776,7 +776,7 @@
 
     /* AUTOMATIC LOCALSTORAGE PURGE ON NEW BUILD RELEASE */
     (function() {
-      const CURRENT_APP_VERSION = 'v30';
+      const CURRENT_APP_VERSION = 'v31';
       const storedVersion = localStorage.getItem('gamenight_app_version');
 
       if (storedVersion !== CURRENT_APP_VERSION) {
