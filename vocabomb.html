@@ -679,38 +679,23 @@
       letter-spacing: 1px;
     }
 
+    /* 1. FULL-SCREEN STANDINGS SCREEN FIX */
     #boom-screen {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(7, 9, 14, 0.98);
-      border-radius: 0;
+      background: rgba(7, 9, 14, 0.97);
       border: none;
+      border-radius: 0;
+      box-shadow: 0 0 50px var(--red-glow);
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
-      padding: max(20px, env(safe-area-inset-top)) 18px max(20px, env(safe-area-inset-bottom));
+      padding: 24px 18px;
       text-align: center;
       z-index: 1000;
       animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       overflow-y: auto;
-    }
-
-    .btn-compact-row {
-      display: flex;
-      gap: 6px;
-      width: 100%;
-      margin-top: 10px;
-    }
-
-    .btn-compact {
-      flex: 1;
-      padding: 12px 6px;
-      font-size: 0.72rem;
-      font-weight: 800;
-      border-radius: 12px;
-      margin-bottom: 0;
-      letter-spacing: 0.5px;
     }
 
     .boom-title {
@@ -933,6 +918,24 @@
       display: inline-block;
     }
 
+    /* 3 & 4. COMPACT BUTTON ROWS STYLING */
+    .compact-btn-row {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+      margin-top: 14px;
+    }
+
+    .compact-btn-row .btn {
+      flex: 1;
+      padding: 12px 6px;
+      font-size: 0.8rem;
+      margin-bottom: 0;
+      border-radius: 12px;
+      letter-spacing: 0px;
+      white-space: nowrap;
+    }
+
     @media (max-width: 360px) {
       .game-box {
         padding: 18px 12px;
@@ -948,6 +951,10 @@
       input[type="text"] {
         padding: 12px;
         font-size: 1.1rem;
+      }
+      .compact-btn-row .btn {
+        font-size: 0.72rem;
+        padding: 10px 4px;
       }
     }
 
@@ -1228,22 +1235,17 @@
 
           <div id="round-stats" style="width: 100%;"></div>
           
-         <!-- HOST CONTROL BUTTONS (3 COMPACT BUTTONS) -->
-         <div id="host-boom-controls" style="display:none; width: 100%; margin-top: 12px;">
-            <div class="btn-compact-row">
-              <button class="btn btn-green btn-compact" id="btn-replay-same">🔄 REPLAY</button>
-              <button class="btn btn-secondary btn-compact" id="btn-goto-lobby">🏠 GAME LOBBY</button>
-              <button class="btn btn-gold btn-compact" id="btn-return-launcher" onclick="returnToLauncher()">🎮 LAUNCHER</button>
-            </div>
+          <!-- 3. COMPACT HOST CONTROL BUTTONS -->
+          <div id="host-boom-controls" class="compact-btn-row" style="display:none;">
+            <button class="btn btn-green" id="btn-replay-same">🔄 REPLAY</button>
+            <button class="btn btn-gold" id="btn-game-lobby" onclick="returnToGameLobby()">🏠 GAME LOBBY</button>
+            <button class="btn btn-secondary" id="btn-return-launcher" onclick="returnToLauncher()">🎮 LAUNCHER</button>
           </div>
 
-          <!-- PLAYER CONTROL BUTTONS (2 BUTTONS) -->
-          <div id="non-host-boom-msg" style="display:none; width: 100%; margin-top: 12px;">
-            <div style="font-size: 0.78rem; color: var(--gold); font-weight:800; margin-bottom: 8px;">WAITING FOR HOST DECISION...</div>
-            <div class="btn-compact-row">
-              <button class="btn btn-green btn-compact" id="btn-player-continue" disabled>⏳ CONTINUING...</button>
-              <button class="btn btn-secondary btn-compact" id="btn-player-leave-lobby" onclick="leaveLobbyOnly()">🚪 LEAVE LOBBY</button>
-            </div>
+          <!-- 4. COMPACT NON-HOST PLAYER CONTROL BUTTONS -->
+          <div id="non-host-boom-msg" class="compact-btn-row" style="display:none;">
+            <button class="btn btn-secondary" disabled>⏳ CONTINUING...</button>
+            <button class="btn btn-gold" id="btn-leave-lobby" onclick="leaveLobby()">🚪 LEAVE LOBBY</button>
           </div>
         </div>
       </div>
@@ -1264,26 +1266,72 @@
       });
     });
 
+    // HELPER TO RETURN TO GAME LOBBY (HOST RESET TO LOBBY)
+    function returnToGameLobby() {
+      if (!roomData || roomData.host !== myPlayerId) return;
+      const updates = { 
+        gameState: 'LOBBY', 
+        isGameOver: false, 
+        eliminationRankings: null, 
+        usedWords: null, 
+        activeAttackWarning: null,
+        surgeRound: null,
+        surgeTurnsInRound: null,
+        surgeScores: null,
+        surgeBaseOrder: null,
+        lastSubmittedWord: null,
+        surgeTurnToken: null,
+        isSurgeIntermission: false,
+        intermissionEndTime: null,
+        roundSecretFuseEndTime: null,
+        hasRoundFuseFired: null
+      };
+
+      if (roomData.players) {
+        Object.entries(roomData.players).forEach(([pid, p]) => {
+          if (!p.isDisconnected) {
+            updates[`players/${pid}/isReady`] = false;
+            updates[`players/${pid}/isEliminated`] = false;
+            updates[`players/${pid}/streak`] = 0;
+            updates[`players/${pid}/powerup`] = null;
+            updates[`players/${pid}/shields`] = 0;
+          }
+        });
+      }
+
+      roomRef.update(updates);
+    }
+
+    // HELPER TO REMOVE PLAYER FROM ROOM AND RETURN TO LAUNCHER
+    function leaveLobby() {
+      stopActiveTurnVibration();
+      releaseScreenWakeLock();
+      if (roomRef && myPlayerId) {
+        roomRef.child(`players/${myPlayerId}`).remove().catch(err => console.error("Error leaving room:", err));
+      }
+      returnToLauncher();
+    }
+
     // HELPER TO RETURN TO MASTER LAUNCHER (SUPER APP)
-function returnToLauncher() {
-  stopActiveTurnVibration();
-  releaseScreenWakeLock();
-  if (handoffResetTimeout) clearTimeout(handoffResetTimeout);
+    function returnToLauncher() {
+      stopActiveTurnVibration();
+      releaseScreenWakeLock();
+      if (handoffResetTimeout) clearTimeout(handoffResetTimeout);
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const room = urlParams.get('room') || currentRoom || '';
-  const name = urlParams.get('name') || myName || '';
-  const isHost = urlParams.get('isHost') === 'true' || (roomData && roomData.host === myPlayerId);
+      const urlParams = new URLSearchParams(window.location.search);
+      const room = urlParams.get('room') || currentRoom || '';
+      const name = urlParams.get('name') || myName || '';
+      const isHost = urlParams.get('isHost') === 'true' || (roomData && roomData.host === myPlayerId);
 
-  if (isHost && typeof db !== 'undefined' && room) {
-    db.ref(`master_rooms/${room}`).update({
-      status: 'LOBBY',
-      launchedGame: null
-    }).catch(err => console.error("Return to launcher status update failed:", err));
-  }
+      if (isHost && typeof db !== 'undefined' && room) {
+        db.ref(`master_rooms/${room}`).update({
+          status: 'LOBBY',
+          launchedGame: null
+        }).catch(err => console.error("Return to launcher status update failed:", err));
+      }
 
-  window.location.href = `index.html?room=${room}&name=${encodeURIComponent(name)}&isHost=${isHost}`;
-}
+      window.location.href = `index.html?room=${room}&name=${encodeURIComponent(name)}&isHost=${isHost}`;
+    }
 
 // UNIVERSAL MOBILE SOFT-KEYBOARD VIEWPORT ADAPTER
 (function() {
@@ -1892,16 +1940,14 @@ if ('serviceWorker' in navigator) {
           const startingLetter = getRandomLetter(banned);
           const startNow = getServerTime();
 
-          const baseTurnMs = (roomData.config?.baseTurnTime || 8) * 1000;
-          const currentServerTime = Date.now() + serverTimeOffset;
           const updates = {
             gameState: 'PLAYING',
             activePlayerId: startingPlayerId,
             playerOrder: activePlayers,
             requiredLetter: startingLetter,
-            currentTurnTimeCap: baseTurnMs,
-            globalFuseEndTime: currentServerTime + (totalFuseSeconds * 1000),
-            turnEndTime: currentServerTime + baseTurnMs,
+            currentTurnTimeCap: roomData.config.baseTurnTime * 1000,
+            globalFuseEndTime: startNow + (totalFuseSeconds * 1000),
+            turnEndTime: startNow + (roomData.config.baseTurnTime * 1000),
             isFrozen: false,
             freezeEndTime: 0,
             isPanicClock: false,
@@ -1976,6 +2022,16 @@ if ('serviceWorker' in navigator) {
       if (lastUIState !== roomData.gameState) {
         document.getElementById('word-input').value = '';
         lastUIState = roomData.gameState;
+      }
+
+      // 2. TOGGLE HISTORY LOG VISIBILITY ON GAME OVER / PLAYING
+      const historyCard = document.querySelector('.history-card');
+      if (historyCard) {
+        if (roomData.gameState === 'BOOM') {
+          historyCard.style.display = 'none';
+        } else if (roomData.gameState === 'PLAYING') {
+          historyCard.style.display = 'block';
+        }
       }
 
       // ALWAYS WIPE INPUT BOX WHENEVER TURN SWITCHES OR INTERMISSION BEGINS
@@ -2110,10 +2166,6 @@ if ('serviceWorker' in navigator) {
         document.getElementById('boom-screen').style.display = 'none';
         document.getElementById('room-screen').style.display = 'none';
         document.getElementById('game-screen').style.display = 'block';
-        
-        // Restore history card visibility during active gameplay
-        const historyCard = document.querySelector('.history-card');
-        if (historyCard) historyCard.style.display = 'block';
 
         const isSurge = roomData.config?.format === 'SURGE';
         const maxRounds = roomData.config?.surgeMaxRounds || 5;
@@ -2266,10 +2318,6 @@ if ('serviceWorker' in navigator) {
         handledBoom = true;
         stopActiveTurnVibration();
         document.getElementById('active-game-card').classList.remove('low-time-shake', 'frozen-box');
-        
-        // Hide history card on full-screen game over
-        const historyCard = document.querySelector('.history-card');
-        if (historyCard) historyCard.style.display = 'none';
         
         const isVictim = roomData.loserId === myPlayerId;
 
@@ -2510,11 +2558,11 @@ if ('serviceWorker' in navigator) {
         }
 
         if (isHost && (isGameOver || (!isKnockout && !isSurge))) {
-          document.getElementById('host-boom-controls').style.display = 'block';
+          document.getElementById('host-boom-controls').style.display = 'flex';
           document.getElementById('non-host-boom-msg').style.display = 'none';
         } else if (!isHost && (isGameOver || (!isKnockout && !isSurge))) {
           document.getElementById('host-boom-controls').style.display = 'none';
-          document.getElementById('non-host-boom-msg').style.display = 'block';
+          document.getElementById('non-host-boom-msg').style.display = 'flex';
         } else {
           document.getElementById('host-boom-controls').style.display = 'none';
           document.getElementById('non-host-boom-msg').style.display = 'none';
@@ -2556,20 +2604,6 @@ if ('serviceWorker' in navigator) {
       });
 
       roomRef.update(updates);
-    });
-
-    document.getElementById('btn-end-game').addEventListener('click', () => {
-      if (roomData.host !== myPlayerId) return;
-      if (confirm('Disband room for all players across the Super App?')) {
-        db.ref(`master_rooms/${currentRoom}`).update({ status: 'DISBANDED' }).then(() => {
-          return roomRef.remove();
-        }).then(() => {
-          returnToLauncher();
-        }).catch(err => {
-          console.error("Disband room error:", err);
-          returnToLauncher();
-        });
-      }
     });
 
     // ATOMIC TURN ADVANCEMENT ENGINE FOR POINT SURGE MODE
@@ -2822,17 +2856,15 @@ if ('serviceWorker' in navigator) {
         roomRef.update({ activeAttackWarning: null });
       }
 
-      const baseMs = (roomData.config?.baseTurnTime || 8) * 1000;
-      const cap = (typeof roomData.currentTurnTimeCap === 'number' && roomData.currentTurnTimeCap > 0) ? roomData.currentTurnTimeCap : baseMs;
-      const endTime = (typeof roomData.turnEndTime === 'number' && roomData.turnEndTime > 0) ? roomData.turnEndTime : (nowServer + cap);
+      const cap = roomData.currentTurnTimeCap || (roomData.config.baseTurnTime * 1000);
       
       let effectiveNow = nowServer;
-      if (warningActive && typeof warning.pauseEndTime === 'number') {
+      if (warningActive) {
         effectiveNow = warning.pauseEndTime - 2000;
       }
 
-      const remainingTurnTime = Math.max(0, endTime - effectiveNow);
-      const percent = isNaN(remainingTurnTime / cap) ? 100 : Math.max(0, Math.min(100, (remainingTurnTime / cap) * 100));
+      const remainingTurnTime = Math.max(0, roomData.turnEndTime - effectiveNow);
+      const percent = Math.max(0, Math.min(100, (remainingTurnTime / cap) * 100));
       
       const timerFill = document.getElementById('turn-timer');
       timerFill.style.width = percent + '%';
@@ -3152,10 +3184,9 @@ if ('serviceWorker' in navigator) {
           powerup: newPowerup
         });
 
-        const turnTimeCap = (typeof roomData.currentTurnTimeCap === 'number' && roomData.currentTurnTimeCap > 0) ? roomData.currentTurnTimeCap : ((cfg?.baseTurnTime || 8) * 1000);
+        const turnTimeCap = roomData.currentTurnTimeCap || (cfg.baseTurnTime * 1000);
         const nowServer = getServerTime();
-        const endTime = (typeof roomData.turnEndTime === 'number' && roomData.turnEndTime > 0) ? roomData.turnEndTime : (nowServer + turnTimeCap);
-        const rawRemainingTime = Math.max(0, endTime - nowServer);
+        const rawRemainingTime = Math.max(0, roomData.turnEndTime - nowServer);
         
         // CLAMPED REMAINING TIME PREVENTS POWER-UP POINT INFLATION EXPLOITS
         const remainingTime = Math.min(rawRemainingTime, turnTimeCap);
@@ -3251,58 +3282,6 @@ if ('serviceWorker' in navigator) {
     document.getElementById('word-input').addEventListener('keypress', (e) => {
       if (e.key === 'Enter') submitWord();
     });
-
-// Game Lobby (Change Rules) Button for Host
-document.getElementById('btn-goto-lobby').addEventListener('click', () => {
-  if (roomData.host !== myPlayerId) return;
-  
-  const updates = { 
-    gameState: 'LOBBY', 
-    isGameOver: false, 
-    eliminationRankings: null, 
-    usedWords: null, 
-    activeAttackWarning: null,
-    surgeRound: null,
-    surgeTurnsInRound: null,
-    surgeScores: null,
-    surgeBaseOrder: null,
-    lastSubmittedWord: null,
-    surgeTurnToken: null,
-    isSurgeIntermission: false,
-    intermissionEndTime: null,
-    roundSecretFuseEndTime: null,
-    hasRoundFuseFired: null
-  };
-
-  // Keep rules locked = false so host can tweak rules in lobby
-  if (roomData.config) updates['config/rulesLocked'] = false;
-
-  Object.entries(roomData.players || {}).forEach(([pid, p]) => {
-    if (!p.isDisconnected) {
-      updates[`players/${pid}/isReady`] = false;
-      updates[`players/${pid}/isEliminated`] = false;
-      updates[`players/${pid}/streak`] = 0;
-      updates[`players/${pid}/powerup`] = null;
-      updates[`players/${pid}/shields`] = 0;
-    }
-  });
-
-  roomRef.update(updates);
-});
-
-// Leave Lobby for Non-Host Players (Allows host to replay with remaining players)
-function leaveLobbyOnly() {
-  stopActiveTurnVibration();
-  releaseScreenWakeLock();
-  if (roomRef && myPlayerId) {
-    roomRef.child(`players/${myPlayerId}`).remove();
-    // Also remove from master room roster
-    if (typeof db !== 'undefined' && currentRoom) {
-      db.ref(`master_rooms/${currentRoom}/players/${myPlayerId}`).remove();
-    }
-  }
-  returnToLauncher();
-}
   </script>
 </body>
 </html>
