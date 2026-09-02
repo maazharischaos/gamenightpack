@@ -274,12 +274,26 @@
 
     .room-code-val { font-size: 2.5rem; font-weight: 900; letter-spacing: 6px; color: var(--amber-warm); text-shadow: 0 0 20px var(--amber-glow); }
 
-    .player-list { display: flex; flex-direction: column; gap: 8px; flex: 1; min-height: 0; overflow-y: auto; margin-top: 8px; }
+    .player-list { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); 
+      gap: 6px; 
+      max-height: 120px; 
+      overflow-y: auto; 
+      margin-top: 6px; 
+    }
     .player-pill {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 10px 14px; background: rgba(255, 255, 255, 0.04);
+      padding: 6px 10px; background: rgba(255, 255, 255, 0.04);
       border-radius: var(--radius-md); border: 1px solid var(--glass-border);
-      font-size: 0.85rem; font-weight: 700;
+      font-size: 0.72rem; font-weight: 800; text-transform: uppercase;
+    }
+    .award-card-styled {
+      background: rgba(0, 240, 255, 0.06);
+      border: 1px solid var(--cyan-neon);
+      box-shadow: 0 0 15px var(--cyan-glow);
+      border-radius: var(--radius-md);
+      padding: 12px; margin-top: 10px;
     }
 
     #screen-game { display: flex; flex-direction: column; height: 100%; overflow: hidden; padding: 0; }
@@ -428,11 +442,11 @@
         <div id="display-room-code" class="room-code-val">----</div>
       </div>
 
-      <div class="glass-card" style="flex: 1; display: flex; flex-direction: column;">
-        <div class="input-label" style="margin-bottom: 6px;">PLAYERS IN ROOM</div>
+      <div class="glass-card" style="flex: 1; display: flex; flex-direction: column; gap: 8px; overflow-y: auto;">
+        <div class="input-label">PLAYERS IN ROOM</div>
         <div id="room-player-list" class="player-list"></div>
 
-        <div id="host-settings-container" style="margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 8px; display: none;">
+        <div id="host-settings-container" style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 8px; display: none;">
           <div class="input-label">GAME MODE</div>
           <div style="display: flex; gap: 4px; margin: 4px 0 8px 0;">
             <button id="btn-mode-classic" class="btn btn-secondary btn-mode active">CLASSIC</button>
@@ -1105,16 +1119,25 @@
           let earnedPoints = wordObj.points * Math.min(GameState.comboStreak, 3);
           if (GameState.isOvertimeActive) earnedPoints *= 2;
 
-          if (wordObj.isGolden && !wordObj.claimedBy) {
-            earnedPoints += 500;
-            sound.playGoldenClaim();
-            ToastEngine.show("⚡ GOLDEN WORD CLAIMED! +500 BONUS", "success");
-            
-            if (GameState.matchRef) {
-              const wordIdx = GameState.words.findIndex(w => w.id === wordObj.id);
-              if (wordIdx !== -1) {
-                GameState.matchRef.child(`words/${wordIdx}/claimedBy`).set(GameState.playerName);
+          // First-to-claim restriction for Golden Bonus Points
+          if (wordObj.isGolden) {
+            if (!wordObj.claimedBy) {
+              earnedPoints += 500;
+              sound.playGoldenClaim();
+              ToastEngine.show("⚡ GOLDEN WORD CLAIMED! +500 BONUS", "success");
+              
+              if (GameState.matchRef) {
+                const wordIdx = GameState.words.findIndex(w => w.id === wordObj.id);
+                if (wordIdx !== -1) {
+                  GameState.matchRef.child(`words/${wordIdx}/claimedBy`).set(GameState.playerName);
+                }
               }
+            } else {
+              // Revert to original base points if another player already claimed it
+              earnedPoints = Math.floor(wordObj.points / 2) * Math.min(GameState.comboStreak, 3);
+              if (GameState.isOvertimeActive) earnedPoints *= 2;
+              sound.playSuccess(1 + (GameState.comboStreak * 0.1));
+              ToastEngine.show("Golden bonus already claimed! Standard points earned.", "info");
             }
           } else {
             sound.playSuccess(1 + (GameState.comboStreak * 0.1));
@@ -1332,12 +1355,12 @@
           const pill = document.createElement('div');
           pill.className = 'player-pill';
           pill.innerHTML = `
-            <div style="display:flex; align-items:center; gap:8px;">
-              <div class="status-dot online"></div>
-              <span style="font-weight:800;">${p.name || 'UNKNOWN'} ${p.isHost ? '👑' : ''} ${p.isEliminated ? '💀 (SPECTATOR)' : ''}</span>
+            <div style="display:flex; align-items:center; gap:4px; overflow:hidden;">
+              <div class="status-dot online" style="flex-shrink:0;"></div>
+              <span style="font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.name || 'UNKNOWN'} ${p.isHost ? '👑' : ''}</span>
             </div>
-            <span style="font-size:0.75rem; font-weight:800; color:${p.isReady ? 'var(--cyan-neon)' : 'var(--text-muted)'}">
-              ${p.isReady ? 'READY' : 'NOT READY'}
+            <span style="font-size:0.65rem; font-weight:800; color:${p.isReady ? 'var(--cyan-neon)' : 'var(--text-muted)'}; flex-shrink:0;">
+              ${p.isReady ? '✓' : '—'}
             </span>
           `;
           container.appendChild(pill);
@@ -1346,7 +1369,6 @@
         this.updateHostControls();
         const startBtn = document.getElementById('btn-start-game');
         if (GameState.isHost && startBtn) {
-          // Enable start match button whenever at least 1 player is connected
           startBtn.disabled = players.length === 0;
         }
       },
@@ -1506,7 +1528,7 @@
           if (tourneyLabel) tourneyLabel.style.display = 'none';
         }
 
-        // 3. AWARDS (Only revealed when Host explicitly Ends the Tournament)
+        // 3. DISTINCT STYLED AWARDS CARD (Sits dynamically directly under standings)
         const awardsContainer = document.getElementById('awards-container');
         awardsContainer.innerHTML = '';
 
@@ -1515,24 +1537,27 @@
           const speedWinner = validSolvers.sort((a, b) => (a.submittedAt || Infinity) - (b.submittedAt || Infinity))[0];
           const accuracyWinner = [...players].sort((a, b) => (a.wrongAttempts || 0) - (b.wrongAttempts || 0))[0];
 
-          awardsContainer.innerHTML = `<div class="input-label" style="margin-top: 14px;">🏆 TOURNAMENT AWARDS</div>`;
+          let awardsHTML = `<div class="award-card-styled">
+            <div class="input-label" style="color:var(--cyan-neon); margin-bottom:8px;">🏆 TOURNAMENT HALL OF FAME</div>`;
 
           if (speedWinner && speedWinner.name) {
-            awardsContainer.innerHTML += `
-              <div class="award-card" style="background: rgba(255, 200, 42, 0.1); border: 1px solid var(--amber-warm); padding: 10px; border-radius: 12px; margin-top: 6px;">
-                <div style="font-weight:900; color:var(--amber-warm);">⚡ SPEED DEMON</div>
-                <div style="font-size:0.78rem; color:#fff; margin-top:2px;"><b>${speedWinner.name}</b> had the fastest overall completions!</div>
+            awardsHTML += `
+              <div style="background: rgba(255, 200, 42, 0.12); border: 1px solid var(--amber-warm); padding: 8px 12px; border-radius: 10px; margin-bottom: 6px;">
+                <div style="font-weight:900; color:var(--amber-warm); font-size:0.8rem;">⚡ SPEED DEMON</div>
+                <div style="font-size:0.75rem; color:#fff; margin-top:2px;"><b>${speedWinner.name}</b> recorded fastest completions!</div>
               </div>
             `;
           }
           if (accuracyWinner && accuracyWinner.name) {
-            awardsContainer.innerHTML += `
-              <div class="award-card" style="background: rgba(0, 240, 255, 0.1); border: 1px solid var(--cyan-neon); padding: 10px; border-radius: 12px; margin-top: 6px;">
-                <div style="font-weight:900; color:var(--cyan-neon);">🎯 ACCURACY ACE</div>
-                <div style="font-size:0.78rem; color:#fff; margin-top:2px;"><b>${accuracyWinner.name}</b> made the fewest wrong attempts!</div>
+            awardsHTML += `
+              <div style="background: rgba(0, 240, 255, 0.12); border: 1px solid var(--cyan-neon); padding: 8px 12px; border-radius: 10px;">
+                <div style="font-weight:900; color:var(--cyan-neon); font-size:0.8rem;">🎯 ACCURACY ACE</div>
+                <div style="font-size:0.75rem; color:#fff; margin-top:2px;"><b>${accuracyWinner.name}</b> made the fewest wrong attempts!</div>
               </div>
             `;
           }
+          awardsHTML += `</div>`;
+          awardsContainer.innerHTML = awardsHTML;
         }
 
         // Toggle Control Panels & Buttons
@@ -1766,6 +1791,8 @@ window.addEventListener('DOMContentLoaded', () => {
         }
         if (autoHost) {
           roomRef.child('meta').update({ hostId: GameState.playerId });
+          // Explicitly register host status in player state immediately
+          roomRef.child(`players/${GameState.playerId}`).update({ isHost: true });
         }
         UIController.initRoomView();
       });
