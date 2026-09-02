@@ -1331,7 +1331,7 @@ window.addEventListener('load', () => {
         roomRef = db.ref('rooms/' + currentRoom);
         const myPlayerRef = roomRef.child('players/' + myPlayerId);
 
-        myPlayerRef.set({
+        myPlayerRef.update({
           name: myName,
           joinedAt: firebase.database.ServerValue.TIMESTAMP,
           isReady: false,
@@ -1353,6 +1353,19 @@ window.addEventListener('load', () => {
         if (autoHost) {
           roomRef.child('host').set(myPlayerId);
         }
+
+        // Sync incoming players instantly from master room into VocaBomb
+        db.ref(`master_rooms/${currentRoom}/players`).on('child_added', pSnap => {
+          const pid = pSnap.key;
+          const p = pSnap.val() || {};
+          if (pid && pid !== myPlayerId) {
+            roomRef.child(`players/${pid}`).update({
+              name: p.name || 'PLAYER',
+              isDisconnected: false,
+              isEliminated: false
+            });
+          }
+        });
 
         // Listen for master_rooms status to auto-return players when host disbands or leaves
         db.ref(`master_rooms/${currentRoom}/status`).on('value', mSnap => {

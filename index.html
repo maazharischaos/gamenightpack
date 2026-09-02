@@ -667,12 +667,18 @@
 
       roomRef.child('launchedGame').on('value', gSnap => {
         const gameFile = gSnap.val();
-        // Redirect as soon as launchedGame is set to a file (SETUP or PLAYING)
         if (gameFile && typeof gameFile === 'string' && gameFile.trim() !== '') {
           triggerLoadingOverlay('🎮', 'LAUNCHING GAME...');
-          setTimeout(() => {
-            window.location.href = `${gameFile}?room=${currentRoomCode}&name=${encodeURIComponent(myName)}&pid=${myPid}&isHost=false`;
-          }, 400);
+          
+          // Instantly sync player into master_rooms before redirecting
+          db.ref(`master_rooms/${currentRoomCode}/players/${myPid}`).update({
+            name: myName,
+            isHost: false
+          }).then(() => {
+            setTimeout(() => {
+              window.location.href = `${gameFile}?room=${currentRoomCode}&name=${encodeURIComponent(myName)}&pid=${myPid}&isHost=false`;
+            }, 400);
+          });
         }
       });
 
@@ -770,7 +776,7 @@
 
     /* AUTOMATIC LOCALSTORAGE PURGE ON NEW BUILD RELEASE */
     (function() {
-      const CURRENT_APP_VERSION = 'v22';
+      const CURRENT_APP_VERSION = 'v23';
       const storedVersion = localStorage.getItem('gamenight_app_version');
 
       if (storedVersion !== CURRENT_APP_VERSION) {

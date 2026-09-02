@@ -275,18 +275,25 @@
     .room-code-val { font-size: 2.5rem; font-weight: 900; letter-spacing: 6px; color: var(--amber-warm); text-shadow: 0 0 20px var(--amber-glow); }
 
     .player-list { 
-      display: grid; 
-      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); 
-      gap: 6px; 
-      max-height: 120px; 
+      display: flex; 
+      flex-wrap: wrap; 
+      gap: 4px; 
+      max-height: 80px; 
       overflow-y: auto; 
-      margin-top: 6px; 
+      margin-top: 4px; 
     }
     .player-pill {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 6px 10px; background: rgba(255, 255, 255, 0.04);
-      border-radius: var(--radius-md); border: 1px solid var(--glass-border);
-      font-size: 0.72rem; font-weight: 800; text-transform: uppercase;
+      display: inline-flex; 
+      align-items: center; 
+      gap: 3px;
+      padding: 1px 4px; 
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 4px; 
+      border: 1px solid var(--glass-border);
+      font-size: 0.65rem; 
+      font-weight: 800; 
+      text-transform: uppercase;
+      width: auto;
     }
     .award-card-styled {
       background: rgba(0, 240, 255, 0.06);
@@ -336,9 +343,13 @@
     .word-card .custom-input { padding: 10px 14px; font-size: 0.95rem; }
 
     .sticky-submit-bar {
-      flex-shrink: 0; padding: 12px 16px; background: rgba(7, 9, 14, 0.98); backdrop-filter: blur(20px);
+      flex-shrink: 0; 
+      padding: 10px 16px calc(14px + env(safe-area-inset-bottom, 12px)); 
+      background: rgba(7, 9, 14, 0.98); 
+      backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      border-top: 1px solid var(--glass-border); z-index: 20;
+      border-top: 1px solid var(--glass-border); 
+      z-index: 20;
     }
 
     .podium-list { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
@@ -952,10 +963,13 @@
             const pid = pSnap.key;
             const p = pSnap.val() || {};
             if (GameState.playersRef && pid) {
-              GameState.playersRef.child(pid).update({
-                name: p.name || 'UNKNOWN',
-                isHost: !!p.isHost,
-                online: true
+              GameState.playersRef.child(pid).once('value', existingSnap => {
+                const existing = existingSnap.val() || {};
+                GameState.playersRef.child(pid).update({
+                  name: p.name || existing.name || 'PLAYER',
+                  isHost: existing.isHost || !!p.isHost,
+                  online: true
+                });
               });
             }
           });
@@ -976,7 +990,9 @@
           GameState.gameMode = meta.gameMode || 'classic';
           GameState.wordCategory = meta.wordCategory || 'mixed';
           GameState.isTournamentOver = !!meta.isTournamentOver;
-          if (meta.hostId) GameState.isHost = (meta.hostId === GameState.playerId);
+          if (meta.hostId) {
+            GameState.isHost = (meta.hostId === GameState.playerId);
+          }
 
           if (meta.status === 'countdown' && (fsm.currentState === GAME_STATES.ROOM || fsm.currentState === GAME_STATES.ROUND_END)) {
             StateCalculations.resetLocalState();
@@ -1119,12 +1135,17 @@
           let earnedPoints = wordObj.points * Math.min(GameState.comboStreak, 3);
           if (GameState.isOvertimeActive) earnedPoints *= 2;
 
-          // First-to-claim restriction for Golden Bonus Points
-          if (wordObj.isGolden) {
-            if (!wordObj.claimedBy) {
-              earnedPoints += 500;
+          // Check live claim state directly from GameState.words array
+          const liveWord = GameState.words.find(w => w.id === wordObj.id) || wordObj;
+
+          if (liveWord.isGolden) {
+            if (!liveWord.claimedBy) {
+              // First solver gets full golden points + combo streak
+              earnedPoints = liveWord.points * Math.min(GameState.comboStreak, 3);
+              if (GameState.isOvertimeActive) earnedPoints *= 2;
+              
               sound.playGoldenClaim();
-              ToastEngine.show("⚡ GOLDEN WORD CLAIMED! +500 BONUS", "success");
+              ToastEngine.show(`⚡ GOLDEN WORD CLAIMED! +${earnedPoints} PTS`, "success");
               
               if (GameState.matchRef) {
                 const wordIdx = GameState.words.findIndex(w => w.id === wordObj.id);
@@ -1133,9 +1154,11 @@
                 }
               }
             } else {
-              // Revert to original base points if another player already claimed it
-              earnedPoints = Math.floor(wordObj.points / 2) * Math.min(GameState.comboStreak, 3);
+              // Subsequent solver gets only original base points (no golden bonus)
+              const originalBasePoints = Math.floor(liveWord.points / 2);
+              earnedPoints = originalBasePoints;
               if (GameState.isOvertimeActive) earnedPoints *= 2;
+              
               sound.playSuccess(1 + (GameState.comboStreak * 0.1));
               ToastEngine.show("Golden bonus already claimed! Standard points earned.", "info");
             }
@@ -1449,10 +1472,16 @@
       updateGoldenWordClaims() {
         GameState.words.forEach(w => {
           if (w.isGolden && w.claimedBy) {
+            const card = document.getElementById(`card-${w.id}`);
             const tag = document.getElementById(`claimed-tag-${w.id}`);
+            if (card && w.claimedBy !== GameState.playerName) {
+              card.classList.remove('golden-word');
+              const badge = card.querySelector('.point-badge');
+              if (badge) badge.textContent = `+${Math.floor(w.points / 2)} PTS`;
+            }
             if (tag) {
               tag.style.display = 'block';
-              tag.textContent = `🌟 GOLDEN BONUS CLAIMED BY ${w.claimedBy}`;
+              tag.textContent = `🌟 CLAIMED BY ${w.claimedBy}`;
             }
           }
         });
