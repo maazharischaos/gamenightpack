@@ -679,7 +679,7 @@
       letter-spacing: 1px;
     }
 
-    /* TRUE FULL-SCREEN OVERLAY & PINNED BOTTOM BUTTONS FOR STANDINGS SCREEN */
+    /* FULL SCREEN OVERLAY WITH FLUID WIDTH AND NON-CLIPPED MARGINS */
     #boom-screen {
       display: none;
       position: fixed;
@@ -696,7 +696,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: space-between;
-      padding: 20px 16px calc(20px + env(safe-area-inset-bottom)) 16px;
+      padding: 20px 20px calc(20px + env(safe-area-inset-bottom)) 20px;
       text-align: center;
       z-index: 10000;
       animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -706,7 +706,6 @@
     .boom-scroll-area {
       flex: 1;
       width: 100%;
-      max-width: 500px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
@@ -936,24 +935,23 @@
       display: inline-block;
     }
 
-    /* LARGE, PINNED COMPACT BUTTON ROWS STYLING */
+    /* FLUID COMPACT BUTTON ROW STYLING WITH NO SIDE-CLIPPING */
     .compact-btn-row {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       width: 100%;
-      max-width: 500px;
       padding-top: 12px;
       flex-shrink: 0;
     }
 
     .compact-btn-row .btn {
       flex: 1;
-      padding: 18px 10px;
-      font-size: 0.95rem;
+      padding: 16px 8px;
+      font-size: 0.88rem;
       font-weight: 900;
       margin-bottom: 0;
       border-radius: 16px;
-      letter-spacing: 0.5px;
+      letter-spacing: 0px;
       white-space: nowrap;
     }
 
@@ -974,8 +972,8 @@
         font-size: 1.1rem;
       }
       .compact-btn-row .btn {
-        font-size: 0.82rem;
-        padding: 14px 6px;
+        font-size: 0.78rem;
+        padding: 14px 4px;
       }
     }
 
