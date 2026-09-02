@@ -1402,7 +1402,7 @@ window.addEventListener('load', () => {
           roomRefCheck.set({
             createdAt: firebase.database.ServerValue.TIMESTAMP,
             gameState: 'LOBBY',
-            host: autoPid || myPlayerId,
+            host: autoHost ? (autoPid || myPlayerId) : null,
             config: {
               format: 'KNOCKOUT',
               mode: 'RANDOM',
@@ -1444,9 +1444,10 @@ window.addEventListener('load', () => {
           }
         });
 
-        if (autoHost) {
-          roomRef.child('host').set(myPlayerId);
-        }
+        roomRef.child('host').transaction((currentHost) => {
+          if (autoHost) return myPlayerId;
+          return currentHost ? currentHost : null;
+        });
 
         // Sync incoming players instantly from master room into VocaBomb
         db.ref(`master_rooms/${currentRoom}/players`).on('child_added', pSnap => {
