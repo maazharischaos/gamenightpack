@@ -681,20 +681,36 @@
 
     #boom-screen {
       display: none;
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(7, 9, 14, 0.97);
-      border-radius: 28px;
-      border: 2px solid var(--red);
-      box-shadow: 0 0 50px var(--red-glow);
+      position: fixed;
+      inset: 0;
+      background: rgba(7, 9, 14, 0.98);
+      border-radius: 0;
+      border: none;
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
-      padding: 24px 18px;
+      padding: max(20px, env(safe-area-inset-top)) 18px max(20px, env(safe-area-inset-bottom));
       text-align: center;
-      z-index: 100;
+      z-index: 1000;
       animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       overflow-y: auto;
+    }
+
+    .btn-compact-row {
+      display: flex;
+      gap: 6px;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    .btn-compact {
+      flex: 1;
+      padding: 12px 6px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      border-radius: 12px;
+      margin-bottom: 0;
+      letter-spacing: 0.5px;
     }
 
     .boom-title {
@@ -1212,14 +1228,22 @@
 
           <div id="round-stats" style="width: 100%;"></div>
           
-         <div id="host-boom-controls" style="display:none; width: 100%; margin-top: 14px;">
-            <button class="btn btn-green" id="btn-replay-same">REPLAY (SAME RULES)</button>
-            <button class="btn btn-gold" id="btn-return-launcher" onclick="returnToLauncher()">🎮 CHANGE GAME / LAUNCHER</button>
-            <button class="btn btn-secondary" id="btn-end-game">END GAME (MAIN MENU)</button>
+         <!-- HOST CONTROL BUTTONS (3 COMPACT BUTTONS) -->
+         <div id="host-boom-controls" style="display:none; width: 100%; margin-top: 12px;">
+            <div class="btn-compact-row">
+              <button class="btn btn-green btn-compact" id="btn-replay-same">🔄 REPLAY</button>
+              <button class="btn btn-secondary btn-compact" id="btn-goto-lobby">🏠 GAME LOBBY</button>
+              <button class="btn btn-gold btn-compact" id="btn-return-launcher" onclick="returnToLauncher()">🎮 LAUNCHER</button>
+            </div>
           </div>
-          <div id="non-host-boom-msg" style="display:none; width: 100%; margin-top: 14px;">
-            <div style="font-size: 0.85rem; color: var(--gold); font-weight:800; margin-bottom: 10px;">WAITING FOR HOST TO START NEXT GAME...</div>
-            <button class="btn btn-gold" id="btn-player-return-launcher" onclick="returnToLauncher()">🎮 RETURN TO LAUNCHER</button>
+
+          <!-- PLAYER CONTROL BUTTONS (2 BUTTONS) -->
+          <div id="non-host-boom-msg" style="display:none; width: 100%; margin-top: 12px;">
+            <div style="font-size: 0.78rem; color: var(--gold); font-weight:800; margin-bottom: 8px;">WAITING FOR HOST DECISION...</div>
+            <div class="btn-compact-row">
+              <button class="btn btn-green btn-compact" id="btn-player-continue" disabled>⏳ CONTINUING...</button>
+              <button class="btn btn-secondary btn-compact" id="btn-player-leave-lobby" onclick="leaveLobbyOnly()">🚪 LEAVE LOBBY</button>
+            </div>
           </div>
         </div>
       </div>
@@ -2084,6 +2108,10 @@ if ('serviceWorker' in navigator) {
         document.getElementById('boom-screen').style.display = 'none';
         document.getElementById('room-screen').style.display = 'none';
         document.getElementById('game-screen').style.display = 'block';
+        
+        // Restore history card visibility during active gameplay
+        const historyCard = document.querySelector('.history-card');
+        if (historyCard) historyCard.style.display = 'block';
 
         const isSurge = roomData.config?.format === 'SURGE';
         const maxRounds = roomData.config?.surgeMaxRounds || 5;
@@ -2236,6 +2264,10 @@ if ('serviceWorker' in navigator) {
         handledBoom = true;
         stopActiveTurnVibration();
         document.getElementById('active-game-card').classList.remove('low-time-shake', 'frozen-box');
+        
+        // Hide history card on full-screen game over
+        const historyCard = document.querySelector('.history-card');
+        if (historyCard) historyCard.style.display = 'none';
         
         const isVictim = roomData.loserId === myPlayerId;
 
@@ -3214,6 +3246,58 @@ if ('serviceWorker' in navigator) {
     document.getElementById('word-input').addEventListener('keypress', (e) => {
       if (e.key === 'Enter') submitWord();
     });
+
+// Game Lobby (Change Rules) Button for Host
+document.getElementById('btn-goto-lobby').addEventListener('click', () => {
+  if (roomData.host !== myPlayerId) return;
+  
+  const updates = { 
+    gameState: 'LOBBY', 
+    isGameOver: false, 
+    eliminationRankings: null, 
+    usedWords: null, 
+    activeAttackWarning: null,
+    surgeRound: null,
+    surgeTurnsInRound: null,
+    surgeScores: null,
+    surgeBaseOrder: null,
+    lastSubmittedWord: null,
+    surgeTurnToken: null,
+    isSurgeIntermission: false,
+    intermissionEndTime: null,
+    roundSecretFuseEndTime: null,
+    hasRoundFuseFired: null
+  };
+
+  // Keep rules locked = false so host can tweak rules in lobby
+  if (roomData.config) updates['config/rulesLocked'] = false;
+
+  Object.entries(roomData.players || {}).forEach(([pid, p]) => {
+    if (!p.isDisconnected) {
+      updates[`players/${pid}/isReady`] = false;
+      updates[`players/${pid}/isEliminated`] = false;
+      updates[`players/${pid}/streak`] = 0;
+      updates[`players/${pid}/powerup`] = null;
+      updates[`players/${pid}/shields`] = 0;
+    }
+  });
+
+  roomRef.update(updates);
+});
+
+// Leave Lobby for Non-Host Players (Allows host to replay with remaining players)
+function leaveLobbyOnly() {
+  stopActiveTurnVibration();
+  releaseScreenWakeLock();
+  if (roomRef && myPlayerId) {
+    roomRef.child(`players/${myPlayerId}`).remove();
+    // Also remove from master room roster
+    if (typeof db !== 'undefined' && currentRoom) {
+      db.ref(`master_rooms/${currentRoom}/players/${myPlayerId}`).remove();
+    }
+  }
+  returnToLauncher();
+}
   </script>
 </body>
 </html>
