@@ -1892,14 +1892,15 @@ if ('serviceWorker' in navigator) {
           const startingLetter = getRandomLetter(banned);
           const startNow = getServerTime();
 
+          const baseTurnMs = (roomData.config?.baseTurnTime || 8) * 1000;
           const updates = {
             gameState: 'PLAYING',
             activePlayerId: startingPlayerId,
             playerOrder: activePlayers,
             requiredLetter: startingLetter,
-            currentTurnTimeCap: roomData.config.baseTurnTime * 1000,
+            currentTurnTimeCap: baseTurnMs,
             globalFuseEndTime: startNow + (totalFuseSeconds * 1000),
-            turnEndTime: startNow + (roomData.config.baseTurnTime * 1000),
+            turnEndTime: startNow + baseTurnMs,
             isFrozen: false,
             freezeEndTime: 0,
             isPanicClock: false,
@@ -2820,14 +2821,16 @@ if ('serviceWorker' in navigator) {
         roomRef.update({ activeAttackWarning: null });
       }
 
-      const cap = roomData.currentTurnTimeCap || (roomData.config.baseTurnTime * 1000);
+      const baseMs = (roomData.config?.baseTurnTime || 8) * 1000;
+      const cap = roomData.currentTurnTimeCap || baseMs;
+      const endTime = roomData.turnEndTime || (nowServer + cap);
       
       let effectiveNow = nowServer;
       if (warningActive) {
         effectiveNow = warning.pauseEndTime - 2000;
       }
 
-      const remainingTurnTime = Math.max(0, roomData.turnEndTime - effectiveNow);
+      const remainingTurnTime = Math.max(0, endTime - effectiveNow);
       const percent = Math.max(0, Math.min(100, (remainingTurnTime / cap) * 100));
       
       const timerFill = document.getElementById('turn-timer');
@@ -3148,9 +3151,10 @@ if ('serviceWorker' in navigator) {
           powerup: newPowerup
         });
 
-        const turnTimeCap = roomData.currentTurnTimeCap || (cfg.baseTurnTime * 1000);
+        const turnTimeCap = roomData.currentTurnTimeCap || ((cfg?.baseTurnTime || 8) * 1000);
         const nowServer = getServerTime();
-        const rawRemainingTime = Math.max(0, roomData.turnEndTime - nowServer);
+        const endTime = roomData.turnEndTime || (nowServer + turnTimeCap);
+        const rawRemainingTime = Math.max(0, endTime - nowServer);
         
         // CLAMPED REMAINING TIME PREVENTS POWER-UP POINT INFLATION EXPLOITS
         const remainingTime = Math.min(rawRemainingTime, turnTimeCap);
