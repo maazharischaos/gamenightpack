@@ -511,15 +511,15 @@ p.sub{
 (function(){
 "use strict";
 
-// Firebase Config
+// Firebase Config synced with index.html
 const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyAJD7Uttw1NQlU3cIPUINOUpC8SqRiWpaQ",
-  authDomain: "gamenightpack.firebaseapp.com",
-  databaseURL: "https://gamenightpack-default-rtdb.firebaseio.com",
-  projectId: "gamenightpack",
-  storageBucket: "gamenightpack.firebasestorage.app",
-  messagingSenderId: "5588271975",
-  appId: "1:5588271975:web:898050b61dcf78bdf8a5c2"
+  apiKey: "AIzaSyBeYg5e99uvqvBcRlkETgbg36VV_Sllclg",
+  authDomain: "gamenightpack-44f16.firebaseapp.com",
+  databaseURL: "https://gamenightpack-44f16-default-rtdb.firebaseio.com",
+  projectId: "gamenightpack-44f16",
+  storageBucket: "gamenightpack-44f16.firebasestorage.app",
+  messagingSenderId: "383266305677",
+  appId: "1:383266305677:web:596c70c7ddc304fd9994c4"
 };
 firebase.initializeApp(FIREBASE_CONFIG);
 const db = firebase.database();
@@ -841,11 +841,30 @@ async function joinFromLauncher(roomCode, pName, pId, isHostFlag) {
   saveIdentity();
   render(); // Render immediately to prevent screen-flash
 
-  // Write player directly to database
-  await stSet("sg:" + S.roomCode + ":players:" + S.playerId, { name: pName, joinedAt: serverNow() });
+  // Register state into Scattergo store
+  await stSet("sg:" + S.roomCode + ":players:" + S.playerId, { name: pName, isHost: isHost, joinedAt: serverNow() });
 
-  // Add real-time listener on master_rooms so players auto-return when host disbands or finishes
+  // Read master room snapshot to guarantee no missing connected players are dropped
   if (typeof db !== 'undefined' && S.roomCode) {
+    try {
+      const snap = await db.ref(`master_rooms/${S.roomCode}/players`).get();
+      if (snap.exists()) {
+        const mPlayers = snap.val() || {};
+        for (const [pid, pData] of Object.entries(mPlayers)) {
+          if (pData && pData.name) {
+            await stSet("sg:" + S.roomCode + ":players:" + pid, {
+              name: pData.name,
+              isHost: !!pData.isHost,
+              joinedAt: serverNow()
+            });
+          }
+        }
+      }
+    } catch(e) {
+      console.error("Master room player sync failed:", e);
+    }
+
+    // Listener for disbanded room or lobby state changes
     db.ref(`master_rooms/${S.roomCode}/status`).on('value', snap => {
       const status = snap.val();
       if (status === 'LOBBY' || status === 'DISBANDED' || !status) {
@@ -1009,6 +1028,10 @@ async function createRoom(){
     S.meta = meta;
     S.screen = "hostLobby";
     saveIdentity();
+
+    // Ensure host is written to scattergo player database node
+    await stSet("sg:"+code+":players:"+hostId, { name: meta.hostName, isHost: true, joinedAt: serverNow() });
+
     if(!editingExisting) sRoomCreated();
     render();
     if(!editingExisting) startMainLoop();
@@ -2388,8 +2411,13 @@ async function pollTick(){
       const data = await stGet(key);
       if(data) newPlayers[pid] = data;
     }
-    const playersChanged = JSON.stringify(Object.keys(newPlayers).sort()) !== JSON.stringify(Object.keys(S.players).sort());
-    S.players = newPlayers;
+
+    // Safely update players without overwriting non-host records when a snapshot is empty
+    if(Object.keys(newPlayers).length > 0){
+      const playersChanged = JSON.stringify(Object.keys(newPlayers).sort()) !== JSON.stringify(Object.keys(S.players).sort());
+      S.players = newPlayers;
+      if(S.role === "host" && S.screen === "hostLobby" && playersChanged){ sJoin(); render(); }
+    }
 
     if(!meta) return;
 
@@ -2410,9 +2438,9 @@ async function pollTick(){
       }
 
       if(S.role === "host"){
-        handleHostPoll(prevStatus, playersChanged);
+        handleHostPoll(prevStatus, false);
       } else {
-        await handlePlayerPoll(prevStatus, prevRoundNum, playersChanged);
+        await handlePlayerPoll(prevStatus, prevRoundNum, false);
       }
     }
   }catch(e){
