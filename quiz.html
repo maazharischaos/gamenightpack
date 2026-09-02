@@ -288,7 +288,7 @@
 
 <script>
 /* ============================================================
-   ⬇⬇⬇  PASTE YOUR FIREBASE CONFIG HERE  ⬇⬇⬇
+   FIREBASE CONFIGURATION
 ============================================================ */
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyBeYg5e99uvqvBcRlkETgbg36VV_Sllclg",
@@ -299,37 +299,21 @@ const FIREBASE_CONFIG = {
   messagingSenderId: "383266305677",
   appId: "1:383266305677:web:596c70c7ddc304fd9994c4"
 };
-/* ============================================================ */
 
-const QBANK=[["Geography","What is the capital of Afghanistan?","Kabul","capital"],["Geography","Kabul is the capital of which country?","Afghanistan","country"],["Geography","What is the capital of Albania?","Tirana","capital"],["Geography","Tirana is the capital of which country?","Albania","country"],["Geography","What is the capital of Algeria?","Algiers","capital"],["Geography","Algiers is the capital of which country?","Algeria","country"],["Geography","What is the capital of Argentina?","Buenos Aires","capital"],["Geography","Buenos Aires is the capital of which country?","Argentina","country"],["Geography","What is the capital of Armenia?","Yerevan","capital"],["Geography","Yerevan is the capital of which country?","Armenia","country"],["Geography","What is the capital of Australia?","Canberra","capital"],["Geography","Canberra is the capital of which country?","Australia","country"],["Geography","What is the capital of Austria?","Vienna","capital"],["Geography","Vienna is the capital of which country?","Austria","country"],["Geography","What is the capital of Azerbaijan?","Baku","capital"],["Geography","Baku is the capital of which country?","Azerbaijan","country"],["Geography","What is the capital of Bangladesh?","Dhaka","capital"],["Geography","Dhaka is the capital of which country?","Bangladesh","country"],["Geography","What is the capital of Belgium?","Brussels","capital"],["Geography","Brussels is the capital of which country?","Belgium","country"],["Geography","What is the capital of Bhutan?","Thimphu","capital"],["Geography","Thimphu is the capital of which country?","Bhutan","country"],["Geography","What is the capital of Brazil?","Brasilia","capital"],["Geography","Brasilia is the capital of which country?","Brazil","country"],["Geography","What is the capital of Bulgaria?","Sofia","capital"],["Geography","Sofia is the capital of which country?","Bulgaria","country"],["Geography","What is the capital of Cambodia?","Phnom Penh","capital"],["Geography","Phnom Penh is the capital of which country?","Cambodia","country"],["Geography","What is the capital of Canada?","Ottawa","capital"],["Geography","Ottawa is the capital of which country?","Canada","country"],["Geography","What is the capital of Chile?","Santiago","capital"],["Geography","Santiago is the capital of which country?","Chile","country"],["Geography","What is the capital of China?","Beijing","capital"],["Geography","Beijing is the capital of which country?","China","country"],["Geography","What is the capital of Colombia?","Bogota","capital"],["Geography","Bogota is the capital of which country?","Colombia","country"],["Geography","What is the capital of Croatia?","Zagreb","capital"],["Geography","Zagreb is the capital of which country?","Croatia","country"],["Geography","What is the capital of Cuba?","Havana","capital"],["Geography","Havana is the capital of which country?","Cuba","country"],["Geography","What is the capital of Czechia?","Prague","capital"],["Geography","Prague is the capital of which country?","Czechia","country"],["Geography","What is the capital of Denmark?","Copenhagen","capital"],["Geography","Copenhagen is the capital of which country?","Denmark","country"],["Geography","What is the capital of Ecuador?","Quito","capital"],["Geography","Quito is the capital of which country?","Ecuador","country"],["Geography","What is the capital of Egypt?","Cairo","capital"],["Geography","Cairo is the capital of which country?","Egypt","country"],["Geography","What is the capital of Estonia?","Tallinn","capital"],["Geography","Tallinn is the capital of which country?","Estonia","country"],["Geography","What is the capital of Ethiopia?","Addis Ababa","capital"],["Geography","Addis Ababa is the capital of which country?","Ethiopia","country"],["Geography","What is the capital of Finland?","Helsinki","capital"],["Geography","Helsinki is the capital of which country?","Finland","country"],["Geography","What is the capital of France?","Paris","capital"],["Geography","Paris is the capital of which country?","France","country"],["Geography","What is the capital of Georgia?","Tbilisi","capital"],["Geography","Tbilisi is the capital of which country?","Georgia","country"],["Geography","What is the capital of Germany?","Berlin","capital"],["Geography","Berlin is the capital of which country?","Germany","country"],["Geography","What is the capital of Ghana?","Accra","capital"],["Geography","Accra is the capital of which country?","Ghana","country"],["Geography","What is the capital of Greece?","Athens","capital"],["Geography","Athens is the capital of which country?","Greece","country"],["Geography","What is the capital of Hungary?","Budapest","capital"],["Geography","Budapest is the capital of which country?","Hungary","country"],["Geography","What is the capital of Iceland?","Reykjavik","capital"],["Geography","Reykjavik is the capital of which country?","Iceland","country"],["Geography","What is the capital of India?","New Delhi","capital"],["Geography","New Delhi is the capital of which country?","India","country"],["Geography","What is the capital of Indonesia?","Jakarta","capital"],["Geography","Jakarta is the capital of which country?","Indonesia","country"],["Geography","What is the capital of Iran?","Tehran","capital"],["Geography","Tehran is the capital of which country?","Iran","country"],["Geography","What is the capital of Iraq?","Baghdad","capital"],["Geography","Baghdad is the capital of which country?","Iraq","country"],["Geography","What is the capital of Ireland?","Dublin","capital"],["Geography","Dublin is the capital of which country?","Ireland","country"],["Geography","What is the capital of Italy?","Rome","capital"],["Geography","Rome is the capital of which country?","Italy","country"],["Geography","What is the capital of Japan?","Tokyo","capital"],["Geography","Tokyo is the capital of which country?","Japan","country"],["Geography","What is the capital of Jordan?","Amman","capital"],["Geography","Amman is the capital of which country?","Jordan","country"],["Geography","What is the capital of Kazakhstan?","Astana","capital"],["Geography","Astana is the capital of which country?","Kazakhstan","country"],["Geography","What is the capital of Kenya?","Nairobi","capital"],["Geography","Nairobi is the capital of which country?","Kenya","country"],["Geography","What is the capital of Kuwait?","Kuwait City","capital"],["Geography","Kuwait City is the capital of which country?","Kuwait","country"],["Geography","What is the capital of Latvia?","Riga","capital"],["Geography","Riga is the capital of which country?","Latvia","country"],["Geography","What is the capital of Lebanon?","Beirut","capital"],["Geography","Beirut is the capital of which country?","Lebanon","country"],["Geography","What is the capital of Libya?","Tripoli","capital"],["Geography","Tripoli is the capital of which country?","Libya","country"],["Geography","What is the capital of Lithuania?","Vilnius","capital"],["Geography","Vilnius is the capital of which country?","Lithuania","country"],["Geography","What is the capital of Malaysia?","Kuala Lumpur","capital"],["Geography","Kuala Lumpur is the capital of which country?","Malaysia","country"],["Geography","What is the capital of Mexico?","Mexico City","capital"],["Geography","Mexico City is the capital of which country?","Mexico","country"],["Geography","What is the capital of Mongolia?","Ulaanbaatar","capital"],["Geography","Ulaanbaatar is the capital of which country?","Mongolia","country"],["Geography","What is the capital of Morocco?","Rabat","capital"],["Geography","Rabat is the capital of which country?","Morocco","country"],["Geography","What is the capital of Nepal?","Kathmandu","capital"],["Geography","Kathmandu is the capital of which country?","Nepal","country"],["Geography","What is the capital of Netherlands?","Amsterdam","capital"],["Geography","Amsterdam is the capital of which country?","Netherlands","country"],["Geography","What is the capital of New Zealand?","Wellington","capital"],["Geography","Wellington is the capital of which country?","New Zealand","country"],["Geography","What is the capital of Nigeria?","Abuja","capital"],["Geography","Abuja is the capital of which country?","Nigeria","country"],["Geography","What is the capital of Norway?","Oslo","capital"],["Geography","Oslo is the capital of which country?","Norway","country"],["Geography","What is the capital of Oman?","Muscat","capital"],["Geography","Muscat is the capital of which country?","Oman","country"],["Geography","What is the capital of Pakistan?","Islamabad","capital"],["Geography","Islamabad is the capital of which country?","Pakistan","country"],["Geography","What is the capital of Peru?","Lima","capital"],["Geography","Lima is the capital of which country?","Peru","country"],["Geography","What is the capital of Philippines?","Manila","capital"],["Geography","Manila is the capital of which country?","Philippines","country"],["Geography","What is the capital of Poland?","Warsaw","capital"],["Geography","Warsaw is the capital of which country?","Poland","country"],["Geography","What is the capital of Portugal?","Lisbon","capital"],["Geography","Lisbon is the capital of which country?","Portugal","country"],["Geography","What is the capital of Qatar?","Doha","capital"],["Geography","Doha is the capital of which country?","Qatar","country"],["Geography","What is the capital of Romania?","Bucharest","capital"],["Geography","Bucharest is the capital of which country?","Romania","country"],["Geography","What is the capital of Russia?","Moscow","capital"],["Geography","Moscow is the capital of which country?","Russia","country"],["Geography","What is the capital of Saudi Arabia?","Riyadh","capital"],["Geography","Riyadh is the capital of which country?","Saudi Arabia","country"],["Geography","What is the capital of Serbia?","Belgrade","capital"],["Geography","Belgrade is the capital of which country?","Serbia","country"],["Geography","What is the capital of Singapore?","Singapore","capital"],["Geography","Singapore is the capital of which country?","Singapore","country"],["Geography","What is the capital of Slovakia?","Bratislava","capital"],["Geography","Bratislava is the capital of which country?","Slovakia","country"],["Geography","What is the capital of Slovenia?","Ljubljana","capital"],["Geography","Ljubljana is the capital of which country?","Slovenia","country"],["Geography","What is the capital of South Korea?","Seoul","capital"],["Geography","Seoul is the capital of which country?","South Korea","country"],["Geography","What is the capital of Spain?","Madrid","capital"],["Geography","Madrid is the capital of which country?","Spain","country"],["Geography","What is the capital of Sweden?","Stockholm","capital"],["Geography","Stockholm is the capital of which country?","Sweden","country"],["Geography","What is the capital of Switzerland?","Bern","capital"],["Geography","Bern is the capital of which country?","Switzerland","country"],["Geography","What is the capital of Syria?","Damascus","capital"],["Geography","Damascus is the capital of which country?","Syria","country"],["Geography","What is the capital of Thailand?","Bangkok","capital"],["Geography","Bangkok is the capital of which country?","Thailand","country"],["Geography","What is the capital of Tunisia?","Tunis","capital"],["Geography","Tunis is the capital of which country?","Tunisia","country"],["Geography","What is the capital of Turkey?","Ankara","capital"],["Geography","Ankara is the capital of which country?","Turkey","country"],["Geography","What is the capital of Ukraine?","Kyiv","capital"],["Geography","Kyiv is the capital of which country?","Ukraine","country"],["Geography","What is the capital of United Arab Emirates?","Abu Dhabi","capital"],["Geography","Abu Dhabi is the capital of which country?","United Arab Emirates","country"],["Geography","What is the capital of United Kingdom?","London","capital"],["Geography","London is the capital of which country?","United Kingdom","country"],["Geography","What is the capital of United States?","Washington DC","capital"],["Geography","Washington DC is the capital of which country?","United States","country"],["Geography","What is the capital of Uruguay?","Montevideo","capital"],["Geography","Montevideo is the capital of which country?","Uruguay","country"],["Geography","What is the capital of Uzbekistan?","Tashkent","capital"],["Geography","Tashkent is the capital of which country?","Uzbekistan","country"],["Geography","What is the capital of Venezuela?","Caracas","capital"],["Geography","Caracas is the capital of which country?","Venezuela","country"],["Geography","What is the capital of Vietnam?","Hanoi","capital"],["Geography","Hanoi is the capital of which country?","Vietnam","country"],["Geography","What is the capital of Yemen?","Sanaa","capital"],["Geography","Sanaa is the capital of which country?","Yemen","country"],["Geography","What is the capital of Zimbabwe?","Harare","capital"],["Geography","Harare is the capital of which country?","Zimbabwe","country"],["Geography","What is the capital of Zambia?","Lusaka","capital"],["Geography","Lusaka is the capital of which country?","Zambia","country"],["Geography","What is the capital of Uganda?","Kampala","capital"],["Geography","Kampala is the capital of which country?","Uganda","country"],["Geography","What is the capital of Tanzania?","Dodoma","capital"],["Geography","Dodoma is the capital of which country?","Tanzania","country"],["Geography","What is the capital of Sudan?","Khartoum","capital"],["Geography","Khartoum is the capital of which country?","Sudan","country"],["Geography","What is the capital of Senegal?","Dakar","capital"],["Geography","Dakar is the capital of which country?","Senegal","country"],["Geography","What is the capital of Rwanda?","Kigali","capital"],["Geography","Kigali is the capital of which country?","Rwanda","country"],["Geography","What is the capital of Paraguay?","Asuncion","capital"],["Geography","Asuncion is the capital of which country?","Paraguay","country"],["Geography","What is the capital of Panama?","Panama City","capital"],["Geography","Panama City is the capital of which country?","Panama","country"],["Geography","What is the capital of Myanmar?","Naypyidaw","capital"],["Geography","Naypyidaw is the capital of which country?","Myanmar","country"],["Geography","What is the capital of Malta?","Valletta","capital"],["Geography","Valletta is the capital of which country?","Malta","country"],["Geography","What is the capital of Luxembourg?","Luxembourg City","capital"],["Geography","Luxembourg City is the capital of which country?","Luxembourg","country"],["Geography","What is the capital of Jamaica?","Kingston","capital"],["Geography","Kingston is the capital of which country?","Jamaica","country"],["Geography","What is the capital of Honduras?","Tegucigalpa","capital"],["Geography","Tegucigalpa is the capital of which country?","Honduras","country"],["Geography","What is the capital of Guatemala?","Guatemala City","capital"],["Geography","Guatemala City is the capital of which country?","Guatemala","country"],["Geography","What is the capital of Fiji?","Suva","capital"],["Geography","Suva is the capital of which country?","Fiji","country"],["Geography","What is the capital of Cyprus?","Nicosia","capital"],["Geography","Nicosia is the capital of which country?","Cyprus","country"],["Geography","What is the capital of Costa Rica?","San Jose","capital"],["Geography","San Jose is the capital of which country?","Costa Rica","country"],["Geography","What is the capital of Cameroon?","Yaounde","capital"],["Geography","Yaounde is the capital of which country?","Cameroon","country"],["Geography","What is the capital of Botswana?","Gaborone","capital"],["Geography","Gaborone is the capital of which country?","Botswana","country"],["Geography","What is the capital of Angola?","Luanda","capital"],["Geography","Luanda is the capital of which country?","Angola","country"],["Geography","What is the capital of Mozambique?","Maputo","capital"],["Geography","Maputo is the capital of which country?","Mozambique","country"],["Geography","What is the capital of Namibia?","Windhoek","capital"],["Geography","Windhoek is the capital of which country?","Namibia","country"],["Geography","What is the capital of Bolivia?","Sucre","capital"],["Geography","Sucre is the capital of which country?","Bolivia","country"],["Geography","What is the capital of Belarus?","Minsk","capital"],["Geography","Minsk is the capital of which country?","Belarus","country"],["Geography","What is the capital of Bahrain?","Manama","capital"],["Geography","Manama is the capital of which country?","Bahrain","country"],["Geography","What is the capital of Nicaragua?","Managua","capital"],["Geography","Managua is the capital of which country?","Nicaragua","country"],["Geography","What is the capital of Mali?","Bamako","capital"],["Geography","Bamako is the capital of which country?","Mali","country"],["Geography","What is the capital of Madagascar?","Antananarivo","capital"],["Geography","Antananarivo is the capital of which country?","Madagascar","country"],["Geography","What is the currency of Japan?","Yen","currency"],["Geography","What is the currency of India?","Rupee","currency"],["Geography","What is the currency of United Kingdom?","Pound sterling","currency"],["Geography","What is the currency of United States?","Dollar","currency"],["Geography","What is the currency of Russia?","Ruble","currency"],["Geography","What is the currency of China?","Yuan","currency"],["Geography","What is the currency of Switzerland?","Swiss franc","currency"],["Geography","What is the currency of Thailand?","Baht","currency"],["Geography","What is the currency of South Africa?","Rand","currency"],["Geography","What is the currency of Saudi Arabia?","Riyal","currency"],["Geography","What is the currency of Poland?","Zloty","currency"],["Geography","What is the currency of Sweden?","Krona","currency"],["Geography","What is the currency of Denmark?","Krone","currency"],["Geography","What is the currency of Turkey?","Lira","currency"],["Geography","What is the currency of Vietnam?","Dong","currency"],["Geography","What is the currency of South Korea?","Won","currency"],["Geography","What is the currency of Israel?","Shekel","currency"],["Geography","What is the currency of Brazil?","Real","currency"],["Geography","What is the currency of Mexico?","Peso","currency"],["Geography","What is the currency of Nigeria?","Naira","currency"],["Geography","What is the currency of Kenya?","Shilling","currency"],["Geography","What is the currency of Bangladesh?","Taka","currency"],["Geography","What is the currency of Malaysia?","Ringgit","currency"],["Geography","What is the currency of Indonesia?","Rupiah","currency"],["Geography","What is the currency of Ghana?","Cedi","currency"],["Geography","What is the currency of Hungary?","Forint","currency"],["Geography","What is the currency of Czechia?","Koruna","currency"],["Geography","What is the currency of Iran?","Rial","currency"],["Geography","What is the currency of Kuwait?","Kuwaiti dinar","currency"],["Geography","What is the currency of United Arab Emirates?","Dirham","currency"],["Geography","What is the currency of Ethiopia?","Birr","currency"],["Geography","What is the currency of Myanmar?","Kyat","currency"],["Geography","What is the currency of Mongolia?","Tugrik","currency"],["Geography","What is the currency of Peru?","Sol","currency"],["Geography","What is the currency of Guatemala?","Quetzal","currency"],["Geography","On which continent is Brazil?","South America","continent"],["Geography","On which continent is Nigeria?","Africa","continent"],["Geography","On which continent is Japan?","Asia","continent"],["Geography","On which continent is France?","Europe","continent"],["Geography","On which continent is Australia?","Oceania","continent"],["Geography","On which continent is Canada?","North America","continent"],["Geography","On which continent is Egypt?","Africa","continent"],["Geography","On which continent is India?","Asia","continent"],["Geography","On which continent is Chile?","South America","continent"],["Geography","On which continent is Norway?","Europe","continent"],["Geography","On which continent is Kenya?","Africa","continent"],["Geography","On which continent is Mexico?","North America","continent"],["Geography","On which continent is Vietnam?","Asia","continent"],["Geography","On which continent is Peru?","South America","continent"],["Geography","On which continent is Greece?","Europe","continent"],["Geography","On which continent is Morocco?","Africa","continent"],["Geography","On which continent is Thailand?","Asia","continent"],["Geography","On which continent is Colombia?","South America","continent"],["Geography","On which continent is Portugal?","Europe","continent"],["Geography","On which continent is Ghana?","Africa","continent"],["Geography","On which continent is Nepal?","Asia","continent"],["Geography","On which continent is Argentina?","South America","continent"],["Geography","On which continent is Iceland?","Europe","continent"],["Geography","On which continent is Tanzania?","Africa","continent"],["Geography","On which continent is Malaysia?","Asia","continent"],["Geography","On which continent is Ecuador?","South America","continent"],["Geography","On which continent is Ireland?","Europe","continent"],["Geography","On which continent is Zambia?","Africa","continent"],["Geography","On which continent is Cambodia?","Asia","continent"],["Geography","On which continent is Uruguay?","South America","continent"],["Geography","On which continent is New Zealand?","Oceania","continent"],["Geography","On which continent is Fiji?","Oceania","continent"],["Geography","On which continent is Cuba?","North America","continent"],["Geography","On which continent is Jamaica?","North America","continent"],["Geography","On which continent is Panama?","North America","continent"],["Geography","Which is the longest river in the world?","The Nile","geo_water"],["Geography","Which is the largest ocean on Earth?","Pacific Ocean","geo_water"],["Geography","Which is the smallest ocean?","Arctic Ocean","geo_water"],["Geography","What is the tallest mountain above sea level?","Mount Everest","geo_land"],["Geography","Which is the largest hot desert in the world?","The Sahara","geo_land"],["Geography","Which is the largest country by land area?","Russia","country"],["Geography","Which is the smallest country in the world?","Vatican City","country"],["Geography","Which is the deepest ocean trench?","Mariana Trench","geo_water"],["Geography","Which is the largest island in the world?","Greenland","geo_land"],["Geography","Which country has the longest coastline?","Canada","country"],["Geography","Mount Kilimanjaro is in which country?","Tanzania","country"],["Geography","The Great Barrier Reef is off the coast of which country?","Australia","country"],["Geography","Which mountain range separates Europe and Asia?","Ural Mountains","geo_land"],["Geography","Which strait separates Asia and North America?","Bering Strait","geo_water"],["Geography","Angel Falls is in which country?","Venezuela","country"],["Geography","Which is the driest non-polar desert on Earth?","Atacama Desert","geo_land"],["Geography","Which canal connects the Mediterranean and Red Seas?","Suez Canal","geo_water"],["Geography","Which canal links the Atlantic and Pacific Oceans?","Panama Canal","geo_water"],["Geography","Which is the largest freshwater lake by volume?","Lake Baikal","geo_water"],["Geography","Which is the largest lake in Africa?","Lake Victoria","geo_water"],["Geography","Which river flows through London?","River Thames","geo_water"],["Geography","Which river flows through Paris?","River Seine","geo_water"],["Geography","Which river is the longest in Europe?","Volga","geo_water"],["Geography","Which desert lies mostly in Mongolia and China?","Gobi Desert","geo_land"],["Geography","Which African river is home to Victoria Falls?","Zambezi","geo_water"],["Geography","Which is the longest mountain range on land?","The Andes","geo_land"],["Geography","Which country is entirely surrounded by South Africa?","Lesotho","country"],["Geography","Which small country lies between France and Spain?","Andorra","country"],["Geography","Which sea is the saltiest and at Earth's lowest land point?","Dead Sea","geo_water"],["Geography","Which country is home to Machu Picchu?","Peru","country"],["Geography","Which sea lies between Italy and the Balkans?","Adriatic Sea","geo_water"],["Geography","Which is the largest inland body of water on Earth?","Caspian Sea","geo_water"],["Geography","Which is the flattest continent?","Australia","country"],["Geography","Which continent is the least populated?","Antarctica","geo_land"],["Geography","Which is the northernmost capital city in the world?","Reykjavik","city"],["Geography","Which US state is the largest by area?","Alaska","geo_land"],["Geography","Which country owns Easter Island?","Chile","country"],["Geography","Mount Etna is on which island?","Sicily","geo_land"],["Geography","Which European capital is split by the Danube?","Budapest","city"],["Geography","Which country is known as the Emerald Isle?","Ireland","country"],["Geography","Which country is nicknamed the Land of the Rising Sun?","Japan","country"],["Geography","Which is the largest country in Africa by area?","Algeria","country"],["Geography","Which is the largest country in South America?","Brazil","country"],["Geography","Which ocean lies east of Africa?","Indian Ocean","geo_water"],["Geography","Which peninsula are Spain and Portugal on?","Iberian Peninsula","geo_land"],["Geography","Which country has the most volcanoes?","Indonesia","country"],["Geography","Which is the world's largest archipelago nation?","Indonesia","country"],["Geography","The Nile flows into which sea?","Mediterranean Sea","geo_water"],["Geography","Which two countries share the longest border?","Canada and USA","geo_land"],["Geography","Which country spans Europe and Asia at the Bosphorus?","Turkey","country"],["Geography","Which US city is home to the Statue of Liberty?","New York City","city"],["Geography","Which is the highest waterfall in the world?","Angel Falls","geo_water"],["Geography","Which country has the most natural lakes?","Canada","country"],["Geography","Which line divides Earth into two hemispheres?","The Equator","geo_land"],["Geography","Which African country was formerly called Abyssinia?","Ethiopia","country"],["Geography","Which sea separates Europe and Africa at Gibraltar?","Mediterranean Sea","geo_water"],["Geography","Which country is famous for its fjords?","Norway","country"],["Geography","What separates the UK from mainland Europe?","English Channel","geo_water"],["Geography","Which country contains most of the Amazon basin?","Brazil","country"],["Geography","Which is the largest gulf in the world?","Gulf of Mexico","geo_water"],["Science & Nature","What is the chemical symbol for gold?","Au","element_sym"],["Science & Nature","Which element has the symbol Au?","Gold","element_name"],["Science & Nature","What is the chemical symbol for silver?","Ag","element_sym"],["Science & Nature","Which element has the symbol Ag?","Silver","element_name"],["Science & Nature","What is the chemical symbol for iron?","Fe","element_sym"],["Science & Nature","Which element has the symbol Fe?","Iron","element_name"],["Science & Nature","What is the chemical symbol for oxygen?","O","element_sym"],["Science & Nature","Which element has the symbol O?","Oxygen","element_name"],["Science & Nature","What is the chemical symbol for hydrogen?","H","element_sym"],["Science & Nature","Which element has the symbol H?","Hydrogen","element_name"],["Science & Nature","What is the chemical symbol for carbon?","C","element_sym"],["Science & Nature","Which element has the symbol C?","Carbon","element_name"],["Science & Nature","What is the chemical symbol for sodium?","Na","element_sym"],["Science & Nature","Which element has the symbol Na?","Sodium","element_name"],["Science & Nature","What is the chemical symbol for potassium?","K","element_sym"],["Science & Nature","Which element has the symbol K?","Potassium","element_name"],["Science & Nature","What is the chemical symbol for helium?","He","element_sym"],["Science & Nature","Which element has the symbol He?","Helium","element_name"],["Science & Nature","What is the chemical symbol for nitrogen?","N","element_sym"],["Science & Nature","Which element has the symbol N?","Nitrogen","element_name"],["Science & Nature","What is the chemical symbol for chlorine?","Cl","element_sym"],["Science & Nature","Which element has the symbol Cl?","Chlorine","element_name"],["Science & Nature","What is the chemical symbol for calcium?","Ca","element_sym"],["Science & Nature","Which element has the symbol Ca?","Calcium","element_name"],["Science & Nature","What is the chemical symbol for copper?","Cu","element_sym"],["Science & Nature","Which element has the symbol Cu?","Copper","element_name"],["Science & Nature","What is the chemical symbol for zinc?","Zn","element_sym"],["Science & Nature","Which element has the symbol Zn?","Zinc","element_name"],["Science & Nature","What is the chemical symbol for lead?","Pb","element_sym"],["Science & Nature","Which element has the symbol Pb?","Lead","element_name"],["Science & Nature","What is the chemical symbol for tin?","Sn","element_sym"],["Science & Nature","Which element has the symbol Sn?","Tin","element_name"],["Science & Nature","What is the chemical symbol for mercury?","Hg","element_sym"],["Science & Nature","Which element has the symbol Hg?","Mercury","element_name"],["Science & Nature","What is the chemical symbol for neon?","Ne","element_sym"],["Science & Nature","Which element has the symbol Ne?","Neon","element_name"],["Science & Nature","What is the chemical symbol for sulfur?","S","element_sym"],["Science & Nature","Which element has the symbol S?","Sulfur","element_name"],["Science & Nature","What is the chemical symbol for uranium?","U","element_sym"],["Science & Nature","Which element has the symbol U?","Uranium","element_name"],["Science & Nature","What is the chemical symbol for nickel?","Ni","element_sym"],["Science & Nature","Which element has the symbol Ni?","Nickel","element_name"],["Science & Nature","What is the chemical symbol for platinum?","Pt","element_sym"],["Science & Nature","Which element has the symbol Pt?","Platinum","element_name"],["Science & Nature","What is the chemical symbol for aluminium?","Al","element_sym"],["Science & Nature","Which element has the symbol Al?","Aluminium","element_name"],["Science & Nature","What is the chemical symbol for magnesium?","Mg","element_sym"],["Science & Nature","Which element has the symbol Mg?","Magnesium","element_name"],["Science & Nature","What is the chemical symbol for phosphorus?","P","element_sym"],["Science & Nature","Which element has the symbol P?","Phosphorus","element_name"],["Science & Nature","What is the chemical symbol for argon?","Ar","element_sym"],["Science & Nature","Which element has the symbol Ar?","Argon","element_name"],["Science & Nature","What is the chemical symbol for cobalt?","Co","element_sym"],["Science & Nature","Which element has the symbol Co?","Cobalt","element_name"],["Science & Nature","What is the chemical symbol for manganese?","Mn","element_sym"],["Science & Nature","Which element has the symbol Mn?","Manganese","element_name"],["Science & Nature","What is the chemical symbol for bromine?","Br","element_sym"],["Science & Nature","Which element has the symbol Br?","Bromine","element_name"],["Science & Nature","What is the chemical symbol for iodine?","I","element_sym"],["Science & Nature","Which element has the symbol I?","Iodine","element_name"],["Science & Nature","What is the chemical symbol for silicon?","Si","element_sym"],["Science & Nature","Which element has the symbol Si?","Silicon","element_name"],["Science & Nature","What is the chemical symbol for titanium?","Ti","element_sym"],["Science & Nature","Which element has the symbol Ti?","Titanium","element_name"],["Science & Nature","What is the chemical symbol for lithium?","Li","element_sym"],["Science & Nature","Which element has the symbol Li?","Lithium","element_name"],["Science & Nature","What is the chemical symbol for barium?","Ba","element_sym"],["Science & Nature","Which element has the symbol Ba?","Barium","element_name"],["Science & Nature","What is the chemical symbol for krypton?","Kr","element_sym"],["Science & Nature","Which element has the symbol Kr?","Krypton","element_name"],["Science & Nature","What is the largest planet in our solar system?","Jupiter","planet"],["Science & Nature","What is the smallest planet in our solar system?","Mercury","planet"],["Science & Nature","Which planet is known as the Red Planet?","Mars","planet"],["Science & Nature","Which planet is closest to the Sun?","Mercury","planet"],["Science & Nature","Which planet has the most prominent ring system?","Saturn","planet"],["Science & Nature","Which planet spins on its side?","Uranus","planet"],["Science & Nature","Which planet has the Great Red Spot?","Jupiter","planet"],["Science & Nature","What is the name of our galaxy?","The Milky Way","planet"],["Science & Nature","How many bones are in the adult human body?","206","num_digit"],["Science & Nature","How many teeth does a typical adult human have?","32","num_digit"],["Science & Nature","How many hearts does an octopus have?","Three","num_word"],["Science & Nature","How many legs does a spider have?","Eight","num_word"],["Science & Nature","What is the largest organ of the human body?","The skin","bodypart"],["Science & Nature","What is the largest internal organ in the human body?","The liver","bodypart"],["Science & Nature","What is the human body's longest bone?","The femur","bodypart"],["Science & Nature","Which organ pumps blood around the body?","The heart","bodypart"],["Science & Nature","What is the powerhouse of the cell?","Mitochondria","bodypart"],["Science & Nature","What gas do plants absorb for photosynthesis?","Carbon dioxide","substance"],["Science & Nature","What is the primary gas in Earth's atmosphere?","Nitrogen","substance"],["Science & Nature","What is the most abundant gas in the universe?","Hydrogen","substance"],["Science & Nature","What is the hardest known natural material?","Diamond","substance"],["Science & Nature","Which metal is liquid at room temperature?","Mercury","planet"],["Science & Nature","What is the chemical formula for table salt?","NaCl","substance"],["Science & Nature","What is H2O commonly known as?","Water","substance"],["Science & Nature","What is the freezing point of water in Celsius?","0 degrees","measure"],["Science & Nature","What is the boiling point of water in Celsius?","100 degrees","measure"],["Science & Nature","Who developed the theory of general relativity?","Albert Einstein","person_m"],["Science & Nature","Who proposed evolution by natural selection?","Charles Darwin","person_m"],["Science & Nature","Who formulated the laws of motion and gravity?","Isaac Newton","person_m"],["Science & Nature","What is the SI unit of electric current?","Ampere","unit"],["Science & Nature","What is the SI unit of force?","Newton","unit"],["Science & Nature","What is the SI unit of power?","Watt","unit"],["Science & Nature","Which blood type is the universal donor?","O negative","unit"],["Science & Nature","Which vitamin is made when skin meets sunlight?","Vitamin D","unit"],["Science & Nature","What is the largest mammal on Earth?","Blue whale","animal"],["Science & Nature","What is the fastest land animal?","Cheetah","animal"],["Science & Nature","What is the tallest animal in the world?","Giraffe","animal"],["Science & Nature","What is the largest species of shark?","Whale shark","animal"],["Science & Nature","What is the largest bird in the world?","Ostrich","animal"],["Science & Nature","What is the smallest bird in the world?","Bee hummingbird","animal"],["Science & Nature","What is a baby kangaroo called?","A joey","collective"],["Science & Nature","What is a group of lions called?","A pride","collective"],["Science & Nature","What is a group of wolves called?","A pack","collective"],["Science & Nature","What is a group of crows called?","A murder","collective"],["Science & Nature","What do bees collect from flowers?","Nectar","substance"],["Science & Nature","What is the tallest type of tree on Earth?","Coast redwood","plant"],["Science & Nature","What is the process plants use to make food?","Photosynthesis","sci_field"],["Science & Nature","What is the study of weather called?","Meteorology","sci_field"],["Science & Nature","What is the study of living organisms called?","Biology","sci_field"],["Science & Nature","Approximately how fast does light travel?","300,000 km per second","unit"],["Science & Nature","What force keeps us on the ground?","Gravity","substance"],["Science & Nature","What is the term for animals active at night?","Nocturnal","sci_field"],["Science & Nature","How many chambers does the human heart have?","Four","num_word"],["Science & Nature","What is the closest star to Earth?","The Sun","planet"],["Science & Nature","What causes the tides on Earth?","The Moon's gravity","substance"],["Science & Nature","How many planets are in our solar system?","Eight","num_word"],["Science & Nature","What is the centre of an atom called?","The nucleus","bodypart"],["Science & Nature","What particle has a negative charge?","Electron","bodypart"],["Science & Nature","What is the most abundant metal in Earth's crust?","Aluminium","substance"],["Science & Nature","What is frozen carbon dioxide commonly called?","Dry ice","substance"],["History","In what year did humans first land on the Moon?","1969","year"],["History","In which year did World War I begin?","1914","year"],["History","In which year did World War II end?","1945","year"],["History","In which year did the Berlin Wall fall?","1989","year"],["History","In which year did India gain independence?","1947","year"],["History","Who was the first person to walk on the Moon?","Neil Armstrong","person_m"],["History","Who was the first man in space?","Yuri Gagarin","person_m"],["History","Who was the first woman in space?","Valentina Tereshkova","person_f"],["History","Which ship famously sank in 1912?","The Titanic","monument"],["History","Who was the first President of the United States?","George Washington","person_m"],["History","Who was the first Prime Minister of India?","Jawaharlal Nehru","person_m"],["History","Who led India's non-violent independence movement?","Mahatma Gandhi","person_m"],["History","Which wall divided a German city until 1989?","The Berlin Wall","monument"],["History","Who was the British PM for most of World War II?","Winston Churchill","person_m"],["History","Which empire was ruled by Julius Caesar's successors?","The Roman Empire","empire"],["History","Which ancient civilisation built the pyramids at Giza?","Ancient Egypt","empire"],["History","Who was the Egyptian queen famously linked to Caesar and Antony?","Cleopatra","person_f"],["History","Which explorer's crew first circumnavigated the globe?","Ferdinand Magellan","person_m"],["History","In 1492, who sailed west and reached the Americas?","Christopher Columbus","person_m"],["History","Which war was fought between the North and South USA?","The American Civil War","hist_event"],["History","Who wrote the Indian Constitution's drafting committee report?","B. R. Ambedkar","person_m"],["History","Which revolution began in France in 1789?","The French Revolution","hist_event"],["History","Who was known as the Iron Lady?","Margaret Thatcher","person_f"],["History","Which South African leader was jailed for 27 years?","Nelson Mandela","person_m"],["History","Which US president was assassinated in Dallas in 1963?","John F. Kennedy","person_m"],["History","Which civilisation built Machu Picchu?","The Inca","empire"],["History","What was the name of the first artificial satellite?","Sputnik 1","monument"],["History","Which country gifted the Statue of Liberty to the USA?","France","country"],["History","Who was the Mughal emperor who built the Taj Mahal?","Shah Jahan","person_m"],["History","The Taj Mahal was built in memory of whom?","Mumtaz Mahal","person_f"],["History","Which Indian emperor embraced Buddhism after Kalinga?","Ashoka","person_m"],["History","Which wall stretches thousands of kilometres across China?","The Great Wall of China","monument"],["History","Who invented the telephone?","Alexander Graham Bell","person_m"],["History","Who is credited with the first practical light bulb?","Thomas Edison","person_m"],["History","Who discovered penicillin?","Alexander Fleming","person_m"],["History","Which two cities were hit by atomic bombs in 1945?","Hiroshima and Nagasaki","hist_event"],["History","Which conflict followed WWII between the USA and USSR?","The Cold War","hist_event"],["History","Which year did the Soviet Union dissolve?","1991","year"],["History","Who was the longest-reigning British monarch?","Queen Elizabeth II","person_f"],["History","Which document did English barons force King John to seal in 1215?","Magna Carta","monument"],["History","Who painted during the Renaissance and designed flying machines?","Leonardo da Vinci","person_m"],["History","Which plague devastated Europe in the 14th century?","The Black Death","hist_event"],["History","Which Indian freedom fighter was called Netaji?","Subhas Chandra Bose","person_m"],["History","The Salt March of 1930 was led by whom?","Mahatma Gandhi","person_m"],["History","Which country was formerly known as Persia?","Iran","country"],["History","Which country was formerly known as Siam?","Thailand","country"],["History","Which city was the capital of the Byzantine Empire?","Constantinople","city"],["History","Who was the first Emperor of unified China?","Qin Shi Huang","person_m"],["History","In which year did the Titanic sink?","1912","year"],["History","Which US president led during the Great Depression's New Deal?","Franklin D. Roosevelt","person_m"],["Bollywood","Which 1975 film features the line 'Kitne aadmi the?'","Sholay","film"],["Bollywood","Who played Gabbar Singh in Sholay?","Amjad Khan","person_m"],["Bollywood","Who directed Lagaan (2001)?","Ashutosh Gowariker","person_m"],["Bollywood","Which actor is nicknamed King Khan?","Shah Rukh Khan","person_m"],["Bollywood","Which actor is known as Mr. Perfectionist?","Aamir Khan","person_m"],["Bollywood","Which actor is nicknamed Bhaijaan?","Salman Khan","person_m"],["Bollywood","Which actor is called the Greek God of Bollywood?","Hrithik Roshan","person_m"],["Bollywood","Who is known as Big B?","Amitabh Bachchan","person_m"],["Bollywood","Which 1995 romance stars Raj and Simran?","Dilwale Dulhania Le Jayenge","film"],["Bollywood","Who directed Dilwale Dulhania Le Jayenge?","Aditya Chopra","person_m"],["Bollywood","Which actress debuted in Student of the Year (2012)?","Alia Bhatt","person_f"],["Bollywood","Which actress is nicknamed Bebo?","Kareena Kapoor","person_f"],["Bollywood","Who is called the Dhak-Dhak Girl?","Madhuri Dixit","person_f"],["Bollywood","Chaiyya Chaiyya was filmed on top of what?","A train","sport_term"],["Bollywood","Who composed the music for Dil Se?","A. R. Rahman","person_m"],["Bollywood","Who composed the score for Slumdog Millionaire?","A. R. Rahman","person_m"],["Bollywood","Which singer is called the Nightingale of India?","Lata Mangeshkar","person_f"],["Bollywood","Who sang Tum Hi Ho from Aashiqui 2?","Arijit Singh","person_m"],["Bollywood","Which actor starred in 3 Idiots as Rancho?","Aamir Khan","person_m"],["Bollywood","Who directed 3 Idiots and Munna Bhai?","Rajkumar Hirani","person_m"],["Bollywood","Which 2016 film features Aamir Khan as a wrestler father?","Dangal","film"],["Bollywood","Which 2018 film stars Ranbir Kapoor as Sanjay Dutt?","Sanju","film"],["Bollywood","Who directed Gully Boy (2019)?","Zoya Akhtar","person_m"],["Bollywood","Who directed Zindagi Na Milegi Dobara?","Zoya Akhtar","person_m"],["Bollywood","Who directed Devdas (2002) and Bajirao Mastani?","Sanjay Leela Bhansali","person_m"],["Bollywood","Which 2018 film stars Ranveer Singh as Alauddin Khilji?","Padmaavat","film"],["Bollywood","Which actress starred in Queen (2013)?","Kangana Ranaut","person_f"],["Bollywood","Which actress played Rani Lakshmibai in Manikarnika?","Kangana Ranaut","person_f"],["Bollywood","Who starred in Kahaani (2012)?","Vidya Balan","person_f"],["Bollywood","Which actress starred in English Vinglish?","Sridevi","person_f"],["Bollywood","Who played Mary Kom in the 2014 biopic?","Priyanka Chopra","person_f"],["Bollywood","Which 2007 film features SRK as a hockey coach?","Chak De! India","film"],["Bollywood","Which 2004 film features SRK as an NRI scientist?","Swades","film"],["Bollywood","Who directed My Name Is Khan?","Karan Johar","person_m"],["Bollywood","Which 2001 family drama is abbreviated K3G?","Kabhi Khushi Kabhie Gham","film"],["Bollywood","Which 1998 film features Rahul and Anjali at summer camp?","Kuch Kuch Hota Hai","film"],["Bollywood","Which 2019 film stars Vicky Kaushal in a surgical strike story?","Uri: The Surgical Strike","film"],["Bollywood","Who delivered the line 'Mogambo khush hua'?","Amrish Puri","person_m"],["Bollywood","In which film did Amrish Puri play Mogambo?","Mr. India","film"],["Bollywood","Which 2013 biopic stars Farhan Akhtar as Milkha Singh?","Bhaag Milkha Bhaag","film"],["Bollywood","Which 2016 film features Sushant Singh Rajput as a cricketer?","M.S. Dhoni: The Untold Story","film"],["Bollywood","Which 2007 film did Aamir Khan direct about a dyslexic boy?","Taare Zameen Par","film"],["Bollywood","Who directed Andhadhun (2018)?","Sriram Raghavan","person_m"],["Bollywood","Which actor played a blind pianist in Andhadhun?","Ayushmann Khurrana","person_m"],["Bollywood","Which actress starred as a spy in Raazi (2018)?","Alia Bhatt","person_f"],["Bollywood","Which 2015 film features a mute Pakistani girl?","Bajrangi Bhaijaan","film"],["Bollywood","Which actor is famous for the catchphrase 'Jhakaas'?","Anil Kapoor","person_m"],["Bollywood","Which actor is known as the He-Man of Bollywood?","Dharmendra","person_m"],["Bollywood","Which 1994 hit is abbreviated HAHK?","Hum Aapke Hain Koun","film"],["Bollywood","Which 2012 film did Anurag Basu direct with Ranbir Kapoor?","Barfi!","film"],["Bollywood","Who directed Gangs of Wasseypur?","Anurag Kashyap","person_m"],["Bollywood","Which 2019 film stars Hrithik Roshan as a maths teacher?","Super 30","film"],["Bollywood","Which film launched Hrithik Roshan in 2000?","Kaho Naa Pyaar Hai","film"],["Bollywood","Who directed the Krrish franchise?","Rakesh Roshan","person_m"],["Bollywood","Which 2014 film features Aamir Khan as an alien?","PK","film"],["Bollywood","Which 1957 film earned India an early Oscar nomination?","Mother India","film"],["Bollywood","Which actress starred in Piku opposite Amitabh Bachchan?","Deepika Padukone","person_f"],["Bollywood","Which 2013 film features Ranbir and Deepika travelling?","Yeh Jawaani Hai Deewani","film"],["Bollywood","Which 2019 film stars Shahid Kapoor as a volatile surgeon?","Kabir Singh","film"],["Bollywood","Which family includes Raj, Rishi and Ranbir?","The Kapoor family","family"],["Bollywood","Which 2008 film features Aamir Khan with short-term memory loss?","Ghajini","film"],["Bollywood","Which actress starred in Fashion (2008)?","Priyanka Chopra","person_f"],["Bollywood","Which composer duo made music for many Karan Johar films?","Vishal-Shekhar","family"],["Bollywood","Which playback singer was famous for comic and romantic songs and acted too?","Kishore Kumar","person_m"],["Hollywood & TV","Who directed Jurassic Park and E.T.?","Steven Spielberg","person_m"],["Hollywood & TV","Who directed Inception and The Dark Knight?","Christopher Nolan","person_m"],["Hollywood & TV","Who directed Pulp Fiction?","Quentin Tarantino","person_m"],["Hollywood & TV","Who directed Titanic and Avatar?","James Cameron","person_m"],["Hollywood & TV","Which 1994 film features Andy Dufresne in Shawshank prison?","The Shawshank Redemption","film"],["Hollywood & TV","Which film features the line 'I'll be back'?","The Terminator","film"],["Hollywood & TV","Who played Jack in Titanic?","Leonardo DiCaprio","person_m"],["Hollywood & TV","Who played Iron Man in the Marvel films?","Robert Downey Jr.","person_m"],["Hollywood & TV","Who played Captain Jack Sparrow?","Johnny Depp","person_m"],["Hollywood & TV","Which actress played Hermione Granger?","Emma Watson","person_f"],["Hollywood & TV","Who wrote the Harry Potter books?","J. K. Rowling","person_f"],["Hollywood & TV","Which film features a shark terrorising Amity Island?","Jaws","film"],["Hollywood & TV","Which 1972 crime film features the Corleone family?","The Godfather","film"],["Hollywood & TV","Who directed The Godfather?","Francis Ford Coppola","person_m"],["Hollywood & TV","Which sci-fi series features Luke Skywalker?","Star Wars","film"],["Hollywood & TV","Who created the Star Wars franchise?","George Lucas","person_m"],["Hollywood & TV","Which film features the character Forrest Gump?","Forrest Gump","film"],["Hollywood & TV","Who played Forrest Gump?","Tom Hanks","person_m"],["Hollywood & TV","Which TV series features the Iron Throne?","Game of Thrones","tv_show"],["Hollywood & TV","Which sitcom features Ross, Rachel and Joey?","Friends","tv_show"],["Hollywood & TV","Which series features Walter White as a chemistry teacher?","Breaking Bad","tv_show"],["Hollywood & TV","Which Netflix series is set in Hawkins, Indiana?","Stranger Things","tv_show"],["Hollywood & TV","Which animated film features the lion cub Simba?","The Lion King","film"],["Hollywood & TV","Which animated film features Woody and Buzz Lightyear?","Toy Story","film"],["Hollywood & TV","Which animated film features the snow queen Elsa?","Frozen","film"],["Hollywood & TV","Which studio produces the Toy Story films?","Pixar","company"],["Hollywood & TV","Which 2019 Marvel film was the culmination of the Infinity Saga?","Avengers: Endgame","film"],["Hollywood & TV","Which actor played Thor in the Marvel films?","Chris Hemsworth","person_m"],["Hollywood & TV","Which film series features Neo and the red pill?","The Matrix","film"],["Hollywood & TV","Which 1997 film features the Titanic disaster?","Titanic","film"],["Hollywood & TV","Which award is Hollywood's most famous, presented by the Academy?","The Oscar","trophy"],["Hollywood & TV","Which film won Best Picture at the 2020 Oscars, a Korean film?","Parasite","film"],["Hollywood & TV","Who directed Parasite?","Bong Joon-ho","person_m"],["Hollywood & TV","Which actress starred in La La Land opposite Ryan Gosling?","Emma Stone","person_f"],["Hollywood & TV","Which franchise features agent James Bond?","James Bond","character"],["Hollywood & TV","Which actor played Bond in Casino Royale (2006)?","Daniel Craig","person_m"],["Hollywood & TV","Which film features the quote 'Here's looking at you, kid'?","Casablanca","film"],["Hollywood & TV","Which director is known for Psycho and The Birds?","Alfred Hitchcock","person_m"],["Hollywood & TV","Which series features the detective Sherlock Holmes on BBC with Cumberbatch?","Sherlock","tv_show"],["Hollywood & TV","Which show features contestants in a bake-off tent in the UK?","The Great British Bake Off","tv_show"],["Hollywood & TV","Which film features a clownfish searching for his son?","Finding Nemo","film"],["Hollywood & TV","Which superhero is known as the Caped Crusader?","Batman","character"],["Hollywood & TV","Which city does Batman protect?","Gotham City","city"],["Hollywood & TV","Which superhero is from the planet Krypton?","Superman","character"],["Hollywood & TV","Which actor played Wolverine for nearly two decades?","Hugh Jackman","person_m"],["Hollywood & TV","Which film trilogy features Frodo and the One Ring?","The Lord of the Rings","film"],["Hollywood & TV","Who wrote The Lord of the Rings?","J. R. R. Tolkien","person_m"],["Hollywood & TV","Which director made Schindler's List?","Steven Spielberg","person_m"],["Hollywood & TV","Which 1999 film features Tyler Durden?","Fight Club","film"],["Hollywood & TV","Which streaming service produced The Crown?","Netflix","company"],["Music","Which band released the album Abbey Road?","The Beatles","band"],["Music","Which city were The Beatles from?","Liverpool","city"],["Music","Who was the lead singer of Queen?","Freddie Mercury","person_m"],["Music","Which Queen song features the line 'Is this the real life'?","Bohemian Rhapsody","song"],["Music","Who is known as the King of Pop?","Michael Jackson","person_m"],["Music","Which Michael Jackson album is the best-selling of all time?","Thriller","song"],["Music","Who is known as the King of Rock and Roll?","Elvis Presley","person_m"],["Music","Which artist released the album 1989 and Folklore?","Taylor Swift","person_f"],["Music","Which artist is known for the song Shape of You?","Ed Sheeran","person_m"],["Music","Which Barbadian singer released Umbrella?","Rihanna","person_f"],["Music","Which band features Chris Martin as lead singer?","Coldplay","band"],["Music","Which rock band released Stairway to Heaven?","Led Zeppelin","band"],["Music","Which band released Another Brick in the Wall?","Pink Floyd","band"],["Music","Which Irish band features Bono?","U2","band"],["Music","How many strings does a standard guitar have?","Six","num_word"],["Music","How many keys does a standard piano have?","88","num_digit"],["Music","Which instrument has black and white keys?","Piano","instrument"],["Music","Which brass instrument is the largest?","Tuba","instrument"],["Music","What is a group of musicians led by a conductor called?","An orchestra","music_term"],["Music","Which Italian term means 'very loud' in music?","Fortissimo","music_term"],["Music","Which Italian term means 'soft' in music?","Piano","instrument"],["Music","How many lines are on a musical staff?","Five","num_word"],["Music","Which composer wrote the Ninth Symphony while deaf?","Ludwig van Beethoven","person_m"],["Music","Which composer wrote The Four Seasons?","Antonio Vivaldi","person_m"],["Music","Which Austrian composer wrote The Magic Flute?","Wolfgang Amadeus Mozart","person_m"],["Music","Which classical composer is famous for the Brandenburg Concertos?","Johann Sebastian Bach","person_m"],["Music","Which Indian instrument did Ravi Shankar popularise?","The sitar","instrument"],["Music","Which percussion instrument pair is common in Indian classical music?","Tabla","instrument"],["Music","Which music award show is the biggest in the USA?","The Grammy Awards","music_term"],["Music","Which singer is known as the Queen of Soul?","Aretha Franklin","person_f"],["Music","Which artist released the album Lemonade?","Beyonce","person_f"],["Music","Which K-pop group released Dynamite?","BTS","band"],["Music","Which Canadian rapper released the album Scorpion?","Drake","person_m"],["Music","Which artist is known for Rocket Man and Tiny Dancer?","Elton John","person_m"],["Music","Which band released Hotel California?","Eagles","band"],["Music","Which genre originated in Jamaica with Bob Marley as an icon?","Reggae","genre"],["Music","Which genre originated in New Orleans in the early 1900s?","Jazz","genre"],["Music","Which Indian playback singer sang with a famously versatile range and is called the Melody Queen?","Lata Mangeshkar","person_f"],["Music","What does DJ stand for?","Disc jockey","music_term"],["Music","Which instrument does a violinist play with a bow?","Violin","instrument"],["Music","How many members were in The Beatles?","Four","num_word"],["Music","Which Beatles member was known for Imagine as a solo artist?","John Lennon","person_m"],["Cricket","Who won the 1975 Cricket World Cup?","West Indies","cricket_nation"],["Cricket","Who won the 1979 Cricket World Cup?","West Indies","cricket_nation"],["Cricket","Who won the 1983 Cricket World Cup?","India","cricket_nation"],["Cricket","Who won the 1987 Cricket World Cup?","Australia","cricket_nation"],["Cricket","Who won the 1992 Cricket World Cup?","Pakistan","cricket_nation"],["Cricket","Who won the 1996 Cricket World Cup?","Sri Lanka","cricket_nation"],["Cricket","Who won the 1999 Cricket World Cup?","Australia","cricket_nation"],["Cricket","Who won the 2003 Cricket World Cup?","Australia","cricket_nation"],["Cricket","Who won the 2007 Cricket World Cup?","Australia","cricket_nation"],["Cricket","Who won the 2011 Cricket World Cup?","India","cricket_nation"],["Cricket","Who won the 2015 Cricket World Cup?","Australia","cricket_nation"],["Cricket","Who won the 2019 Cricket World Cup?","England","cricket_nation"],["Cricket","Who won the 2023 Cricket World Cup?","Australia","cricket_nation"],["Cricket","Who won the 2007 Men's T20 World Cup?","India","cricket_nation"],["Cricket","Who won the 2009 Men's T20 World Cup?","Pakistan","cricket_nation"],["Cricket","Who won the 2010 Men's T20 World Cup?","England","cricket_nation"],["Cricket","Who won the 2012 Men's T20 World Cup?","West Indies","cricket_nation"],["Cricket","Who won the 2014 Men's T20 World Cup?","Sri Lanka","cricket_nation"],["Cricket","Who won the 2016 Men's T20 World Cup?","West Indies","cricket_nation"],["Cricket","Who won the 2021 Men's T20 World Cup?","Australia","cricket_nation"],["Cricket","Who won the 2022 Men's T20 World Cup?","England","cricket_nation"],["Cricket","Who won the 2024 Men's T20 World Cup?","India","cricket_nation"],["Cricket","How many players are in a cricket team on the field?","Eleven","num_word"],["Cricket","How many balls are in one over?","Six","num_word"],["Cricket","What is a batter dismissed for zero called?","A duck","sport_term"],["Cricket","How many runs is a boundary along the ground?","Four","num_word"],["Cricket","How many runs for a ball hit over the boundary?","Six","num_word"],["Cricket","What is three wickets in three balls called?","A hat-trick","sport_term"],["Cricket","Which ground is called the Home of Cricket?","Lord's","venue"],["Cricket","Who has the most runs in Test cricket?","Sachin Tendulkar","person_m"],["Cricket","Who was the first to score 100 international centuries?","Sachin Tendulkar","person_m"],["Cricket","Who is the leading wicket-taker in Test history?","Muttiah Muralitharan","person_m"],["Cricket","How many overs per side in a One Day International?","Fifty","num_word"],["Cricket","What are the wooden pieces on top of the stumps called?","The bails","sport_term"],["Cricket","Which country invented cricket?","England","country"],["Cricket","What is the highest individual score in Test cricket?","400 not out","sport_term"],["Cricket","Who scored 400 not out in a Test innings?","Brian Lara","person_m"],["Cricket","The Ashes is played between England and which country?","Australia","country"],["Cricket","What does LBW stand for?","Leg Before Wicket","sport_term"],["Cricket","How long is a cricket pitch between the wickets?","22 yards","measure"],["Cricket","Who captained India to the 1983 World Cup?","Kapil Dev","person_m"],["Cricket","Who captained India to the 2011 World Cup?","MS Dhoni","person_m"],["Cricket","Which wicketkeeper is nicknamed Captain Cool?","MS Dhoni","person_m"],["Cricket","Which Indian batter is nicknamed Hitman?","Rohit Sharma","person_m"],["Cricket","Who holds the record for most ODI double centuries?","Rohit Sharma","person_m"],["Cricket","Which trophy do India and Australia contest in Tests?","Border-Gavaskar Trophy","trophy"],["Cricket","Which Indian is called The Wall?","Rahul Dravid","person_m"],["Cricket","Which cricketer is called King Kohli?","Virat Kohli","person_m"],["Cricket","Who is the highest run-scorer in IPL history?","Virat Kohli","person_m"],["Cricket","Which spinner bowled the Ball of the Century?","Shane Warne","person_m"],["Cricket","Who hit six sixes in an over at the 2007 T20 World Cup?","Yuvraj Singh","person_m"],["Cricket","Which Pakistani pacer was called the Rawalpindi Express?","Shoaib Akhtar","person_m"],["Cricket","Which South African is nicknamed Mr 360?","AB de Villiers","person_m"],["Cricket","Which stadium in Kolkata is a famous cricket venue?","Eden Gardens","venue"],["Cricket","Who was called the Little Master before Tendulkar?","Sunil Gavaskar","person_m"],["Cricket","What colour ball is used in Test cricket?","Red","colour"],["Cricket","What colour ball is used in day-night Tests?","Pink","colour"],["Cricket","How many overs can a bowler bowl in a T20 innings?","Four","num_word"],["Cricket","What is an over with no runs off the bat called?","A maiden","sport_term"],["Cricket","Which IPL team won the first title in 2008?","Rajasthan Royals","ipl_team"],["Cricket","Which IPL team is based in Chennai?","Chennai Super Kings","ipl_team"],["Cricket","Which IPL team is based in Mumbai?","Mumbai Indians","ipl_team"],["Cricket","What is cricket's world governing body?","The ICC","trophy"],["Cricket","Which Indian all-rounder is nicknamed Jaddu?","Ravindra Jadeja","person_m"],["Cricket","Which country does Kane Williamson captain?","New Zealand","country"],["Cricket","What is the term for the bowler's approach before delivery?","The run-up","sport_term"],["Cricket","Which superstition-linked score is called Nelson?","111","num_digit"],["Cricket","Which format of cricket lasts up to five days?","Test cricket","sport_term"],["Cricket","Who was India's coach for the 2011 World Cup win?","Gary Kirsten","person_m"],["Cricket","Which Indian is often called the God of Cricket?","Sachin Tendulkar","person_m"],["Cricket","What is a fast short ball aimed at the batter called?","A bouncer","sport_term"],["Cricket","Which fielding position stands beside the wicketkeeper?","Slip","sport_term"],["Football","Who won the 1930 FIFA World Cup?","Uruguay","football_nation"],["Football","Who won the 1934 FIFA World Cup?","Italy","football_nation"],["Football","Who won the 1938 FIFA World Cup?","Italy","football_nation"],["Football","Who won the 1950 FIFA World Cup?","Uruguay","football_nation"],["Football","Who won the 1954 FIFA World Cup?","West Germany","football_nation"],["Football","Who won the 1958 FIFA World Cup?","Brazil","football_nation"],["Football","Who won the 1962 FIFA World Cup?","Brazil","football_nation"],["Football","Who won the 1966 FIFA World Cup?","England","football_nation"],["Football","Who won the 1970 FIFA World Cup?","Brazil","football_nation"],["Football","Who won the 1974 FIFA World Cup?","West Germany","football_nation"],["Football","Who won the 1978 FIFA World Cup?","Argentina","football_nation"],["Football","Who won the 1982 FIFA World Cup?","Italy","football_nation"],["Football","Who won the 1986 FIFA World Cup?","Argentina","football_nation"],["Football","Who won the 1990 FIFA World Cup?","West Germany","football_nation"],["Football","Who won the 1994 FIFA World Cup?","Brazil","football_nation"],["Football","Who won the 1998 FIFA World Cup?","France","football_nation"],["Football","Who won the 2002 FIFA World Cup?","Brazil","football_nation"],["Football","Who won the 2006 FIFA World Cup?","Italy","football_nation"],["Football","Who won the 2010 FIFA World Cup?","Spain","football_nation"],["Football","Who won the 2014 FIFA World Cup?","Germany","football_nation"],["Football","Who won the 2018 FIFA World Cup?","France","football_nation"],["Football","Who won the 2022 FIFA World Cup?","Argentina","football_nation"],["Football","How many players per team are on the pitch at kickoff?","Eleven","num_word"],["Football","Which country has won the most FIFA World Cups?","Brazil","country"],["Football","Who is nicknamed CR7?","Cristiano Ronaldo","person_m"],["Football","Which club is known as the Red Devils?","Manchester United","club"],["Football","Who has won the most Ballon d'Or awards?","Lionel Messi","person_m"],["Football","How long is a standard football match?","90 minutes","measure"],["Football","What is England's top football division called?","The Premier League","league"],["Football","Which Spanish club is nicknamed Los Blancos?","Real Madrid","club"],["Football","Which two clubs contest El Clasico?","Real Madrid and Barcelona","club"],["Football","What is awarded for a foul inside the penalty area?","A penalty kick","sport_term"],["Football","How many points does a league win earn?","Three","num_word"],["Football","Which card signals a player's dismissal?","Red card","sport_term"],["Football","Which country does Lionel Messi represent?","Argentina","country"],["Football","Which country did Diego Maradona play for?","Argentina","country"],["Football","Which club plays at Anfield?","Liverpool","city"],["Football","Which club plays at the Emirates Stadium?","Arsenal","club"],["Football","Which club plays at Old Trafford?","Manchester United","club"],["Football","Which club plays at Stamford Bridge?","Chelsea","club"],["Football","Which club plays at the Camp Nou?","Barcelona","club"],["Football","Which German club is based in Munich?","Bayern Munich","club"],["Football","Which Italian club is nicknamed The Old Lady?","Juventus","club"],["Football","Which trophy do European club champions win?","UEFA Champions League","league"],["Football","Who is the all-time top scorer in the Champions League?","Cristiano Ronaldo","person_m"],["Football","Who managed Manchester United for over 26 years?","Sir Alex Ferguson","person_m"],["Football","Which manager led Liverpool to the 2019 Champions League?","Jurgen Klopp","person_m"],["Football","Which country won Euro 2020?","Italy","country"],["Football","Which country won Euro 2024?","Spain","country"],["Football","Which nation hosted the 2010 World Cup?","South Africa","country"],["Football","Which nation hosted the 2014 World Cup?","Brazil","country"],["Football","Which nation hosted the 2018 World Cup?","Russia","country"],["Football","Which country hosted the 2022 World Cup?","Qatar","country"],["Football","Which African nation reached the 2022 World Cup semi-finals?","Morocco","country"],["Football","Which French striker won the 2022 World Cup Golden Boot?","Kylian Mbappe","person_m"],["Football","Who won the Golden Ball at the 2022 World Cup?","Lionel Messi","person_m"],["Football","Which Norwegian striker joined Manchester City in 2022?","Erling Haaland","person_m"],["Football","Which Portuguese club did Ronaldo start his senior career with?","Sporting CP","club"],["Football","Which position wears gloves and can use hands?","Goalkeeper","sport_term"],["Football","What is scoring three goals in a match called?","A hat-trick","sport_term"],["Football","How wide is a standard football goal?","8 yards","measure"],["Football","Which Dutch legend pioneered Total Football?","Johan Cruyff","person_m"],["Football","Which Brazilian is widely known simply as Pele?","Edson Arantes do Nascimento","person_m"],["Football","Which country does Neymar represent?","Brazil","country"],["Football","Which club did Messi join in MLS in 2023?","Inter Miami","club"],["Football","Which league is Spain's top division?","La Liga","league"],["Football","Which league is Italy's top division?","Serie A","league"],["Football","Which league is Germany's top division?","Bundesliga","league"],["Football","Which club is nicknamed The Gunners?","Arsenal","club"],["Football","Which club is nicknamed The Toffees?","Everton","club"],["Football","Which stadium is England's national stadium?","Wembley Stadium","venue"],["Football","How long is each half of extra time?","15 minutes","measure"],["Football","Which competition is Europe's second-tier club tournament?","UEFA Europa League","league"],["Football","Which country won the first World Cup in 1930?","Uruguay","country"],["Other Sports","How many players are on a basketball team on court?","Five","num_word"],["Other Sports","How many players are on a volleyball team on court?","Six","num_word"],["Other Sports","How many players are in a hockey team on the field?","Eleven","num_word"],["Other Sports","How many rings are on the Olympic flag?","Five","num_word"],["Other Sports","How often are the Summer Olympics held?","Every four years","sport_term"],["Other Sports","In which country did the Olympic Games originate?","Greece","country"],["Other Sports","Which city hosted the 2020 Summer Olympics?","Tokyo","city"],["Other Sports","Which city hosted the 2016 Summer Olympics?","Rio de Janeiro","city"],["Other Sports","Which city hosted the 2012 Summer Olympics?","London","city"],["Other Sports","Which city hosted the 2024 Summer Olympics?","Paris","city"],["Other Sports","Which sprinter holds the 100m world record?","Usain Bolt","person_m"],["Other Sports","Which country does Usain Bolt represent?","Jamaica","country"],["Other Sports","How many players are on a baseball team on the field?","Nine","num_word"],["Other Sports","In tennis, what is a score of zero called?","Love","sport_term"],["Other Sports","Which tennis tournament is played on grass in London?","Wimbledon","venue"],["Other Sports","Which tennis tournament is played on clay in Paris?","French Open","venue"],["Other Sports","Which Swiss player won a record number of Wimbledon men's titles?","Roger Federer","person_m"],["Other Sports","Which Spanish player is called the King of Clay?","Rafael Nadal","person_m"],["Other Sports","Which Serbian player has the most men's Grand Slam titles?","Novak Djokovic","person_m"],["Other Sports","How many holes are in a full round of golf?","Eighteen","num_word"],["Other Sports","What is one under par in golf called?","A birdie","sport_term"],["Other Sports","What is two under par on a hole called?","An eagle","sport_term"],["Other Sports","What is one over par called?","A bogey","sport_term"],["Other Sports","In which sport would you perform a slam dunk?","Basketball","sport_name"],["Other Sports","In which sport is the Tour de France contested?","Cycling","sport_name"],["Other Sports","How many players are in a rugby union team?","Fifteen","num_word"],["Other Sports","What is the maximum break in snooker?","147","num_digit"],["Other Sports","In boxing, how long is a standard professional round?","Three minutes","sport_term"],["Other Sports","Which martial art originated in Japan and means 'gentle way'?","Judo","sport_name"],["Other Sports","Which martial art is Korea's national sport?","Taekwondo","sport_name"],["Other Sports","In which sport do you use a shuttlecock?","Badminton","sport_name"],["Other Sports","Which country dominates the sport of badminton alongside Indonesia?","China","country"],["Other Sports","What is the diameter of a basketball hoop in inches?","18 inches","measure"],["Other Sports","Which Formula 1 driver has won seven world titles alongside Schumacher?","Lewis Hamilton","person_m"],["Other Sports","Which German driver won seven F1 world championships?","Michael Schumacher","person_m"],["Other Sports","Which country is the Formula 1 team Ferrari from?","Italy","country"],["Other Sports","How many squares are on a chessboard?","64","num_digit"],["Other Sports","Which chess piece can only move diagonally?","The bishop","sport_term"],["Other Sports","Which chess piece is the most valuable to protect?","The king","sport_term"],["Other Sports","In which sport is the Ryder Cup contested?","Golf","sport_name"],["Other Sports","In which sport is the Stanley Cup awarded?","Ice hockey","sport_name"],["Other Sports","In which sport is the Davis Cup contested?","Tennis","sport_name"],["Other Sports","How many points is a touchdown worth in American football?","Six","num_word"],["Other Sports","Which Indian athlete won javelin gold at the 2020 Olympics?","Neeraj Chopra","person_m"],["Other Sports","Which sport is known as the sport of kings?","Horse racing","sport_name"],["Other Sports","What is the national sport of Japan involving wrestlers?","Sumo","sport_name"],["Other Sports","How many lanes are in a standard Olympic swimming pool?","Eight","num_word"],["Other Sports","Which swimmer has won the most Olympic gold medals?","Michael Phelps","person_m"],["Other Sports","In which sport do teams compete for the America's Cup?","Sailing","sport_name"],["Other Sports","How many players are on a kabaddi team on the court?","Seven","num_word"],["Food & Drink","Which country is the origin of pizza?","Italy","country"],["Food & Drink","Which country is sushi originally from?","Japan","country"],["Food & Drink","Which country did the croissant become famous in?","France","country"],["Food & Drink","Which spice is the most expensive by weight?","Saffron","ingredient"],["Food & Drink","What is the main ingredient in guacamole?","Avocado","ingredient"],["Food & Drink","What is the main ingredient in hummus?","Chickpeas","ingredient"],["Food & Drink","Which nut is used to make marzipan?","Almond","ingredient"],["Food & Drink","Which fruit is known as the king of fruits in South Asia?","Mango","ingredient"],["Food & Drink","What is dried grape called?","Raisin","ingredient"],["Food & Drink","Which vegetable makes people cry when chopped?","Onion","ingredient"],["Food & Drink","What type of pastry is used for profiteroles?","Choux pastry","dish"],["Food & Drink","Which Italian dish is a thin flat pasta ribbon?","Fettuccine","dish"],["Food & Drink","Which Indian bread is cooked in a tandoor?","Naan","dish"],["Food & Drink","Which Indian dish features rice cooked with spices and meat?","Biryani","dish"],["Food & Drink","Which fermented Korean side dish is made from cabbage?","Kimchi","dish"],["Food & Drink","Which Japanese drink is made from fermented rice?","Sake","drink"],["Food & Drink","Which country is the largest producer of coffee?","Brazil","country"],["Food & Drink","Which country is the largest producer of tea?","China","country"],["Food & Drink","What is the main ingredient of traditional Greek tzatziki?","Yoghurt","ingredient"],["Food & Drink","Which cheese is traditionally used on a Margherita pizza?","Mozzarella","dish"],["Food & Drink","Which cheese is famous for its holes?","Swiss cheese","dish"],["Food & Drink","What is the primary flavour in a classic pesto sauce?","Basil","ingredient"],["Food & Drink","Which meat is used in a traditional Wiener schnitzel?","Veal","ingredient"],["Food & Drink","What is tofu made from?","Soybeans","ingredient"],["Food & Drink","Which drink is made from crushed grapes and fermented?","Wine","drink"],["Food & Drink","Which alcoholic drink is made from juniper berries?","Gin","drink"],["Food & Drink","Which country is famous for tequila?","Mexico","country"],["Food & Drink","What is the base spirit in a mojito?","Rum","drink"],["Food & Drink","Which vitamin are citrus fruits famous for?","Vitamin C","unit"],["Food & Drink","What is the process of cooking food in hot oil called?","Frying","food_term"],["Food & Drink","Which grain is used to make traditional risotto?","Rice","ingredient"],["Food & Drink","What is a young sheep's meat called?","Lamb","ingredient"],["Food & Drink","Which sweet substance do bees produce?","Honey","ingredient"],["Food & Drink","What is the world's most widely consumed beverage after water?","Tea","drink"],["Food & Drink","Which vegetable is the main ingredient in coleslaw?","Cabbage","ingredient"],["Food & Drink","Which Middle Eastern dish is made of deep-fried chickpea balls?","Falafel","dish"],["Food & Drink","Which flatbread is a staple across the Middle East?","Pita","dish"],["Food & Drink","Which nut is used in traditional baklava?","Pistachio","ingredient"],["Food & Drink","Which fruit is used to make traditional cider?","Apple","ingredient"],["Food & Drink","What does the cooking term 'al dente' describe?","Pasta that is firm to the bite","food_term"],["Food & Drink","Which herb is commonly paired with tomato in Italian cooking?","Basil","ingredient"],["Food & Drink","Which South Indian dish is a fermented rice and lentil crepe?","Dosa","dish"],["Food & Drink","Which Indian dessert is made from milk solids and syrup?","Gulab jamun","dish"],["Food & Drink","Which chilli measurement scale is used for spiciness?","Scoville scale","food_term"],["Food & Drink","What is the main ingredient in traditional French onion soup?","Onions","ingredient"],["Literature & Arts","Who wrote Romeo and Juliet?","William Shakespeare","person_m"],["Literature & Arts","Who wrote Hamlet?","William Shakespeare","person_m"],["Literature & Arts","Who wrote Pride and Prejudice?","Jane Austen","person_f"],["Literature & Arts","Who wrote Oliver Twist and Great Expectations?","Charles Dickens","person_m"],["Literature & Arts","Who wrote 1984?","George Orwell","person_m"],["Literature & Arts","Who wrote Animal Farm?","George Orwell","person_m"],["Literature & Arts","Who wrote The Old Man and the Sea?","Ernest Hemingway","person_m"],["Literature & Arts","Who wrote To Kill a Mockingbird?","Harper Lee","person_f"],["Literature & Arts","Who wrote The Great Gatsby?","F. Scott Fitzgerald","person_m"],["Literature & Arts","Who wrote War and Peace?","Leo Tolstoy","person_m"],["Literature & Arts","Who wrote Crime and Punishment?","Fyodor Dostoevsky","person_m"],["Literature & Arts","Who wrote Don Quixote?","Miguel de Cervantes","person_m"],["Literature & Arts","Who wrote The Alchemist?","Paulo Coelho","person_m"],["Literature & Arts","Who wrote the Sherlock Holmes stories?","Arthur Conan Doyle","person_m"],["Literature & Arts","Who wrote Gitanjali and won the Nobel Prize in 1913?","Rabindranath Tagore","person_m"],["Literature & Arts","Who wrote Midnight's Children?","Salman Rushdie","person_m"],["Literature & Arts","Who wrote The God of Small Things?","Arundhati Roy","person_f"],["Literature & Arts","Who painted the Mona Lisa?","Leonardo da Vinci","person_m"],["Literature & Arts","Who painted The Starry Night?","Vincent van Gogh","person_m"],["Literature & Arts","Who painted the ceiling of the Sistine Chapel?","Michelangelo","person_m"],["Literature & Arts","Who sculpted the statue of David?","Michelangelo","person_m"],["Literature & Arts","Who painted The Persistence of Memory with melting clocks?","Salvador Dali","person_m"],["Literature & Arts","Which Spanish artist co-founded Cubism?","Pablo Picasso","person_m"],["Literature & Arts","In which museum is the Mona Lisa displayed?","The Louvre","monument"],["Literature & Arts","In which city is the Louvre?","Paris","city"],["Literature & Arts","Which art movement is Claude Monet associated with?","Impressionism","genre"],["Literature & Arts","Who wrote the play A Doll's House?","Henrik Ibsen","person_m"],["Literature & Arts","Which Greek poet is credited with the Iliad and the Odyssey?","Homer","person_m"],["Literature & Arts","What is a poem of fourteen lines called?","A sonnet","lit_term"],["Literature & Arts","What is a word that reads the same backwards called?","A palindrome","lit_term"],["Literature & Arts","What is a comparison using 'like' or 'as' called?","A simile","lit_term"],["Literature & Arts","What is giving human traits to objects called?","Personification","lit_term"],["Literature & Arts","Who wrote The Diary of a Young Girl?","Anne Frank","person_f"],["Literature & Arts","Who created the character Harry Potter?","J. K. Rowling","person_f"],["Literature & Arts","Who wrote The Jungle Book?","Rudyard Kipling","person_m"],["Literature & Arts","Who wrote Charlie and the Chocolate Factory?","Roald Dahl","person_m"],["Literature & Arts","Which Russian novel features Anna and Count Vronsky?","Anna Karenina","book"],["Literature & Arts","What is the first book of the Harry Potter series called in the UK?","Philosopher's Stone","book"],["Literature & Arts","Who wrote the Discworld series?","Terry Pratchett","person_m"],["Literature & Arts","Which prize is the most prestigious in literature globally?","The Nobel Prize in Literature","trophy"],["Literature & Arts","Which Japanese author wrote Norwegian Wood?","Haruki Murakami","person_m"],["Literature & Arts","Who wrote Things Fall Apart?","Chinua Achebe","person_m"],["Literature & Arts","Which epic Indian text features the Kurukshetra war?","The Mahabharata","book"],["Literature & Arts","Which Indian epic features Rama and Sita?","The Ramayana","book"],["Literature & Arts","Who wrote the Panchatantra fables?","Vishnu Sharma","person_m"],["Technology","Who co-founded Microsoft with Paul Allen?","Bill Gates","person_m"],["Technology","Who co-founded Apple with Steve Wozniak?","Steve Jobs","person_m"],["Technology","Who founded Amazon?","Jeff Bezos","person_m"],["Technology","Who founded Tesla's leadership and SpaceX?","Elon Musk","person_m"],["Technology","Who created Facebook?","Mark Zuckerberg","person_m"],["Technology","What does WWW stand for?","World Wide Web","acronym"],["Technology","Who is credited with inventing the World Wide Web?","Tim Berners-Lee","person_m"],["Technology","What does CPU stand for?","Central Processing Unit","acronym"],["Technology","What does RAM stand for?","Random Access Memory","acronym"],["Technology","What does USB stand for?","Universal Serial Bus","acronym"],["Technology","What does HTML stand for?","HyperText Markup Language","acronym"],["Technology","What does PDF stand for?","Portable Document Format","acronym"],["Technology","What does GPS stand for?","Global Positioning System","acronym"],["Technology","What does AI stand for?","Artificial Intelligence","acronym"],["Technology","What does URL stand for?","Uniform Resource Locator","acronym"],["Technology","Which company makes the iPhone?","Apple","ingredient"],["Technology","Which company developed the Android operating system?","Google","company"],["Technology","Which company developed Windows?","Microsoft","company"],["Technology","Which search engine is the most used worldwide?","Google","company"],["Technology","What is the binary system based on?","Two digits, 0 and 1","tech_term"],["Technology","How many bits are in a byte?","Eight","num_word"],["Technology","Which programming language is named after a snake?","Python","tech_term"],["Technology","Which language is primarily used to style web pages?","CSS","tech_term"],["Technology","Which company created the PlayStation?","Sony","company"],["Technology","Which company created the Xbox?","Microsoft","company"],["Technology","Which company created Mario and Zelda?","Nintendo","company"],["Technology","What does VPN stand for?","Virtual Private Network","acronym"],["Technology","What does Wi-Fi connect devices to?","A wireless network","tech_term"],["Technology","Which social platform is known for short videos and was made by ByteDance?","TikTok","company"],["Technology","Which platform was formerly known as Twitter?","X","company"],["Technology","What is the most popular video sharing website?","YouTube","company"],["Technology","Which cryptocurrency was the first and most famous?","Bitcoin","company"],["Technology","Who is the pseudonymous creator of Bitcoin?","Satoshi Nakamoto","person_m"],["Technology","What does the 'G' in 5G stand for?","Generation","tech_term"],["Technology","What is malicious software generally called?","Malware","tech_term"],["Technology","What is a common term for unwanted email?","Spam","tech_term"],["Technology","Which key combination copies text on Windows?","Ctrl + C","tech_term"],["Technology","Which key combination pastes text on Windows?","Ctrl + V","tech_term"],["Technology","What is the small picture representing a program called?","An icon","tech_term"],["Technology","Which company makes the Galaxy series of phones?","Samsung","company"],["Technology","What does OS stand for in computing?","Operating System","acronym"],["Technology","Which technology uses short-range radio to link headphones to phones?","Bluetooth","tech_term"],["Technology","What does HTTP stand for?","HyperText Transfer Protocol","acronym"],["Technology","Which chip company is known for GPUs used in AI?","Nvidia","company"],["Technology","What is the process of converting data into code to prevent access?","Encryption","sci_field"],["General Knowledge","How many continents are there on Earth?","Seven","num_word"],["General Knowledge","How many colours are in a rainbow?","Seven","num_word"],["General Knowledge","How many days are in a leap year?","366","num_digit"],["General Knowledge","How many minutes are in a full day?","1440","year"],["General Knowledge","How many sides does a hexagon have?","Six","num_word"],["General Knowledge","How many sides does an octagon have?","Eight","num_word"],["General Knowledge","How many degrees are in a right angle?","90","num_digit"],["General Knowledge","How many degrees are in a full circle?","360","num_digit"],["General Knowledge","How many players are in a chess game?","Two","num_word"],["General Knowledge","What is the currency used across most of the EU?","The euro","gk_term"],["General Knowledge","Which language has the most native speakers?","Mandarin Chinese","language"],["General Knowledge","Which is the most widely spoken language overall?","English","language"],["General Knowledge","What colour is a standard emergency stop sign?","Red","colour"],["General Knowledge","Which planet do we live on?","Earth","planet"],["General Knowledge","How many wonders were in the ancient world list?","Seven","num_word"],["General Knowledge","Which ancient wonder still stands today?","The Great Pyramid of Giza","monument"],["General Knowledge","What is the tallest building in the world?","Burj Khalifa","monument"],["General Knowledge","In which city is the Burj Khalifa?","Dubai","city"],["General Knowledge","Which country is the Eiffel Tower in?","France","country"],["General Knowledge","Which country is the Colosseum in?","Italy","country"],["General Knowledge","Which country is Christ the Redeemer in?","Brazil","country"],["General Knowledge","In which country is the Taj Mahal?","India","country"],["General Knowledge","What is the largest desert on Earth including cold deserts?","Antarctica","geo_land"],["General Knowledge","What is the name of the flag of surrender?","White flag","colour"],["General Knowledge","Which colour is made by mixing blue and yellow?","Green","colour"],["General Knowledge","Which colour is made by mixing red and blue?","Purple","colour"],["General Knowledge","How many strings does a violin have?","Four","num_word"],["General Knowledge","What is the collective term for a group of fish?","A school","collective"],["General Knowledge","How many letters are in the English alphabet?","26","num_digit"],["General Knowledge","What is the first month of the year?","January","gk_term"],["General Knowledge","How many months have 31 days?","Seven","num_word"],["General Knowledge","What is the largest mammal that can fly?","The bat","animal"],["General Knowledge","What is a person who studies stars called?","An astronomer","gk_term"],["General Knowledge","What is the term for a shape with equal sides and angles?","A regular polygon","lit_term"],["General Knowledge","Which side of a ship is port?","The left side","gk_term"],["General Knowledge","What does SOS traditionally signal?","A distress call","gk_term"],["General Knowledge","Which direction does the sun rise from?","The east","gk_term"],["General Knowledge","What is the study of maps called?","Cartography","sci_field"],["General Knowledge","How many zeros are in one million?","Six","num_word"],["General Knowledge","What is one thousand million called?","A billion","gk_term"],["General Knowledge","Which blood component carries oxygen?","Red blood cells","bodypart"],["General Knowledge","What is the fear of heights called?","Acrophobia","gk_term"],["General Knowledge","What is the fear of confined spaces called?","Claustrophobia","gk_term"],["General Knowledge","Which metal is the best conductor of electricity?","Silver","substance"],["General Knowledge","Which is the only mammal capable of true flight?","The bat","animal"],["General Knowledge","What is the world's most populous country?","India","country"],["General Knowledge","What do you call a shape with three sides?","A triangle","lit_term"],["General Knowledge","What is the square root of 144?","12","num_digit"],["General Knowledge","What is the square root of 81?","9","num_digit"],["General Knowledge","How many hours are in a week?","168","num_digit"],["Math & Numbers","What is 3 x 3?","9","num_digit"],["Math & Numbers","What is 3 x 4?","12","num_digit"],["Math & Numbers","What is 3 x 5?","15","num_digit"],["Math & Numbers","What is 3 x 6?","18","num_digit"],["Math & Numbers","What is 3 x 7?","21","num_digit"],["Math & Numbers","What is 3 x 8?","24","num_digit"],["Math & Numbers","What is 3 x 9?","27","num_digit"],["Math & Numbers","What is 3 x 10?","30","num_digit"],["Math & Numbers","What is 3 x 11?","33","num_digit"],["Math & Numbers","What is 3 x 12?","36","num_digit"],["Math & Numbers","What is 4 x 3?","12","num_digit"],["Math & Numbers","What is 4 x 4?","16","num_digit"],["Math & Numbers","What is 4 x 5?","20","num_digit"],["Math & Numbers","What is 4 x 6?","24","num_digit"],["Math & Numbers","What is 4 x 7?","28","num_digit"],["Math & Numbers","What is 4 x 8?","32","num_digit"],["Math & Numbers","What is 4 x 9?","36","num_digit"],["Math & Numbers","What is 4 x 10?","40","num_digit"],["Math & Numbers","What is 4 x 11?","44","num_digit"],["Math & Numbers","What is 4 x 12?","48","num_digit"],["Math & Numbers","What is 5 x 3?","15","num_digit"],["Math & Numbers","What is 5 x 4?","20","num_digit"],["Math & Numbers","What is 5 x 5?","25","num_digit"],["Math & Numbers","What is 5 x 6?","30","num_digit"],["Math & Numbers","What is 5 x 7?","35","num_digit"],["Math & Numbers","What is 5 x 8?","40","num_digit"],["Math & Numbers","What is 5 x 9?","45","num_digit"],["Math & Numbers","What is 5 x 10?","50","num_digit"],["Math & Numbers","What is 5 x 11?","55","num_digit"],["Math & Numbers","What is 5 x 12?","60","num_digit"],["Math & Numbers","What is 6 x 3?","18","num_digit"],["Math & Numbers","What is 6 x 4?","24","num_digit"],["Math & Numbers","What is 6 x 5?","30","num_digit"],["Math & Numbers","What is 6 x 6?","36","num_digit"],["Math & Numbers","What is 6 x 7?","42","num_digit"],["Math & Numbers","What is 6 x 8?","48","num_digit"],["Math & Numbers","What is 6 x 9?","54","num_digit"],["Math & Numbers","What is 6 x 10?","60","num_digit"],["Math & Numbers","What is 6 x 11?","66","num_digit"],["Math & Numbers","What is 6 x 12?","72","num_digit"],["Math & Numbers","What is 7 x 3?","21","num_digit"],["Math & Numbers","What is 7 x 4?","28","num_digit"],["Math & Numbers","What is 7 x 5?","35","num_digit"],["Math & Numbers","What is 7 x 6?","42","num_digit"],["Math & Numbers","What is 7 x 7?","49","num_digit"],["Math & Numbers","What is 7 x 8?","56","num_digit"],["Math & Numbers","What is 7 x 9?","63","num_digit"],["Math & Numbers","What is 7 x 10?","70","num_digit"],["Math & Numbers","What is 7 x 11?","77","num_digit"],["Math & Numbers","What is 7 x 12?","84","num_digit"],["Math & Numbers","What is 8 x 3?","24","num_digit"],["Math & Numbers","What is 8 x 4?","32","num_digit"],["Math & Numbers","What is 8 x 5?","40","num_digit"],["Math & Numbers","What is 8 x 6?","48","num_digit"],["Math & Numbers","What is 8 x 7?","56","num_digit"],["Math & Numbers","What is 8 x 8?","64","num_digit"],["Math & Numbers","What is 8 x 9?","72","num_digit"],["Math & Numbers","What is 8 x 10?","80","num_digit"],["Math & Numbers","What is 8 x 11?","88","num_digit"],["Math & Numbers","What is 8 x 12?","96","num_digit"],["Math & Numbers","What is 9 x 3?","27","num_digit"],["Math & Numbers","What is 9 x 4?","36","num_digit"],["Math & Numbers","What is 9 x 5?","45","num_digit"],["Math & Numbers","What is 9 x 6?","54","num_digit"],["Math & Numbers","What is 9 x 7?","63","num_digit"],["Math & Numbers","What is 9 x 8?","72","num_digit"],["Math & Numbers","What is 9 x 9?","81","num_digit"],["Math & Numbers","What is 9 x 10?","90","num_digit"],["Math & Numbers","What is 9 x 11?","99","num_digit"],["Math & Numbers","What is 9 x 12?","108","num_digit"],["Math & Numbers","What is 10 x 3?","30","num_digit"],["Math & Numbers","What is 10 x 4?","40","num_digit"],["Math & Numbers","What is 10 x 5?","50","num_digit"],["Math & Numbers","What is 10 x 6?","60","num_digit"],["Math & Numbers","What is 10 x 7?","70","num_digit"],["Math & Numbers","What is 10 x 8?","80","num_digit"],["Math & Numbers","What is 10 x 9?","90","num_digit"],["Math & Numbers","What is 10 x 10?","100","num_digit"],["Math & Numbers","What is 10 x 11?","110","num_digit"],["Math & Numbers","What is 10 x 12?","120","num_digit"],["Math & Numbers","What is 11 x 3?","33","num_digit"],["Math & Numbers","What is 11 x 4?","44","num_digit"],["Math & Numbers","What is 11 x 5?","55","num_digit"],["Math & Numbers","What is 11 x 6?","66","num_digit"],["Math & Numbers","What is 11 x 7?","77","num_digit"],["Math & Numbers","What is 11 x 8?","88","num_digit"],["Math & Numbers","What is 11 x 9?","99","num_digit"],["Math & Numbers","What is 11 x 10?","110","num_digit"],["Math & Numbers","What is 11 x 11?","121","num_digit"],["Math & Numbers","What is 11 x 12?","132","num_digit"],["Math & Numbers","What is 12 x 3?","36","num_digit"],["Math & Numbers","What is 12 x 4?","48","num_digit"],["Math & Numbers","What is 12 x 5?","60","num_digit"],["Math & Numbers","What is 12 x 6?","72","num_digit"],["Math & Numbers","What is 12 x 7?","84","num_digit"],["Math & Numbers","What is 12 x 8?","96","num_digit"],["Math & Numbers","What is 12 x 9?","108","num_digit"],["Math & Numbers","What is 12 x 10?","120","num_digit"],["Math & Numbers","What is 12 x 11?","132","num_digit"],["Math & Numbers","What is 12 x 12?","144","num_digit"],["Math & Numbers","What is 13 x 3?","39","num_digit"],["Math & Numbers","What is 13 x 4?","52","num_digit"],["Math & Numbers","What is 13 x 5?","65","num_digit"],["Math & Numbers","What is 13 x 6?","78","num_digit"],["Math & Numbers","What is 13 x 7?","91","num_digit"],["Math & Numbers","What is 13 x 8?","104","num_digit"],["Math & Numbers","What is 13 x 9?","117","num_digit"],["Math & Numbers","What is 13 x 10?","130","num_digit"],["Math & Numbers","What is 13 x 11?","143","num_digit"],["Math & Numbers","What is 13 x 12?","156","num_digit"],["Math & Numbers","What is 14 x 3?","42","num_digit"],["Math & Numbers","What is 14 x 4?","56","num_digit"],["Math & Numbers","What is 14 x 5?","70","num_digit"],["Math & Numbers","What is 14 x 6?","84","num_digit"],["Math & Numbers","What is 14 x 7?","98","num_digit"],["Math & Numbers","What is 14 x 8?","112","num_digit"],["Math & Numbers","What is 14 x 9?","126","num_digit"],["Math & Numbers","What is 14 x 10?","140","num_digit"],["Math & Numbers","What is 14 x 11?","154","num_digit"],["Math & Numbers","What is 14 x 12?","168","num_digit"],["Math & Numbers","What is 15 x 3?","45","num_digit"],["Math & Numbers","What is 15 x 4?","60","num_digit"],["Math & Numbers","What is 15 x 5?","75","num_digit"],["Math & Numbers","What is 15 x 6?","90","num_digit"],["Math & Numbers","What is 15 x 7?","105","num_digit"],["Math & Numbers","What is 15 x 8?","120","num_digit"],["Math & Numbers","What is 15 x 9?","135","num_digit"],["Math & Numbers","What is 15 x 10?","150","num_digit"],["Math & Numbers","What is 15 x 11?","165","num_digit"],["Math & Numbers","What is 15 x 12?","180","num_digit"],["Math & Numbers","What is 11 squared?","121","num_digit"],["Math & Numbers","What is 12 squared?","144","num_digit"],["Math & Numbers","What is 13 squared?","169","num_digit"],["Math & Numbers","What is 14 squared?","196","num_digit"],["Math & Numbers","What is 15 squared?","225","num_digit"],["Math & Numbers","What is 16 squared?","256","num_digit"],["Math & Numbers","What is 17 squared?","289","num_digit"],["Math & Numbers","What is 18 squared?","324","num_digit"],["Math & Numbers","What is 19 squared?","361","num_digit"],["Math & Numbers","What is 20 squared?","400","num_digit"],["Math & Numbers","What is 21 squared?","441","num_digit"],["Math & Numbers","What is 22 squared?","484","num_digit"],["Math & Numbers","What is 23 squared?","529","num_digit"],["Math & Numbers","What is 24 squared?","576","num_digit"],["Math & Numbers","What is 25 squared?","625","num_digit"],["Math & Numbers","What is 26 squared?","676","num_digit"],["Math & Numbers","What is 27 squared?","729","num_digit"],["Math & Numbers","What is 28 squared?","784","num_digit"],["Math & Numbers","What is 29 squared?","841","num_digit"],["Math & Numbers","What is 30 squared?","900","num_digit"],["Math & Numbers","What is 31 squared?","961","num_digit"],["Math & Numbers","What is 32 squared?","1024","year"],["Math & Numbers","What is 33 squared?","1089","year"],["Math & Numbers","What is 34 squared?","1156","year"],["Math & Numbers","What is 35 squared?","1225","year"],["Math & Numbers","What is 4 divided by 2?","2","num_digit"],["Math & Numbers","What is 9 divided by 3?","3","num_digit"],["Math & Numbers","What is 16 divided by 4?","4","num_digit"],["Math & Numbers","What is 25 divided by 5?","5","num_digit"],["Math & Numbers","What is 36 divided by 6?","6","num_digit"],["Math & Numbers","What is 49 divided by 7?","7","num_digit"],["Math & Numbers","What is 64 divided by 8?","8","num_digit"],["Math & Numbers","What is 81 divided by 9?","9","num_digit"],["Math & Numbers","What is 100 divided by 10?","10","num_digit"],["Math & Numbers","What is 121 divided by 11?","11","num_digit"],["Math & Numbers","What is 144 divided by 12?","12","num_digit"],["Math & Numbers","What is 169 divided by 13?","13","num_digit"],["Math & Numbers","What is 196 divided by 14?","14","num_digit"],["Math & Numbers","What is 225 divided by 15?","15","num_digit"],["Math & Numbers","What is 256 divided by 16?","16","num_digit"],["Math & Numbers","What is 289 divided by 17?","17","num_digit"],["Math & Numbers","What is 324 divided by 18?","18","num_digit"],["Math & Numbers","What is 361 divided by 19?","19","num_digit"],["Math & Numbers","What is 400 divided by 20?","20","num_digit"],["Math & Numbers","What is the value of pi to two decimal places?","3.14","num_digit"],["Math & Numbers","What is 10 percent of 250?","25","num_digit"],["Math & Numbers","What is 25 percent of 200?","50","num_digit"],["Math & Numbers","What is the sum of angles in a triangle?","180 degrees","measure"],["Math & Numbers","What is the sum of angles in a quadrilateral?","360 degrees","measure"],["Math & Numbers","What is the next prime number after 7?","11","num_digit"],["Math & Numbers","What is the smallest prime number?","2","num_digit"],["Math & Numbers","Is zero an even or odd number?","Even","gk_term"],["Math & Numbers","What is 2 to the power of 10?","1024","year"],["Math & Numbers","What is the Roman numeral for 50?","L","roman"],["Math & Numbers","What is the Roman numeral for 100?","C","roman"],["Math & Numbers","What is the Roman numeral for 1000?","M","roman"],["Math & Numbers","What is half of 150?","75","num_digit"],["Math & Numbers","What is 7 factorial divided by 6 factorial?","7","num_digit"],["Math & Numbers","How many degrees in each angle of an equilateral triangle?","60 degrees","measure"]];
+const QBANK=[["Geography","What is the capital of Afghanistan?","Kabul","capital"],["Geography","Kabul is the capital of which country?","Afghanistan","country"],["Geography","What is the capital of Albania?","Tirana","capital"],["Geography","Tirana is the capital of which country?","Albania","country"],["Geography","What is the capital of Algeria?","Algiers","capital"],["Geography","Algiers is the capital of which country?","Algeria","country"],["Geography","What is the capital of Argentina?","Buenos Aires","capital"],["Geography","Buenos Aires is the capital of which country?","Argentina","country"],["Geography","What is the capital of Armenia?","Yerevan","capital"],["Geography","Yerevan is the capital of which country?","Armenia","country"],["Geography","What is the capital of Australia?","Canberra","capital"],["Geography","Canberra is the capital of which country?","Australia","country"],["Geography","What is the capital of Austria?","Vienna","capital"],["Geography","Vienna is the capital of which country?","Austria","country"],["Geography","What is the capital of Azerbaijan?","Baku","capital"],["Geography","Baku is the capital of which country?","Azerbaijan","country"],["Geography","What is the capital of Bangladesh?","Dhaka","capital"],["Geography","Dhaka is the capital of which country?","Bangladesh","country"],["Geography","What is the capital of Belgium?","Brussels","capital"],["Geography","Brussels is the capital of which country?","Belgium","country"],["Geography","What is the capital of Bhutan?","Thimphu","capital"],["Geography","Thimphu is the capital of which country?","Bhutan","country"],["Geography","What is the capital of Brazil?","Brasilia","capital"],["Geography","Brasilia is the capital of which country?","Brazil","country"],["Geography","What is the capital of Bulgaria?","Sofia","capital"],["Geography","Sofia is the capital of which country?","Bulgaria","country"],["Geography","What is the capital of Cambodia?","Phnom Penh","capital"],["Geography","Phnom Penh is the capital of which country?","Cambodia","country"],["Geography","What is the capital of Canada?","Ottawa","capital"],["Geography","Ottawa is the capital of which country?","Canada","country"],["Geography","What is the capital of Chile?","Santiago","capital"],["Geography","Santiago is the capital of which country?","Chile","country"],["Geography","What is the capital of China?","Beijing","capital"],["Geography","Beijing is the capital of which country?","China","country"],["Geography","What is the capital of Colombia?","Bogota","capital"],["Geography","Bogota is the capital of which country?","Colombia","country"],["Geography","What is the capital of Croatia?","Zagreb","capital"],["Geography","Zagreb is the capital of which country?","Croatia","country"],["Geography","What is the capital of Cuba?","Havana","capital"],["Geography","Havana is the capital of which country?","Cuba","country"],["Geography","What is the capital of Czechia?","Prague","capital"],["Geography","Prague is the capital of which country?","Czechia","country"],["Geography","What is the capital of Denmark?","Copenhagen","capital"],["Geography","Copenhagen is the capital of which country?","Denmark","country"],["Geography","What is the capital of Ecuador?","Quito","capital"],["Geography","Quito is the capital of which country?","Ecuador","country"],["Geography","What is the capital of Egypt?","Cairo","capital"],["Geography","Cairo is the capital of which country?","Egypt","country"],["Geography","What is the capital of Estonia?","Tallinn","capital"],["Geography","Tallinn is the capital of which country?","Estonia","country"],["Geography","What is the capital of Ethiopia?","Addis Ababa","capital"],["Geography","Addis Ababa is the capital of which country?","Ethiopia","country"],["Geography","What is the capital of Finland?","Helsinki","capital"],["Geography","Helsinki is the capital of which country?","Finland","country"],["Geography","What is the capital of France?","Paris","capital"],["Geography","Paris is the capital of which country?","France","country"],["Geography","What is the capital of Georgia?","Tbilisi","capital"],["Geography","Tbilisi is the capital of which country?","Georgia","country"],["Geography","What is the capital of Germany?","Berlin","capital"],["Geography","Berlin is the capital of which country?","Germany","country"],["Geography","What is the capital of Ghana?","Accra","capital"],["Geography","Accra is the capital of which country?","Ghana","country"],["Geography","What is the capital of Greece?","Athens","capital"],["Geography","Athens is the capital of which country?","Greece","country"],["Geography","What is the capital of Hungary?","Budapest","capital"],["Geography","Budapest is the capital of which country?","Hungary","country"],["Geography","What is the capital of Iceland?","Reykjavik","capital"],["Geography","Reykjavik is the capital of which country?","Iceland","country"],["Geography","What is the capital of India?","New Delhi","capital"],["Geography","New Delhi is the capital of which country?","India","country"],["Geography","What is the capital of Indonesia?","Jakarta","capital"],["Geography","Jakarta is the capital of which country?","Indonesia","country"],["Geography","What is the capital of Iran?","Tehran","capital"],["Geography","Tehran is the capital of which country?","Iran","country"],["Geography","What is the capital of Iraq?","Baghdad","capital"],["Geography","Baghdad is the capital of which country?","Iraq","country"],["Geography","What is the capital of Ireland?","Dublin","capital"],["Geography","Dublin is the capital of which country?","Ireland","country"],["Geography","What is the capital of Italy?","Rome","capital"],["Geography","Rome is the capital of which country?","Italy","country"],["Geography","What is the capital of Japan?","Tokyo","capital"],["Geography","Tokyo is the capital of which country?","Japan","country"],["Geography","What is the capital of Jordan?","Amman","capital"],["Geography","Amman is the capital of which country?","Jordan","country"],["Geography","What is the capital of Kazakhstan?","Astana","capital"],["Geography","Astana is the capital of which country?","Kazakhstan","country"],["Geography","What is the capital of Kenya?","Nairobi","capital"],["Geography","Nairobi is the capital of which country?","Kenya","country"],["Geography","What is the capital of Kuwait?","Kuwait City","capital"],["Geography","Kuwait City is the capital of which country?","Kuwait","country"],["Geography","What is the capital of Latvia?","Riga","capital"],["Geography","Riga is the capital of which country?","Latvia","country"],["Geography","What is the capital of Lebanon?","Beirut","capital"],["Geography","Beirut is the capital of which country?","Lebanon","country"],["Geography","What is the capital of Libya?","Tripoli","capital"],["Geography","Tripoli is the capital of which country?","Libya","country"],["Geography","What is the capital of Lithuania?","Vilnius","capital"],["Geography","Vilnius is the capital of which country?","Lithuania","country"],["Geography","What is the capital of Malaysia?","Kuala Lumpur","capital"],["Geography","Kuala Lumpur is the capital of which country?","Malaysia","country"],["Geography","What is the capital of Mexico?","Mexico City","capital"],["Geography","Mexico City is the capital of which country?","Mexico","country"],["Geography","What is the capital of Mongolia?","Ulaanbaatar","capital"],["Geography","Ulaanbaatar is the capital of which country?","Mongolia","country"],["Geography","What is the capital of Morocco?","Rabat","capital"],["Geography","Rabat is the capital of which country?","Morocco","country"],["Geography","What is the capital of Nepal?","Kathmandu","capital"],["Geography","Kathmandu is the capital of which country?","Nepal","country"],["Geography","What is the capital of Netherlands?","Amsterdam","capital"],["Geography","Amsterdam is the capital of which country?","Netherlands","country"],["Geography","What is the capital of New Zealand?","Wellington","capital"],["Geography","Wellington is the capital of which country?","New Zealand","country"],["Geography","What is the capital of Nigeria?","Abuja","capital"],["Geography","Abuja is the capital of which country?","Nigeria","country"],["Geography","What is the capital of Norway?","Oslo","capital"],["Geography","Oslo is the capital of which country?","Norway","country"],["Geography","What is the capital of Oman?","Muscat","capital"],["Geography","Muscat is the capital of which country?","Oman","country"],["Geography","What is the capital of Pakistan?","Islamabad","capital"],["Geography","Islamabad is the capital of which country?","Pakistan","country"],["Geography","What is the capital of Peru?","Lima","capital"],["Geography","Lima is the capital of which country?","Peru","country"],["Geography","What is the capital of Philippines?","Manila","capital"],["Geography","Manila is the capital of which country?","Philippines","country"],["Geography","What is the capital of Poland?","Warsaw","capital"],["Geography","Warsaw is the capital of which country?","Poland","country"],["Geography","What is the capital of Portugal?","Lisbon","capital"],["Geography","Lisbon is the capital of which country?","Portugal","country"],["Geography","What is the capital of Qatar?","Doha","capital"],["Geography","Doha is the capital of which country?","Qatar","country"],["Geography","What is the capital of Romania?","Bucharest","capital"],["Geography","Bucharest is the capital of which country?","Romania","country"],["Geography","What is the capital of Russia?","Moscow","capital"],["Geography","Moscow is the capital of which country?","Russia","country"],["Geography","What is the capital of Saudi Arabia?","Riyadh","capital"],["Geography","Riyadh is the capital of which country?","Saudi Arabia","country"],["Geography","What is the capital of Serbia?","Belgrade","capital"],["Geography","Belgrade is the capital of which country?","Serbia","country"],["Geography","What is the capital of Singapore?","Singapore","capital"],["Geography","Singapore is the capital of which country?","Singapore","country"],["Geography","What is the capital of Slovakia?","Bratislava","capital"],["Geography","Bratislava is the capital of which country?","Slovakia","country"],["Geography","What is the capital of Slovenia?","Ljubljana","capital"],["Geography","Ljubljana is the capital of which country?","Slovenia","country"],["Geography","What is the capital of South Korea?","Seoul","capital"],["Geography","Seoul is the capital of which country?","South Korea","country"],["Geography","What is the capital of Spain?","Madrid","capital"],["Geography","Madrid is the capital of which country?","Spain","country"],["Geography","What is the capital of Sweden?","Stockholm","capital"],["Geography","Stockholm is the capital of which country?","Sweden","country"],["Geography","What is the capital of Switzerland?","Bern","capital"],["Geography","Bern is the capital of which country?","Switzerland","country"],["Geography","What is the capital of Syria?","Damascus","capital"],["Geography","Damascus is the capital of which country?","Syria","country"],["Geography","What is the capital of Thailand?","Bangkok","capital"],["Geography","Bangkok is the capital of which country?","Thailand","country"],["Geography","What is the capital of Tunisia?","Tunis","capital"],["Geography","Tunis is the capital of which country?","Tunisia","country"],["Geography","What is the capital of Turkey?","Ankara","capital"],["Geography","Ankara is the capital of which country?","Turkey","country"],["Geography","What is the capital of Ukraine?","Kyiv","capital"],["Geography","Kyiv is the capital of which country?","Ukraine","country"],["Geography","What is the capital of United Arab Emirates?","Abu Dhabi","capital"],["Geography","Abu Dhabi is the capital of which country?","United Arab Emirates","country"],["Geography","What is the capital of United Kingdom?","London","capital"],["Geography","London is the capital of which country?","United Kingdom","country"],["Geography","What is the capital of United States?","Washington DC","capital"],["Geography","Washington DC is the capital of which country?","United States","country"],["Geography","What is the capital of Uruguay?","Montevideo","capital"],["Geography","Montevideo is the capital of which country?","Uruguay","country"],["Geography","What is the capital of Uzbekistan?","Tashkent","capital"],["Geography","Tashkent is the capital of which country?","Uzbekistan","country"],["Geography","What is the capital of Venezuela?","Caracas","capital"],["Geography","Caracas is the capital of which country?","Venezuela","country"],["Geography","What is the capital of Vietnam?","Hanoi","capital"],["Geography","Hanoi is the capital of which country?","Vietnam","country"],["Geography","What is the capital of Yemen?","Sanaa","capital"],["Geography","Sanaa is the capital of which country?","Yemen","country"],["Geography","What is the capital of Zimbabwe?","Harare","capital"],["Geography","Harare is the capital of which country?","Zimbabwe","country"],["Geography","What is the capital of Zambia?","Lusaka","capital"],["Geography","Lusaka is the capital of which country?","Zambia","country"],["Geography","What is the capital of Uganda?","Kampala","capital"],["Geography","Kampala is the capital of which country?","Uganda","country"],["Geography","What is the capital of Tanzania?","Dodoma","capital"],["Geography","Dodoma is the capital of which country?","Tanzania","country"],["Geography","What is the capital of Sudan?","Khartoum","capital"],["Geography","Khartoum is the capital of which country?","Sudan","country"],["Geography","What is the capital of Senegal?","Dakar","capital"],["Geography","Dakar is the capital of which country?","Senegal","country"],["Geography","What is the capital of Rwanda?","Kigali","capital"],["Geography","Kigali is the capital of which country?","Rwanda","country"],["Geography","What is the capital of Paraguay?","Asuncion","capital"],["Geography","Asuncion is the capital of which country?","Paraguay","country"],["Geography","What is the capital of Panama?","Panama City","capital"],["Geography","Panama City is the capital of which country?","Panama","country"],["Geography","What is the capital of Myanmar?","Naypyidaw","capital"],["Geography","Naypyidaw is the capital of which country?","Myanmar","country"],["Geography","What is the capital of Malta?","Valletta","capital"],["Geography","Valletta is the capital of which country?","Malta","country"],["Geography","What is the capital of Luxembourg?","Luxembourg City","capital"],["Geography","Luxembourg City is the capital of which country?","Luxembourg","country"],["Geography","What is the capital of Jamaica?","Kingston","capital"],["Geography","Kingston is the capital of which country?","Jamaica","country"],["Geography","What is the capital of Honduras?","Tegucigalpa","capital"],["Geography","Tegucigalpa is the capital of which country?","Honduras","country"],["Geography","What is the capital of Guatemala?","Guatemala City","capital"],["Geography","Guatemala City is the capital of which country?","Guatemala","country"],["Geography","What is the capital of Fiji?","Suva","capital"],["Geography","Suva is the capital of which country?","Fiji","country"],["Geography","What is the capital of Cyprus?","Nicosia","capital"],["Geography","Nicosia is the capital of which country?","Cyprus","country"],["Geography","What is the capital of Costa Rica?","San Jose","capital"],["Geography","San Jose is the capital of which country?","Costa Rica","country"],["Geography","What is the capital of Cameroon?","Yaounde","capital"],["Geography","Yaounde is the capital of which country?","Cameroon","country"],["Geography","What is the capital of Botswana?","Gaborone","capital"],["Geography","Gaborone is the capital of which country?","Botswana","country"],["Geography","What is the capital of Angola?","Luanda","capital"],["Geography","Luanda is the capital of which country?","Angola","country"],["Geography","What is the capital of Mozambique?","Maputo","capital"],["Geography","Maputo is the capital of which country?","Mozambique","country"],["Geography","What is the capital of Namibia?","Windhoek","capital"],["Geography","Windhoek is the capital of which country?","Namibia","country"],["Geography","What is the capital of Bolivia?","Sucre","capital"],["Geography","Sucre is the capital of which country?","Bolivia","country"],["Geography","What is the capital of Belarus?","Minsk","capital"],["Geography","Minsk is the capital of which country?","Belarus","country"],["Geography","What is the capital of Bahrain?","Manama","capital"],["Geography","Manama is the capital of which country?","Bahrain","country"],["Geography","What is the capital of Nicaragua?","Managua","capital"],["Geography","Managua is the capital of which country?","Nicaragua","country"],["Geography","What is the capital of Mali?","Bamako","capital"],["Geography","Bamako is the capital of which country?","Mali","country"],["Geography","What is the capital of Madagascar?","Antananarivo","capital"],["Geography","Antananarivo is the capital of which country?","Madagascar","country"],["General Knowledge","How many continents are there on Earth?","Seven","num_word"],["General Knowledge","How many colours are in a rainbow?","Seven","num_word"],["General Knowledge","How many days are in a leap year?","366","num_digit"]];
 
 /* ---- bank setup ---- */
 const ALL=QBANK.map(r=>({c:r[0],q:r[1],a:r[2],t:r[3]}));
 const CATEGORIES=[...new Set(ALL.map(x=>x.c))];
-const CATCOLOR={
- 'Bollywood':'#e23e57','Hollywood & TV':'#b3245f','Music':'#7b2d8b','Geography':'#0e9594',
- 'History':'#8a6d3b','Science & Nature':'#127a4a','Technology':'#2b5fb3','Cricket':'#5b3e96',
- 'Football':'#2a6f3f','Other Sports':'#c2560d','Food & Drink':'#c0392b','Literature & Arts':'#6d4c9f',
- 'General Knowledge':'#d99a00','Math & Numbers':'#455a64'
-};
 const catColor=c=>'#111111';
 
-// Extra distractors for subtypes with few real answers in the bank.
 const EXTRA={
- roman:['I','V','X','D','XL','CD'],
- language:['Spanish','Hindi','Arabic','French','Bengali','Portuguese'],
- song:['Imagine','Yesterday','Hey Jude','Billie Jean','Rolling in the Deep'],
- genre:['Blues','Rock','Hip hop','Classical','Country','Soul'],
- ipl_team:['Kolkata Knight Riders','Royal Challengers Bengaluru','Delhi Capitals','Punjab Kings','Sunrisers Hyderabad'],
- character:['Spider-Man','Iron Man','Wonder Woman','Captain America'],
- empire:['The Ottoman Empire','The British Empire','The Mughal Empire','The Persian Empire'],
- family:['The Bachchan family','The Khan family','The Roshan family'],
- plant:['Giant sequoia','Oak','Bamboo','Baobab'],
- food_term:['Boiling','Grilling','Steaming','Baking'],
- tv_show:['The Office','Better Call Saul','The Crown','Peaky Blinders']
+  roman:['I','V','X','D','XL','CD'],
+  language:['Spanish','Hindi','Arabic','French','Bengali','Portuguese'],
+  song:['Imagine','Yesterday','Hey Jude','Billie Jean','Rolling in the Deep'],
+  genre:['Blues','Rock','Hip hop','Classical','Country','Soul']
 };
 
-// pools: category+subtype (most specific), subtype alone, then category+... fallback
 const POOL_CS={}, POOL_S={};
 ALL.forEach(x=>{
   (POOL_CS[x.c+'|'+x.t]=POOL_CS[x.c+'|'+x.t]||new Set()).add(x.a);
@@ -341,9 +325,7 @@ Object.entries(EXTRA).forEach(([k,list])=>{
 });
 function optionsFor(idx){
   const x=ALL[idx];
-  // 1) same category AND same kind — most thematic
   let pool=[...(POOL_CS[x.c+'|'+x.t]||new Set())].filter(v=>v!==x.a);
-  // 2) same kind across all categories (e.g. any woman's name, any film title)
   if(pool.length<3) pool=[...(POOL_S[x.t]||new Set())].filter(v=>v!==x.a);
   const picked=[];
   const p=pool.slice();
@@ -380,12 +362,14 @@ try{
 const app=document.getElementById('app');
 let ME={role:null,name:null,code:null,id:null};
 let roomRef=null,roomListener=null,lastRoom=null;
+let masterPlayersRef=null, roomConfigRef=null;
+
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1800);}
 function uid(){return Math.random().toString(36).slice(2,9);}
 function newCode(){return Math.floor(1000+Math.random()*9000).toString();}
 let myLockedSig=null, optimisticPick=null;
 function serverNow(){return Date.now()+serverOffset;}
-// Bind a tap that registers the instant a finger touches, bypassing iOS's ~300ms click delay.
+
 function bindTap(el,fn){
   if(!el) return;
   let done=false;
@@ -394,7 +378,6 @@ function bindTap(el,fn){
     ev.preventDefault();
     fn(ev);
   };
-  // pointerdown covers modern iOS/Android/desktop; click is a fallback for anything older
   el.addEventListener('pointerdown',fire,{passive:false});
   el.addEventListener('click',fire);
 }
@@ -417,7 +400,7 @@ function optionsForRoom(r){
 }
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
-/* ============ SOUND (robust unlock) ============ */
+/* ============ SOUND ============ */
 let AC=null, soundReady=false;
 function ensureAC(){
   if(!AC){
@@ -430,7 +413,6 @@ function unlockAudio(){
   if(ac.state==='suspended'){ ac.resume(); }
   if(!soundReady){
     try{
-      // silent blip inside a gesture fully unlocks iOS/Safari
       const b=ac.createBuffer(1,1,22050);
       const s=ac.createBufferSource(); s.buffer=b; s.connect(ac.destination); s.start(0);
       soundReady=true;
@@ -458,15 +440,12 @@ function sTimeUp(){ tone(300,0,0.18,0.32,'sawtooth'); tone(300,0.22,0.30,0.32,'s
 function sCorrect(){ tone(523,0,0.14,0.3,'sine'); tone(659,0.12,0.14,0.3,'sine'); tone(784,0.24,0.30,0.32,'sine'); }
 function sWrong(){ tone(200,0,0.26,0.32,'sawtooth'); tone(150,0.20,0.38,0.32,'sawtooth'); }
 function sTick(){ tone(1200,0,0.05,0.18,'sine'); }
-function sDouble(){ // fanfare for a double-points round
-  tone(523,0,0.12,0.3,'square'); tone(659,0.12,0.12,0.3,'square');
-  tone(784,0.24,0.12,0.3,'square'); tone(1047,0.36,0.34,0.34,'square');
-}
+function sDouble(){ tone(523,0,0.12,0.3,'square'); tone(659,0.12,0.12,0.3,'square'); tone(784,0.24,0.12,0.3,'square'); tone(1047,0.36,0.34,0.34,'square'); }
 function sGo(){ tone(660,0,0.10,0.3,'sine'); tone(990,0.12,0.22,0.32,'sine'); }
 
 /* ============ TIMER ============ */
 let tickInterval=null,lastBeepSecond=null,playedTimeUp=false;
-function timerStart(r){ // when the countdown began
+function timerStart(r){
   if(!r||!r.timeLimit) return null;
   if(r.online) return (r.phase==='question')?r.phaseAt:null;
   if(r.mode==='fff') return r.revealed?r.revealedAt:null;
@@ -499,7 +478,6 @@ function startTicking(){
     if(h) h.innerHTML=timerHTML(r);
   },250);
 }
-// Re-render online screens once a second so countdowns visibly tick down.
 let uiTimer=null;
 function startUITick(){
   if(uiTimer) return;
@@ -509,8 +487,7 @@ function startUITick(){
     if(r.phase==='countdown'||r.phase==='reveal') renderOnline(r);
   },500);
 }
-function stopUITick(){ if(uiTimer){clearInterval(uiTimer);uiTimer=null;} 
-}
+function stopUITick(){ if(uiTimer){clearInterval(uiTimer);uiTimer=null;} }
 function stopTicking(){if(tickInterval){clearInterval(tickInterval);tickInterval=null;}lastBeepSecond=null;playedTimeUp=false;}
 function timerHTML(r){
   const rem=remainingSecs(r);
@@ -526,10 +503,6 @@ function timerHTML(r){
 }
 
 /* ============ ONLINE MODE ENGINE ============ */
-/* The clock is derived from Firebase's SERVER timestamp, not any one device.
-   Every client checks whether a phase is due; a transaction on `seq` makes sure
-   exactly one of them performs the transition. If the creator closes their tab,
-   the game keeps running. */
 const COUNTDOWN_S=3, REVEAL_S=5, BUZZ_ANSWER_S=10;
 let engineTimer=null;
 function pointsFor(r,rank){
@@ -539,12 +512,11 @@ function pointsFor(r,rank){
 function startEngine(){ if(!engineTimer) engineTimer=setInterval(engineTick,350); }
 function stopEngine(){ if(engineTimer){clearInterval(engineTimer);engineTimer=null;} }
 
-// Atomically claim the right to advance the game. Returns true if we won.
 async function claim(r){
   try{
     const res=await db.ref('rooms/'+ME.code+'/seq').transaction(cur=>{
       const now=(cur==null)?0:cur;
-      if(now!==(r.seq||0)) return;      // someone else already moved it on
+      if(now!==(r.seq||0)) return;
       return now+1;
     });
     return !!res.committed;
@@ -564,13 +536,12 @@ async function engineTick(){
   }
   if(r.phase==='question'){
     if(r.mode==='buzzer'){
-      // someone buzzed: they get an exclusive answer window
       if(r.buzzedBy){
         const since=(serverNow()-(r.buzzedAt||serverNow()))/1000;
         const answered=answersObj(r)[r.buzzedBy];
         if((answered||since>=BUZZ_ANSWER_S) && await claim(r)) await onlineEndQuestion(r);
       } else if(el>=r.timeLimit && await claim(r)){
-        await onlineEndQuestion(r);      // nobody buzzed in time
+        await onlineEndQuestion(r);
       }
     } else {
       const got=Object.keys(answersObj(r)).length;
@@ -590,11 +561,11 @@ async function onlineStartQuestion(r){
     buzzedBy:null, buzzedAt:null
   });
 }
+
 async function onlineEndQuestion(r){
   const q=currentQ(r), ans=answersObj(r);
   const up={};
   if(r.mode==='buzzer'){
-    // only the player who buzzed could answer
     const bid=r.buzzedBy;
     const a=bid?ans[bid]:null;
     if(a && a.choice===q.a){
@@ -612,12 +583,12 @@ async function onlineEndQuestion(r){
   up['rooms/'+ME.code+'/phaseAt']=firebase.database.ServerValue.TIMESTAMP;
   await db.ref().update(up);
 }
+
 let toppingUp=false;
-// Open-ended games: quietly fetch more questions before we run out.
 async function maybeTopUp(r){
   if(toppingUp) return;
   if(!r||r.src!=='ai'||!r.openEnded||!r.aiQ) return;
-  if(r.qIndex < r.aiQ.length-10) return;      // still plenty in hand
+  if(r.qIndex < r.aiQ.length-10) return;
   toppingUp=true;
   try{
     const more=await generateAI(r.topic,r.cats,30);
@@ -633,7 +604,7 @@ async function maybeTopUp(r){
 async function onlineNext(r){
   const nextI=r.qIndex+1;
   if(nextI>=deckLen(r)){
-    if(r.openEnded && r.src==='ai'){ await maybeTopUp(r); }   // wait for more
+    if(r.openEnded && r.src==='ai'){ await maybeTopUp(r); }
     if(nextI>=deckLen(lastRoom||r)){ await db.ref('rooms/'+ME.code).update({finished:true}); return; }
   }
   await db.ref('rooms/'+ME.code).update({
@@ -643,7 +614,6 @@ async function onlineNext(r){
   });
 }
 
-
 /* ============ SYNC ============ */
 function subscribeRoom(code){
   unsubscribeRoom();
@@ -652,7 +622,6 @@ function subscribeRoom(code){
     const r=snap.val();
     if(!r){ if(ME.role==='player'){toast('Room closed by host');goHome();} return; }
     const prev=lastRoom;
-    // New question (or phase leaving 'question') clears my tap-lock so I can answer the next one.
     if(prev && (prev.qIndex!==r.qIndex || (prev.phase==='question'&&r.phase!=='question'))){
       myLockedSig=null; optimisticPick=null;
       const ln=document.getElementById('lockedNote'); if(ln) ln.remove();
@@ -669,11 +638,16 @@ function subscribeRoom(code){
     else if(ME.role==='mod') renderMod(r); else renderPlayer(r);
   });
 }
-function unsubscribeRoom(){if(roomRef&&roomListener)roomRef.off('value',roomListener);roomRef=null;roomListener=null;}
+
+function unsubscribeRoom(){
+  if(roomRef&&roomListener) roomRef.off('value',roomListener);
+  if(masterPlayersRef) { masterPlayersRef.off(); masterPlayersRef = null; }
+  if(roomConfigRef) { roomConfigRef.off(); roomConfigRef = null; }
+  roomRef=null;roomListener=null;
+}
 
 function playerTransitionSounds(prev,r){
   if(!prev) return;
-  // double-points round announced
   if(!prev.dbl && r.dbl) sDouble();
   if(r.online){
     if(prev.phase!=='question' && r.phase==='question') sGo();
@@ -713,41 +687,9 @@ function goHome(){
   screenHome();
 }
 
-function screenHome(){
-  const need=!configured();
-  app.innerHTML=`
-    <div class="home-hero">
-      <div class="bolt">⚡</div>
-      <h1>AK <span class="z">QUIZ</span> NIGHT</h1>
-      <div class="sub">Buzzer &amp; Fastest Fingering First</div>
-    </div>
-    ${need?`<div class="setup"><b>⚙️ Setup needed</b><p style="margin:8px 0 0">Add your Firebase config near the top of this file where it says <code>PASTE_HERE</code>, then reload.</p></div>`:''}
-    <div class="card">
-      <span class="tag">Host a game</span>
-      <p class="hint">You're the moderator: pick categories and game mode, see answers, and control the round.</p>
-      <button class="btn btn-gold" id="host" ${need?'disabled':''}>Create a Room</button>
-    </div>
-    <div class="divider">— OR —</div>
-    <div class="card">
-      <span class="tag" style="background:var(--teal)">Join a game</span>
-      <label style="margin-top:12px">Your name</label>
-      <input id="pname" placeholder="NAME" maxlength="12" autocomplete="off">
-      <label style="margin-top:12px">Room code</label>
-      <input id="pcode" placeholder="0000" inputmode="numeric" maxlength="4">
-      <button class="btn btn-teal" id="join" ${need?'disabled':''}>Join Room</button>
-      <div class="soundbar"><button class="btn btn-ghost btn-sm" id="stest">🔊 Test sound</button></div>
-      <p class="hint" style="text-align:center">iPhone users: turn off the silent switch, or you won't hear anything.</p>
-    </div>
-  `;
-  if(!need){
-    document.getElementById('host').onclick=()=>{unlockAudio();screenHostSetup();};
-    document.getElementById('join').onclick=joinGame;
-  }
-  document.getElementById('stest').onclick=()=>{unlockAudio();sBuzz();toast('If you heard a buzz, sound works!');};
-}
-
 /* ---------- HOST SETUP ---------- */
 let setupSel={cats:[],count:20,time:15,mode:'buzzer',online:false,suspense:false,dbl:true,neg:0,src:'ai',topic:''};
+
 function screenHostSetup(){
   const avail=ALL.filter(x=>setupSel.cats.includes(x.c)).length;
   app.innerHTML=`
@@ -759,7 +701,7 @@ function screenHostSetup(){
       <label>Your name (shown to players)</label>
       <input id="hname" placeholder="HOST NAME" maxlength="14" value="${esc(setupSel.name||'')}" autocomplete="off">
 
-      <label style="margin-top:14px">Custom topic <span style="color:var(--muted);font-weight:700">(optional)</span></label>
+      <label style="margin-top:14px">Custom topic <span style="color:var(--text-muted);font-weight:700">(optional)</span></label>
       <input id="htopic" placeholder="E.G. CARS" maxlength="40" value="${esc(setupSel.topic||'')}" autocomplete="off">
       <p class="hint">Type anything — Cars, F1, 90s hip hop, Dubai. Leave blank to use the categories below.</p>
 
@@ -781,12 +723,12 @@ function screenHostSetup(){
         <button class="segbtn ${setupSel.dbl?'on':''}" data-x="dbl">✖️2 Double rounds<small>${setupSel.online?'Random x2 questions':'You choose which'}</small></button>
       </div>
       ${(!setupSel.online&&setupSel.mode==='buzzer')?`
-        <label style="margin-top:16px">Negative marking <span style="color:var(--muted);font-weight:700">(wrong buzzer answer)</span></label>
+        <label style="margin-top:16px">Negative marking <span style="color:var(--text-muted);font-weight:700">(wrong buzzer answer)</span></label>
         <div class="chips" id="negSeg">
           ${[0,2,5,10].map(v=>`<button class="chip ${setupSel.neg===v?'on':''}" data-n="${v}">${v===0?'Off':'−'+v}</button>`).join('')}
         </div>`:''}
 
-      <label style="margin-top:18px">Categories <span style="color:var(--muted);font-weight:700">(${setupSel.cats.length} picked · ${avail} questions)</span></label>
+      <label style="margin-top:18px">Categories <span style="color:var(--text-muted);font-weight:700">(${setupSel.cats.length} picked · ${avail} questions)</span></label>
       <div class="row" style="margin-bottom:4px">
         <button class="btn btn-ghost btn-sm" id="allCats" style="flex:1">Select all</button>
         <button class="btn btn-ghost btn-sm" id="noCats" style="flex:1">Clear</button>
@@ -806,7 +748,7 @@ function screenHostSetup(){
         ${[0,5,10,15,20,30].map(t=>`<button class="chip ${setupSel.time===t?'on':''}" data-t="${t}">${t===0?'Off':t+'s'}</button>`).join('')}
       </div>
 
-      <button class="btn btn-ghost btn-sm" id="aitest" style="width:100%;margin-top:14px">🔧 Test AI connection</button>
+      <button class="btn btn-ghost btn-sm" id="aitest" style="width:100%;margin-top:14px">🔧 Test Gemini 3.6 API</button>
       <button class="btn btn-gold" id="create" style="margin-top:10px" ${(setupSel.cats.length||setupSel.topic)?'':'disabled'}>Create Room ›</button>
       ${(setupSel.cats.length||setupSel.topic)?'':'<p class="hint" style="text-align:center">Type a topic or pick a category.</p>'}
     </div>
@@ -835,7 +777,7 @@ function screenHostSetup(){
   document.getElementById('back').onclick=goHome;
   document.getElementById('aitest').onclick=async()=>{
     const b=document.getElementById('aitest');
-    b.textContent='Testing…'; b.disabled=true;
+    b.textContent='Testing Gemini 3.6…'; b.disabled=true;
     try{
       const res=await fetch('/api/questions',{
         method:'POST',headers:{'Content-Type':'application/json'},
@@ -843,21 +785,17 @@ function screenHostSetup(){
       });
       const txt=await res.text();
       let d={}; try{ d=JSON.parse(txt); }catch(_){}
-      if(res.status===404){
-        alert('FUNCTION NOT FOUND (404)\n\nThe questions function was not deployed.\n\nYou must upload the WHOLE folder:\n  index.html\n  functions/api/questions.js\n\nNot just index.html.');
-      } else if(res.status===405){
-        alert('WRONG ROUTING (405)\n\nThe function is deployed but not accepting POST. Re-upload the latest package so the updated function replaces the old one, then redeploy.');
-      } else if(!res.ok){
-        alert('ERROR '+res.status+'\n\n'+(d.error||txt.slice(0,300))+'\n\n'+(d.detail?[].concat(d.detail).join('\n'):''));
+      if(!res.ok){
+        toast('Gemini API Check Failed: Using Offline Bank');
       } else if(d.questions&&d.questions.length){
-        alert('WORKING!\n\nModel: '+(d.model||'?')+'\nGot '+d.questions.length+' test questions.\n\nExample: '+d.questions[0].q);
+        toast('Gemini 3.6 Online! Example: '+d.questions[0].q);
       } else {
-        alert('Responded but returned no questions.\n\n'+txt.slice(0,300));
+        toast('Offline mode active (Bank Fallback)');
       }
     }catch(e){
-      alert('COULD NOT REACH THE FUNCTION\n\n'+e.message+'\n\nIf you opened this file directly from your computer, functions only work on the deployed Netlify site.');
+      toast('Gemini unreachable. Using Offline Bank.');
     }
-    b.textContent='🔧 Test AI connection'; b.disabled=false;
+    b.textContent='🔧 Test Gemini 3.6 API'; b.disabled=false;
   };
   document.getElementById('create').onclick=()=>{
     keepName();
@@ -871,12 +809,10 @@ function screenGenerating(msg){
   app.innerHTML=`<div class="loading" style="margin:auto">
     <div class="spinner"></div>
     <div class="qtext">${esc(msg)}</div>
-    <div class="mini" style="margin-top:8px">This takes a few seconds…</div>
+    <div class="mini" style="margin-top:8px">Connecting to Gemini 3.6…</div>
   </div>`;
 }
-// Ask the Netlify function for questions.
-// Netlify functions time out around 10s, so we request small batches in parallel
-// and retry once. Partial success is still success.
+
 async function callGen(topic,cats,n,avoid){
   const ctrl=new AbortController();
   const t=setTimeout(()=>ctrl.abort(),26000);
@@ -887,20 +823,15 @@ async function callGen(topic,cats,n,avoid){
     });
     clearTimeout(t);
     const txt=await res.text();
-    let data={}; try{ data=JSON.parse(txt); }catch(_){
-      if(res.status===404) aiError='not-deployed'; else aiError='bad-response';
-      console.error('AI raw:',txt.slice(0,300)); return [];
-    }
-    if(!res.ok){ aiError=data.error||('HTTP '+res.status); console.error('AI error',data); return []; }
+    let data={}; try{ data=JSON.parse(txt); }catch(_){ return []; }
+    if(!res.ok){ return []; }
     return Array.isArray(data.questions)?data.questions:[];
   }catch(e){
     clearTimeout(t);
-    aiError=(e.name==='AbortError')?'timeout':e.message;
-    console.error('AI call failed',e); return [];
+    return [];
   }
 }
-// Ask for the FULL count in one call. If short, do up to 2 top-up calls that
-// explicitly avoid the questions we already have (kills the repeats + shortfall).
+
 async function generateAI(topic,cats,count){
   aiError=null;
   const want=count>0?count:20;
@@ -923,40 +854,21 @@ async function generateAI(topic,cats,count){
 }
 let aiError=null;
 
-function screenAIFailed(reason,topic,onRetry,onBank){
-  app.innerHTML=`
-    <div class="home-hero" style="padding:10px 0 2px">
-      <div class="bolt">⚠️</div>
-      <h1>AI not available</h1>
-    </div>
-    <div class="card">
-      <p style="font-weight:800;margin:0 0 4px;text-align:center">Couldn't write questions${topic?' about "'+esc(topic)+'"':''} right now.</p>
-      <button class="btn btn-gold" id="retry">↻ Try again</button>
-      <button class="btn btn-ghost" id="bank">📚 Use the question bank</button>
-      <button class="btn btn-ghost" id="back">‹ Back to setup</button>
-    </div>`;
-  document.getElementById('retry').onclick=onRetry;
-  document.getElementById('bank').onclick=onBank;
-  document.getElementById('back').onclick=screenHostSetup;
-}
-
 async function createRoom(forceBank){
   unlockAudio();
   let code=newCode();
   for(let i=0;i<4;i++){const s=await db.ref('rooms/'+code).get();if(!s.exists())break;code=newCode();}
-  // AI is the primary source; the verified bank is the fallback
+  
   const openEnded = setupSel.count===0;
   let aiQ=null, usedSrc='bank';
   if(!forceBank){
-    const n = openEnded ? 50 : setupSel.count;   // preload the whole game up front
+    const n = openEnded ? 50 : setupSel.count;
     screenGenerating(setupSel.topic
       ? ('Writing '+n+' questions about '+setupSel.topic+'…')
       : ('Writing '+n+' questions…'));
     const gen=await generateAI(setupSel.topic,setupSel.cats,n);
     if(gen.length>=5){
       aiQ=gen; usedSrc='ai';
-      // Guarantee the requested count for fixed-length games: pad any shortfall
-      // with matching bank questions so 20 always means 20.
       if(!openEnded && aiQ.length<n){
         const cats = setupSel.cats.length?setupSel.cats:CATEGORIES;
         const extra=buildDeck(cats, n-aiQ.length).map(i=>({
@@ -965,17 +877,16 @@ async function createRoom(forceBank){
         aiQ=aiQ.concat(extra).slice(0,n);
       }
     } else {
-      screenAIFailed(aiError,setupSel.topic,()=>createRoom(false),()=>createRoom(true));
-      return;
+      // CLEAN FALLBACK: Seamlessly switch to offline QBANK without freeze or alert modal
+      usedSrc='bank';
+      toast('Gemini 3.6 unavailable. Loaded Offline Bank.');
     }
   }
   if(usedSrc==='bank' && (!setupSel.cats || !setupSel.cats.length)){ setupSel.cats=[...CATEGORIES]; }
   const deck=buildDeck(setupSel.cats.length ? setupSel.cats : CATEGORIES, setupSel.count);
 
-  // In online mode a timer is required so rounds can auto-advance
   let tl=Math.min(30,Math.max(0,setupSel.time));
   if(setupSel.online && tl<5) tl=15;
-  // pre-pick which questions are double-point rounds (online mode)
   const effLen = aiQ ? aiQ.length : deck.length;
   const dblSet={};
   if(setupSel.dbl && setupSel.online){
@@ -1032,7 +943,7 @@ async function joinGame(){
   }
 }
 
-// HELPER TO RETURN TO MASTER LAUNCHER (SUPER APP)
+// HELPER TO RETURN TO MASTER LAUNCHER
 function returnToLauncher() {
   stopTicking();
   stopEngine();
@@ -1086,8 +997,8 @@ function renderResults(r){
       ${ME.role==='mod'?`<button class="btn btn-ghost btn-sm" id="close" style="width:100%;margin-top:8px">Close room</button>`:''}
     </div>
   `;
-  document.getElementById('home').onclick=goHome;
-  document.getElementById('btn-launcher').onclick=returnToLauncher;
+  const btnLauncher = document.getElementById('btn-launcher');
+  if (btnLauncher) btnLauncher.onclick=returnToLauncher;
   const againBtn=document.getElementById('again');
   if(againBtn){
     againBtn.onclick=async()=>{
@@ -1114,9 +1025,9 @@ function renderResults(r){
 
 /* ---------- ONLINE MODE RENDERER ---------- */
 function dblBanner(r){
-  return r.dbl?`<div class="result-banner" style="background:var(--gold);border-color:var(--gold-deep);padding:12px;margin-top:10px">
-    <div style="font-size:22px;font-weight:900">✖️2 DOUBLE POINTS ROUND</div>
-    <div class="result-sub" style="color:#6b5200">Every point counts double!</div></div>`:'';
+  return r.dbl?`<div class="result-banner" style="background:var(--gold);border-color:var(--gold);padding:12px;margin-top:10px">
+    <div style="font-size:22px;font-weight:900;color:#07090e">✖️2 DOUBLE POINTS ROUND</div>
+    <div class="result-sub" style="color:#07090e">Every point counts double!</div></div>`:'';
 }
 function myScoreDisplay(r){
   const s=scoresObj(r)[ME.id]||0;
@@ -1126,7 +1037,6 @@ function renderOnline(r){
   if(r.finished){renderResults(r);return;}
   const isEngine=ME.id===r.engineId;
   const players=Object.entries(playersObj(r));
-  // LOBBY
   if(!r.started){
     app.innerHTML=`
       <div class="modbar">
@@ -1135,9 +1045,9 @@ function renderOnline(r){
       </div>
       <div class="qbox center">
         <div class="ans-label">Room code — share this</div>
-        <div style="font-size:46px;font-weight:900;letter-spacing:6px;color:var(--cerise);margin:6px 0">${r.code}</div>
+        <div style="font-size:46px;font-weight:900;letter-spacing:6px;color:var(--gold);margin:6px 0">${r.code}</div>
         <div class="mini" style="margin:0">${deckLen(r)} questions · ${r.timeLimit}s each${r.suspense?' · 🙈 suspense':''}${r.dblEnabled?' · ✖️2 rounds':''}</div>
-        <div class="mini" style="margin-top:4px"><span class="srcbadge">${r.src==='ai'?'🤖 AI'+(r.topic?' · '+esc(r.topic):''):'📚 Question bank'}</span></div>
+        <div class="mini" style="margin-top:4px"><span class="srcbadge">${r.src==='ai'?'🤖 Gemini 3.6'+(r.topic?' · '+esc(r.topic):''):'📚 Question bank'}</span></div>
         <div class="mini" style="margin-top:4px">No host needed — questions play automatically.</div>
       </div>
       <div class="scores">
@@ -1162,9 +1072,8 @@ function renderOnline(r){
   const q=currentQ(r);
   const head=`<div class="modbar">
     <div><div class="sub" style="margin:0">${esc(ME.name)}</div><div style="font-weight:900;font-size:15px">Room #${r.code}</div></div>
-    <div class="center"><div class="ans-label">Score</div><div style="font-size:25px;font-weight:900;color:var(--violet)">${myScoreDisplay(r)}</div></div>
+    <div class="center"><div class="ans-label">Score</div><div style="font-size:25px;font-weight:900;color:var(--gold)">${myScoreDisplay(r)}</div></div>
   </div>`;
-  // COUNTDOWN
   if(r.phase==='countdown'){
     const left=Math.max(0,Math.ceil(COUNTDOWN_S-((serverNow()-(r.phaseAt||0))/1000)));
     app.innerHTML=`${head}
@@ -1181,7 +1090,6 @@ function renderOnline(r){
   const opts=r.options||[];
   const ans=answersObj(r);
   const my=ans[ME.id];
-  // REVEAL
   if(r.phase==='reveal'||r.showAnswer){
     const ok=my&&my.choice===q.a;
     const correct=Object.entries(ans).filter(([id,a])=>a.choice===q.a).sort((a,b)=>a[1].at-b[1].at);
@@ -1209,7 +1117,6 @@ function renderOnline(r){
     document.getElementById('leave').onclick=goHome;
     return;
   }
-  // QUESTION
   const sig='O'+r.qIndex+r.code;
   const needType=typedSig!==sig;
   const qHead=`${head}
@@ -1220,12 +1127,10 @@ function renderOnline(r){
       <div class="qtext" id="qtext"></div>
     </div>`;
 
-  /* ---- ONLINE BUZZER: buzz first, then only that player answers ---- */
   if(r.mode==='buzzer'){
     const buzzed=!!r.buzzedBy, mine=r.buzzedBy===ME.id;
     const bName=buzzed?playersObj(r)[r.buzzedBy]:'';
     if(buzzed && mine && !my){
-      // I won the buzz — I get to pick
       app.innerHTML=`${qHead}
         <div id="timerHolder">${buzzTimerHTML(r)}</div>
         <div class="status">🎉 You buzzed first — pick your answer!</div>
@@ -1240,11 +1145,10 @@ function renderOnline(r){
       document.getElementById('leave').onclick=goHome;
       return;
     }
-    // Not the buzzer (or already answered): show the buzzer / a lock
     let cls='bz',lab='BUZZ';
     if(buzzed&&mine){cls='bz mine';lab='YOU!';}
     else if(buzzed){cls='bz locked';lab='🔒';}
-    const ready=typingDone;                     // buzzer only opens once the question is fully shown
+    const ready=typingDone;
     app.innerHTML=`${qHead}
       <div id="timerHolder">${buzzed?buzzTimerHTML(r):timerHTML(r)}</div>
       <div class="status">${
@@ -1261,7 +1165,6 @@ function renderOnline(r){
     return;
   }
 
-  /* ---- ONLINE FASTEST FINGERING FIRST ---- */
   app.innerHTML=`${qHead}
     <div id="timerHolder">${timerHTML(r)}</div>
     ${my?`<div class="answered">✅ Locked in: <b>${esc(my.choice)}</b><div class="mini" style="margin-top:4px">Waiting for the others…</div></div>`:''}
@@ -1276,7 +1179,6 @@ function renderOnline(r){
   document.getElementById('leave').onclick=goHome;
 }
 
-// countdown for the buzzed player's exclusive answer window
 function buzzTimerHTML(r){
   if(!r.buzzedAt) return '';
   const rem=Math.max(0,BUZZ_ANSWER_S-((serverNow()-r.buzzedAt)/1000));
@@ -1344,9 +1246,9 @@ function renderMod(r){
       </div>
       <div class="qbox center">
         <div class="ans-label">Room code — share this</div>
-        <div style="font-size:46px;font-weight:900;letter-spacing:6px;color:var(--cerise);margin:6px 0">${r.code}</div>
+        <div style="font-size:46px;font-weight:900;letter-spacing:6px;color:var(--gold);margin:6px 0">${r.code}</div>
         <div class="mini" style="margin:0">Host: <b>${esc(r.hostName||'Moderator')}</b> · ${deckLen(r)} questions · ${r.timeLimit?r.timeLimit+'s timer':'no timer'}</div>
-        <div class="mini" style="margin-top:4px"><span class="srcbadge">${r.src==='ai'?'🤖 AI'+(r.topic?' · '+esc(r.topic):''):'📚 Question bank'}</span></div>
+        <div class="mini" style="margin-top:4px"><span class="srcbadge">${r.src==='ai'?'🤖 Gemini 3.6'+(r.topic?' · '+esc(r.topic):''):'📚 Question bank'}</span></div>
       </div>
       <div class="scores">
         <div class="ans-label" style="margin-bottom:8px">Players joined (${players.length})</div>
@@ -1394,7 +1296,7 @@ function renderModBuzzer(r){
     <div class="ans"><div class="ans-label">Answer (only you see this)</div><div class="ans-text">${esc(q.a)}</div></div>
     ${!r.revealed&&r.dblEnabled?`<button class="btn ${r.dbl?'btn-teal':'btn-ghost'}" id="dbl" style="width:100%">${r.dbl?'✖️2 DOUBLE POINTS ON — tap to cancel':'✖️2 Make this a double-points round'}</button>`:''}
     ${!r.revealed?`<button class="btn btn-gold" id="reveal" style="width:100%">👁️ Reveal to Players</button>`:''}
-    ${r.revealed&&r.dbl?`<div class="answered" style="background:var(--gold);border-style:solid">✖️2 Double points this round</div>`:''}
+    ${r.revealed&&r.dbl?`<div class="answered" style="background:var(--gold);border-style:solid;color:#07090e">✖️2 Double points this round</div>`:''}
     ${r.result?`
       <div class="result-banner ${r.result.correct?'result-correct':'result-wrong'}">
         <div class="result-emoji">${r.result.correct?'✅':'❌'}</div>
@@ -1429,7 +1331,7 @@ function renderModBuzzer(r){
   if(g('nextq'))g('nextq').onclick=()=>modNav(1);
   if(g('next'))g('next').onclick=()=>modNav(1);
   if(g('prev'))g('prev').onclick=()=>modNav(-1);
-  g('end').onclick=endGame;
+  if(g('end'))g('end').onclick=endGame;
 }
 
 async function modJudge(correct){
@@ -1437,7 +1339,7 @@ async function modJudge(correct){
   const nm=bid?playersObj(r)[bid]:'';
   const up={};
   const gain=r.dbl?20:10;
-  const penalty=(r.neg||0)*(r.dbl?2:1);      // negative marking (doubles on x2 rounds)
+  const penalty=(r.neg||0)*(r.dbl?2:1);
   let delta=0;
   if(bid){
     delta = correct ? gain : -penalty;
@@ -1448,9 +1350,9 @@ async function modJudge(correct){
   up['rooms/'+ME.code+'/buzzedAt']=null;
   await db.ref().update(up);
 }
+
 async function modNav(d){
   const r=lastRoom;
-  // past the final question of a fixed-length game -> finish and show rankings
   if(d>0 && r.qIndex+1>=deckLen(r) && !r.openEnded){
     await db.ref('rooms/'+ME.code).update({finished:true,buzzedBy:null,buzzedAt:null});
     return;
@@ -1461,6 +1363,7 @@ async function modNav(d){
     result:null,answers:null,showAnswer:false,dbl:false,options:null
   });
 }
+
 async function endGame(){
   if(confirm('End the game and show everyone the final rankings?'))
     await db.ref('rooms/'+ME.code).update({finished:true,buzzedBy:null,buzzedAt:null});
@@ -1489,7 +1392,7 @@ function renderModFFF(r){
     <div class="ans"><div class="ans-label">Correct answer</div><div class="ans-text">${esc(q.a)}</div></div>
     ${!r.revealed&&r.dblEnabled?`<button class="btn ${r.dbl?'btn-teal':'btn-ghost'}" id="dbl" style="width:100%">${r.dbl?'✖️2 DOUBLE POINTS ON — tap to cancel':'✖️2 Make this a double-points round'}</button>`:''}
     ${!r.revealed?`<button class="btn btn-gold" id="reveal" style="width:100%">👁️ Reveal Question &amp; Options</button>`:''}
-    ${r.revealed&&r.dbl?`<div class="answered" style="background:var(--gold);border-style:solid">✖️2 Double points this round</div>`:''}
+    ${r.revealed&&r.dbl?`<div class="answered" style="background:var(--gold);border-style:solid;color:#07090e">✖️2 Double points this round</div>`:''}
     ${r.revealed&&!r.showAnswer?`
       <div class="buzzed">
         <div class="ans-label">Answers received</div>
@@ -1515,7 +1418,7 @@ function renderModFFF(r){
   if(g('nextq'))g('nextq').onclick=()=>modNav(1);
   if(g('next'))g('next').onclick=()=>modNav(1);
   if(g('prev'))g('prev').onclick=()=>modNav(-1);
-  g('end').onclick=endGame;
+  if(g('end'))g('end').onclick=endGame;
 }
 
 function fffResultRows(r){
@@ -1539,6 +1442,7 @@ async function fffReveal(){
     options:opts,answers:null,showAnswer:false
   });
 }
+
 async function fffLock(){
   const r=lastRoom,q=currentQ(r),ans=answersObj(r);
   const correct=Object.entries(ans).filter(([id,a])=>a.choice===q.a).sort((a,b)=>a[1].at-b[1].at);
@@ -1572,11 +1476,12 @@ function typeText(el,text,onDone){
     cur.insertAdjacentText('beforebegin',text[i]);i++;
   },16);
 }
+
 function playerHeader(r,myScore){
   const shown=r.suspense?'🙈':myScore;
   return `<div class="modbar">
     <div><div class="sub" style="margin:0">${esc(ME.name)}</div><div style="font-weight:900;font-size:15px">Room #${r.code}</div></div>
-    <div class="center"><div class="ans-label">${r.suspense?'Hidden':'Score'}</div><div style="font-size:25px;font-weight:900;color:var(--violet)">${shown}</div></div>
+    <div class="center"><div class="ans-label">${r.suspense?'Hidden':'Score'}</div><div style="font-size:25px;font-weight:900;color:var(--gold)">${shown}</div></div>
   </div>`;
 }
 
@@ -1671,7 +1576,6 @@ function renderPlayerFFF(r,myScore){
   const opts=r.options||[];
   const ans=answersObj(r);
   const my=ans[ME.id];
-  // results shown
   if(r.showAnswer){
     const ok=my&&my.choice===q.a;
     const correctSorted=Object.entries(ans).filter(([id,a])=>a.choice===q.a).sort((a,b)=>a[1].at-b[1].at);
@@ -1694,7 +1598,6 @@ function renderPlayerFFF(r,myScore){
       <div class="center"><button class="backlink" id="leave">Leave room</button></div>`;
     document.getElementById('leave').onclick=goHome;return;
   }
-  // not revealed
   if(!r.revealed){
     app.innerHTML=`${playerHeader(r,myScore)}
       <div class="getready" style="margin-top:auto;margin-bottom:auto">
@@ -1706,7 +1609,6 @@ function renderPlayerFFF(r,myScore){
       <div class="center"><button class="backlink" id="leave">Leave room</button></div>`;
     document.getElementById('leave').onclick=goHome;typedSig=null;return;
   }
-  // answering
   const sig='F'+r.qIndex+r.code;
   const needType=typedSig!==sig;
   app.innerHTML=`${playerHeader(r,myScore)}
@@ -1730,7 +1632,7 @@ function renderPlayerFFF(r,myScore){
   document.getElementById('leave').onclick=goHome;
 }
 
-// UNIVERSAL MOBILE SOFT-KEYBOARD VIEWPORT ADAPTER
+// SOFT-KEYBOARD VIEWPORT ADAPTER
 (function() {
   function handleFocusScroll(e) {
     if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
@@ -1753,11 +1655,12 @@ function renderPlayerFFF(r,myScore){
 })();
 
 async function joinFromLauncher(roomCode, pName, pId, isHostFlag) {
+  const actualPid = pId || uid();
   ME = {
     role: isHostFlag ? 'mod' : 'player',
     name: pName,
     code: roomCode,
-    id: isHostFlag ? 'mod' : (pId || uid())
+    id: isHostFlag ? 'mod' : actualPid
   };
 
   setupSel.name = pName;
@@ -1772,17 +1675,45 @@ async function joinFromLauncher(roomCode, pName, pId, isHostFlag) {
         }
       }
     });
+
+    // Real-time Player Roster Sync from master_rooms to local rooms
+    masterPlayersRef = db.ref(`master_rooms/${roomCode}/players`);
+    masterPlayersRef.on('value', snap => {
+      const masterPlayers = snap.val() || {};
+      const updates = {};
+      Object.entries(masterPlayers).forEach(([pid, playerData]) => {
+        if (playerData && playerData.name) {
+          updates[`rooms/${roomCode}/players/${pid}`] = playerData.name;
+          if (scoresObj(lastRoom||{})[pid] === undefined) {
+            updates[`rooms/${roomCode}/scores/${pid}`] = 0;
+          }
+        }
+      });
+      if (Object.keys(updates).length > 0) {
+        db.ref().update(updates);
+      }
+    });
   }
 
   const snap = await db.ref('rooms/' + roomCode).get();
 
-  // If Host lands first from Super App, take them directly to the Setup Screen
   if (isHostFlag) {
     screenHostSetup();
     return;
   }
 
-  // Non-Host Players attach to existing room or wait for host to lock rules
+  // Non-Host Live Config & Meta Sync
+  roomConfigRef = db.ref('rooms/' + roomCode);
+  roomConfigRef.on('value', roomSnap => {
+    if (roomSnap.exists()) {
+      const data = roomSnap.val();
+      if (data.mode) setupSel.mode = data.mode;
+      if (data.timeLimit !== undefined) setupSel.time = data.timeLimit;
+      if (data.cats) setupSel.cats = data.cats;
+      if (data.topic) setupSel.topic = data.topic;
+    }
+  });
+
   if (!snap.exists()) {
     const deck = buildDeck(CATEGORIES, 20);
     const room = {
@@ -1839,13 +1770,11 @@ function screenHome() {
   const autoPid  = urlParams.get('pid');
   const autoHost = urlParams.get('isHost') === 'true';
 
-  // IF LAUNCHED FROM SUPER-APP: Bypass home UI & join directly
   if (autoRoom && autoName) {
     joinFromLauncher(autoRoom, autoName, autoPid, autoHost);
     return; 
   }
 
-  // Otherwise, render original homepage if opened standalone
   stopTicking();
   app.innerHTML = `
     <div class="home-hero">
@@ -1862,8 +1791,10 @@ function screenHome() {
   `;
 }
 
-/* boot */
-screenHome();
+/* Boot */
+document.addEventListener('DOMContentLoaded', () => {
+  screenHome();
+});
 </script>
 </body>
 </html>

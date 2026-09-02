@@ -1,21 +1,10 @@
-// Cloudflare Pages Function: generates quiz questions.
-// Lives at  functions/api/questions.js  and is reachable at  /api/questions
+// Cloudflare Pages Function: generates quiz questions strictly via Gemini 3.6 Flash.
+// Lives at functions/api/questions.js and is reachable at /api/questions
 //
-// Supports TWO providers — choose with the PROVIDER env var: "openai" or "gemini".
-//   PROVIDER=openai   + OPENAI_API_KEY=sk-...      (paid, pay-as-you-go)
-//   PROVIDER=gemini   + GEMINI_API_KEY=...         (free tier)
-// If PROVIDER is unset, it uses whichever key is present (OpenAI first).
-//
-// Set these under: Cloudflare Pages > your project > Settings > Environment variables
+// Requires environment variable: GEMINI_API_KEY
+// Set under: Cloudflare Pages > your project > Settings > Environment variables
 
-// Flash-Lite first: higher requests-per-minute on the free tier, and faster.
-const GEMINI_MODELS = [
-  'gemini-2.5-flash-lite',
-  'gemini-2.5-flash',
-  'gemini-flash-latest',
-  'gemini-2.0-flash'
-];
-const OPENAI_MODEL = 'gpt-4o-mini';
+const GEMINI_MODEL = 'gemini-3.6-flash';
 
 function buildPrompt({ topic, categories, count, avoid }) {
   const subject = topic
@@ -64,7 +53,9 @@ function clean(list, count, seenKeys) {
     if (seen.has(key)) continue;
     seen.add(key);
     out.push({
-      q: item.q.trim(), a: item.a.trim(), opts,
+      q: item.q.trim(),
+      a: item.a.trim(),
+      opts,
       cat: (typeof item.cat === 'string' && item.cat.trim()) ? item.cat.trim().slice(0, 24) : 'AI'
     });
     if (out.length >= count) break;
@@ -72,58 +63,29 @@ function clean(list, count, seenKeys) {
   return out;
 }
 
-async function callOpenAI(key, prompt) {
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+async function callGemini36(key, prompt) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(key)}`;
+  const res = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: OPENAI_MODEL,
-      messages: [
-        { role: 'system', content: 'You output only valid JSON. No prose, no markdown.' },
-        { role: 'user', content: prompt + '\n\nReturn a JSON object of the form {"questions": [ ... ]}.' }
-      ],
-      temperature: 0.9,
-      max_tokens: 4096,
-      response_format: { type: 'json_object' }
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.9, maxOutputTokens: 8192, responseMimeType: 'application/json' }
     })
   });
+  
   const raw = await res.text();
-  if (!res.ok) throw new Error(`OpenAI HTTP ${res.status}: ${raw.slice(0, 200)}`);
+  if (!res.ok) {
+    throw new Error(`Gemini 3.6 API HTTP ${res.status}: ${raw.slice(0, 200)}`);
+  }
+  
   const data = JSON.parse(raw);
-  let content = data?.choices?.[0]?.message?.content || '';
-  try {
-    const o = JSON.parse(content);
-    if (Array.isArray(o)) return o;
-    return o.questions || o.items || o.data || Object.values(o).find(Array.isArray) || null;
-  } catch (_) {
-    return extractJSON(content);
+  const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '';
+  const parsed = extractJSON(text);
+  if (!parsed) {
+    throw new Error('Unparseable output from Gemini 3.6');
   }
-}
-
-async function callGemini(key, prompt) {
-  const errors = [];
-  for (const model of GEMINI_MODELS) {
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.9, maxOutputTokens: 8192, responseMimeType: 'application/json' }
-        })
-      });
-      const raw = await res.text();
-      if (res.status === 429) { errors.push(`${model}: rate-limited`); continue; }
-      if (!res.ok) { errors.push(`${model}: HTTP ${res.status}`); continue; }
-      const data = JSON.parse(raw);
-      const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '';
-      const parsed = extractJSON(text);
-      if (parsed) return parsed;
-      errors.push(`${model}: unparseable`);
-    } catch (e) { errors.push(`${model}: ${e.message}`); }
-  }
-  throw new Error('Gemini failed: ' + errors.join(' | '));
+  return parsed;
 }
 
 // Cloudflare Pages Functions entry points ----------------------------------
@@ -135,31 +97,24 @@ const CORS = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
 
-// Single entry point for ALL methods — avoids any per-method routing mismatch
-// (which was showing up as a 405). We branch on the method ourselves.
 export async function onRequest(context) {
   const method = context.request.method;
   if (method === 'OPTIONS') {
     return new Response('', { status: 204, headers: CORS });
   }
   if (method === 'GET') {
-    // A browser visit / liveness check. 200 so the test button reads it as "reachable".
-    return new Response(JSON.stringify({ ok: true, message: 'Function live. Use POST to generate.' }), { status: 200, headers: CORS });
+    return new Response(JSON.stringify({ ok: true, model: GEMINI_MODEL, message: 'Function live. Send POST requests to generate questions.' }), { status: 200, headers: CORS });
   }
   if (method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Use POST' }), { status: 405, headers: CORS });
   }
 
   const env = context.env || {};
-  const openaiKey = env.OPENAI_API_KEY;
   const geminiKey = env.GEMINI_API_KEY;
-  let provider = (env.PROVIDER || '').toLowerCase();
-  if (!provider) provider = openaiKey ? 'openai' : 'gemini';
 
-  const key = provider === 'openai' ? openaiKey : geminiKey;
-  if (!key) {
+  if (!geminiKey) {
     return new Response(JSON.stringify({
-      error: `No API key for provider "${provider}". Set ${provider === 'openai' ? 'OPENAI_API_KEY' : 'GEMINI_API_KEY'} in Cloudflare Pages environment variables.`
+      error: 'GEMINI_API_KEY environment variable is missing.'
     }), { status: 500, headers: CORS });
   }
 
@@ -170,15 +125,13 @@ export async function onRequest(context) {
   const prompt = buildPrompt({ topic: body.topic, categories: body.categories, count, avoid });
 
   try {
-    const parsed = provider === 'openai'
-      ? await callOpenAI(key, prompt)
-      : await callGemini(key, prompt);
+    const parsed = await callGemini36(geminiKey, prompt);
     const questions = clean(parsed, count, new Set(avoid.map(a => String(a).toLowerCase())));
     if (questions.length >= 1) {
-      return new Response(JSON.stringify({ questions, provider, asked: count, got: questions.length }), { status: 200, headers: CORS });
+      return new Response(JSON.stringify({ questions, provider: 'gemini-3.6-flash', asked: count, got: questions.length }), { status: 200, headers: CORS });
     }
-    return new Response(JSON.stringify({ error: 'No usable questions returned', provider }), { status: 502, headers: CORS });
+    return new Response(JSON.stringify({ error: 'No usable questions returned', provider: 'gemini-3.6-flash' }), { status: 502, headers: CORS });
   } catch (e) {
-    return new Response(JSON.stringify({ error: e.message, provider }), { status: 502, headers: CORS });
+    return new Response(JSON.stringify({ error: e.message, provider: 'gemini-3.6-flash' }), { status: 502, headers: CORS });
   }
 }
