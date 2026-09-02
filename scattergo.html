@@ -280,6 +280,12 @@ p.sub{
 }
 .player-name{font-weight:700; font-size:14.5px; flex:1;}
 .player-score{font-family:var(--font-mono); font-weight:700; color:var(--marigold); font-size:13.5px;}
+.host-badge{
+  font-size: 0.7rem; font-weight: 800; color: var(--marigold);
+  background: rgba(242,183,5,0.12); border: 1px solid rgba(242,183,5,0.3);
+  padding: 3px 8px; border-radius: 12px; letter-spacing: 0.05em;
+  font-family: var(--font-mono); display: inline-flex; align-items: center; gap: 4px;
+}
 .empty-note{
   text-align:center; color:rgba(251,246,236,0.4); font-size:13.5px;
   padding:22px 10px; border:1.5px dashed rgba(251,246,236,0.18); border-radius:14px;
@@ -842,7 +848,7 @@ async function joinFromLauncher(roomCode, pName, pId, isHostFlag) {
   render();
 
   // 1. Register player state immediately into Scattergo store
-  await stSet("sg:" + S.roomCode + ":players:" + S.playerId, { name: pName, isHost: isHost, joinedAt: serverNow() });
+  await stSet("sg:" + S.roomCode + ":players:" + S.playerId, { name: pName, isHost: isHost, isReady: false, joinedAt: serverNow() });
 
   // 2. Read master room snapshot to guarantee no missing connected players are dropped
   if (typeof db !== 'undefined' && S.roomCode) {
@@ -855,6 +861,7 @@ async function joinFromLauncher(roomCode, pName, pId, isHostFlag) {
             await stSet("sg:" + S.roomCode + ":players:" + pid, {
               name: pData.name,
               isHost: !!pData.isHost,
+              isReady: false,
               joinedAt: serverNow()
             });
           }
@@ -991,13 +998,14 @@ async function createRoom(){
   btn.disabled = true; btn.textContent = S.roomCode ? "Saving…" : "Creating…";
   try{
     await checkStorage();
-    const editingExisting = !!(S.roomCode && S.meta && S.meta.status === "lobby");
+    const editingExisting = !!(S.roomCode && S.meta && (S.meta.status === "lobby" || S.meta.status === "lobby_setup"));
     // Preserve existing launcher room code if present
     const code = S.roomCode || roomCode();
     const hostId = S.playerId || uid();
     const isDash = setupDraft.gameMode === "dash";
     const meta = (editingExisting && S.meta) ? Object.assign({}, S.meta, {
       hostName: setupDraft.hostName || "Host",
+      status: "lobby",
       settings: {
         gameMode: setupDraft.gameMode || "classic",
         sprintPreset: setupDraft.sprintPreset || 60,
@@ -1041,7 +1049,7 @@ async function createRoom(){
     saveIdentity();
 
     // Ensure host is written to scattergo player database node
-    await stSet("sg:"+code+":players:"+hostId, { name: meta.hostName, isHost: true, joinedAt: serverNow() });
+    await stSet("sg:"+code+":players:"+hostId, { name: meta.hostName, isHost: true, isReady: true, joinedAt: serverNow() });
 
     if(!editingExisting) sRoomCreated();
     render();
@@ -1054,9 +1062,13 @@ async function createRoom(){
 }
 
 function screenHostLobby(){
-  const playerArr = Object.entries(S.players);
+  const nonHostPlayers = Object.entries(S.players).filter(([id, p]) => !p.isHost);
+  const hostPlayerEntry = Object.entries(S.players).find(([id, p]) => p.isHost);
   const settings = S.meta.settings;
   const isDash = settings.gameMode === "dash";
+
+  const allReady = nonHostPlayers.length > 0 && nonHostPlayers.every(([id, p]) => p.isReady);
+
   return `
   <div class="screen">
     <div class="topbar">
@@ -1066,21 +1078,35 @@ function screenHostLobby(){
     ${!storageOK ? bannerNoSync() : ""}
     <div class="code-display">
       <div class="code">${S.roomCode}</div>
-      <div class="code-hint">Players enter this code to join</div>
+      <div class="code-hint">Share this code if players need to reconnect</div>
     </div>
-    <div class="field-label">Players (${playerArr.length})</div>
+
+    ${hostPlayerEntry ? `
+    <div class="field-label" style="margin-top:10px;">Host / Moderator</div>
+    <div class="player-row" style="border-color: rgba(242,183,5,0.4); background: rgba(242,183,5,0.06); margin-bottom:14px;">
+      <div class="avatar" style="background:${avatarColor(hostPlayerEntry[1].name)};">${esc(initials(hostPlayerEntry[1].name))}</div>
+      <div class="player-name">${esc(hostPlayerEntry[1].name)}</div>
+      <span class="host-badge">👑 HOST</span>
+    </div>` : ''}
+
+    <div class="field-label">Active Competitors (${nonHostPlayers.length})</div>
     <div class="player-list">
-      ${playerArr.length === 0 ? `<div class="empty-note">Waiting for players to join…<br>Share the code above.</div>` :
-        playerArr.map(([id,p],i)=>playerRowHtml(p.name,i)).join("")}
+      ${nonHostPlayers.length === 0 ? `<div class="empty-note">Waiting for players to join…</div>` :
+        nonHostPlayers.map(([id, p], i) => `
+          <div class="player-row" style="animation-delay:${Math.min(i*70,420)}ms;">
+            <div class="avatar" style="background:${avatarColor(p.name)};">${esc(initials(p.name))}</div>
+            <div class="player-name">${esc(p.name)}</div>
+            <div style="font-size:0.85rem; font-weight:800; color:${p.isReady ? 'var(--mint)' : 'var(--muted)'};">
+              ${p.isReady ? 'READY ✓' : 'NOT READY'}
+            </div>
+          </div>
+        `).join("")}
     </div>
     <div class="spacer"></div>
-    <div class="statgrid">
-      <div class="statbox"><div class="n">${isDash ? (settings.sprintPreset === 60 ? '10 Qs' : settings.sprintPreset === 90 ? '15 Qs' : '20 Qs') : (settings.roundsMode==='fixed'? settings.roundsCount : '∞')}</div><div class="l">${isDash ? 'Sprint Length' : (settings.roundsMode==='fixed'?'Rounds':'Open-Ended')}</div></div>
-      <div class="statbox"><div class="n" style="text-transform:capitalize;">${isDash ? 'Per-Q Safe' : settings.letterMode}</div><div class="l">Letter Mode</div></div>
-    </div>
-    <button class="btn btn-primary" id="btnStartRound" ${playerArr.length===0?'disabled':''}>Start Round 1 →</button>
-    <p class="footnote" id="startRoundStatus"></p>
-    <p class="footnote">Any open player tab can keep the game moving — not just yours.</p>
+    <button class="btn btn-primary" id="btnStartRound" ${!allReady ? 'disabled' : ''}>Start Round 1 →</button>
+    <p class="footnote" id="startRoundStatus" style="margin-top:6px;">
+      ${nonHostPlayers.length === 0 ? 'Waiting for players to join...' : (!allReady ? 'Waiting for all players to tap "I\'M READY"...' : 'All players ready! Tap to start.')}
+    </p>
   </div>`;
 }
 function playerRowHtml(name, idx){
@@ -1120,9 +1146,14 @@ function wireHostLobby(){
     }
   };
   const backBtn = document.getElementById("btnBackToSetup");
-  if(backBtn) backBtn.onclick = ()=>{
+  if(backBtn) backBtn.onclick = async ()=>{
     setupDraft = Object.assign({}, setupDraft, S.meta.settings, { hostName: S.meta.hostName });
     S.screen = "hostSetup";
+    if (S.meta) {
+      const updatedMeta = Object.assign({}, S.meta, { status: "lobby_setup" });
+      await stSet("sg:" + S.roomCode + ":meta", updatedMeta);
+      S.meta = updatedMeta;
+    }
     render();
   };
 }
@@ -1220,7 +1251,7 @@ async function startRound(manualLetter){
 
 function screenHostRound(){
   const round = S.meta.round;
-  const playerCount = Object.keys(S.players).length;
+  const activePlayerCount = Object.values(S.players).filter(p => !p.isHost).length;
   const isDash = round.gameMode === "dash";
   if(round.opensAt && serverNow() < round.opensAt){
     return screenCountdown(round, "Code "+S.roomCode);
@@ -1241,7 +1272,7 @@ function screenHostRound(){
     <div class="timer-track"><div class="timer-fill" id="hostTimerFill" style="width:100%;"></div></div>
 
     <div class="statgrid">
-      <div class="statbox"><div class="n" id="submittedCount">0/${playerCount}</div><div class="l">Submitted</div></div>
+      <div class="statbox"><div class="n" id="submittedCount">0/${activePlayerCount}</div><div class="l">Submitted</div></div>
       <div class="statbox"><div class="n" style="text-transform:capitalize;">${isDash ? round.prompts.length + ' Qs' : S.meta.settings.difficulty}</div><div class="l">${isDash ? 'Sprint Size' : 'Difficulty'}</div></div>
     </div>
 
@@ -1344,7 +1375,8 @@ async function buildReviewData(){
     const pid = (k.key||k).split(":").pop();
     if(data) perPlayerAnswers[pid] = data.values || [];
   }
-  const playerIds = Object.keys(S.players);
+  // Filter out host PID so host is never evaluated as a player
+  const playerIds = Object.keys(S.players).filter(pid => !S.players[pid].isHost);
   const items = round.prompts.map((prompt, qi) => {
     return {
       prompt,
@@ -1395,7 +1427,7 @@ function computeGroupsAndPoints(item){
 function screenHostReview(){
   if(!S.reviewData) return `<div class="screen"><div class="wait-wrap"><div class="spinner"></div><p class="sub">Loading answers…</p></div></div>`;
   S.reviewData.items.forEach(computeGroupsAndPoints);
-  const totalPlayers = Object.keys(S.players).length;
+  const activePlayers = Object.entries(S.players).filter(([pid, p]) => !p.isHost);
   return `
   <div class="screen">
     <div class="topbar">
@@ -1408,7 +1440,7 @@ function screenHostReview(){
       <button class="btn btn-ghost" id="btnClearAll" style="font-size:13px;">↺ Reset all</button>
     </div>
     <p class="sub" id="judgeProgress" style="margin:0 0 12px; font-weight:700;"></p>
-    ${totalPlayers===0 ? `<div class="empty-note">No players in this room.</div>` : ""}
+    ${activePlayers.length===0 ? `<div class="empty-note">No players in this room.</div>` : ""}
     <div id="reviewList">
       ${S.reviewData.items.map((item, qi)=> reviewGroupHtml(item, qi)).join("")}
     </div>
@@ -1416,7 +1448,7 @@ function screenHostReview(){
     <div class="field-label" style="margin-top:20px;">Conduct penalties (optional)</div>
     <p class="sub" style="margin-bottom:8px; font-size:12.5px;">Deduct points from a player for any reason — applied when you finish scoring.</p>
     <div class="card">
-      ${Object.entries(S.players).map(([pid,p])=>{
+      ${activePlayers.map(([pid,p])=>{
         const pen = (S.pendingPenalties && S.pendingPenalties[pid]) || 0;
         return `
         <div style="display:flex; align-items:center; gap:8px; padding:8px 0; border-top:1px solid var(--line);">
@@ -1659,12 +1691,14 @@ async function finishScoring(){
   try {
     S.reviewData.items.forEach(computeGroupsAndPoints);
 
+    const activePlayerPids = Object.keys(S.players).filter(pid => !S.players[pid].isHost);
     const roundPoints = {};
-    Object.keys(S.players).forEach(pid => roundPoints[pid] = 0);
+    activePlayerPids.forEach(pid => roundPoints[pid] = 0);
     const perPlayerBreakdown = {};
-    Object.keys(S.players).forEach(pid => perPlayerBreakdown[pid] = []);
+    activePlayerPids.forEach(pid => perPlayerBreakdown[pid] = []);
     S.reviewData.items.forEach(item=>{
       item.answers.forEach(a=>{
+        if (!S.players[a.playerId] || S.players[a.playerId].isHost) return;
         const pts = a.text.trim() ? (a.status==="wrong" ? 0 : a.points) : 0;
         roundPoints[a.playerId] = (roundPoints[a.playerId]||0) + pts;
         perPlayerBreakdown[a.playerId].push({
@@ -1680,7 +1714,9 @@ async function finishScoring(){
 
     if(S.pendingPenalties){
       Object.entries(S.pendingPenalties).forEach(([pid,amt])=>{
-        existingScores[pid] = (existingScores[pid]||0) - amt;
+        if (S.players[pid] && !S.players[pid].isHost) {
+          existingScores[pid] = (existingScores[pid]||0) - amt;
+        }
       });
       S.pendingPenalties = {};
     }
@@ -1719,7 +1755,9 @@ async function finishScoring(){
 function screenHostScoreboard(){
   const settings = S.meta.settings;
   const canContinue = settings.roundsMode === "open" || S.meta.roundsPlayed < settings.roundsCount;
-  const sorted = Object.entries(S.scores).sort((a,b)=> b[1]-a[1]);
+  const sorted = Object.entries(S.scores)
+    .filter(([pid]) => S.players[pid] && !S.players[pid].isHost)
+    .sort((a,b)=> b[1]-a[1]);
   return `
   <div class="screen">
     <div class="topbar">
@@ -1819,7 +1857,9 @@ function returnToLauncher() {
 }
 
 function screenFinal(isHost){
-  const sorted = Object.entries(S.scores).sort((a,b)=> b[1]-a[1]);
+  const sorted = Object.entries(S.scores)
+    .filter(([pid]) => S.players[pid] && !S.players[pid].isHost)
+    .sort((a,b)=> b[1]-a[1]);
   const winner = sorted[0];
   return `
   <div class="screen">
@@ -1947,7 +1987,7 @@ async function joinRoom(){
     return;
   }
   const pid = uid();
-  await stSet("sg:"+code+":players:"+pid, { name, joinedAt: serverNow() });
+  await stSet("sg:"+code+":players:"+pid, { name, isHost: false, isReady: false, joinedAt: serverNow() });
   S.roomCode = code;
   S.playerId = pid;
   S.playerName = name;
@@ -1966,26 +2006,84 @@ async function joinRoom(){
 }
 
 function screenPlayerLobby(){
-  const settings = S.meta.settings;
-  const playerArr = Object.entries(S.players);
+  const settings = S.meta ? S.meta.settings : null;
+  const nonHostPlayers = Object.entries(S.players).filter(([id, p]) => !p.isHost);
+  const hostPlayerEntry = Object.entries(S.players).find(([id, p]) => p.isHost);
+  const myPlayer = S.players[S.playerId] || {};
+  const isReady = !!myPlayer.isReady;
+
+  // Pre-setup screen while host is actively picking game modes / settings
+  if (!S.meta || S.meta.status === 'lobby_setup') {
+    return `
+    <div class="screen">
+      <div class="topbar">
+        <div class="eyebrow" style="margin:0;">In Room <b>${S.roomCode}</b></div>
+        <div class="roompill">${esc(S.playerName)}</div>
+      </div>
+      <div class="wait-wrap" style="flex:none; padding:40px 0;">
+        <div class="spinner"></div>
+        <h1 class="title" style="font-size:22px; margin-top:12px;">${esc(S.meta ? S.meta.hostName : 'Host')} is setting up the game...</h1>
+        <p class="sub">Hang tight! The host is picking categories and timer settings.</p>
+      </div>
+    </div>`;
+  }
+
   const isDash = settings.gameMode === "dash";
+
   return `
   <div class="screen">
     <div class="topbar">
-      <div class="eyebrow" style="margin:0;">In Room ${S.roomCode}</div>
+      <div class="eyebrow" style="margin:0;">In Room <b>${S.roomCode}</b></div>
       <div class="roompill">${esc(S.playerName)}</div>
     </div>
     ${!storageOK ? bannerNoSync() : ""}
-    <div class="wait-wrap" style="flex:none; padding:26px 0;">
-      <div class="spinner"></div>
-      <h1 class="title" style="font-size:22px; margin-top:4px;">Waiting for ${esc(S.meta.hostName||'the host')} to start…</h1>
-      <p class="sub" style="margin-bottom:0;">${isDash ? '⚡ Scatter-Dash Sprint' : (settings.roundsMode==='fixed' ? settings.roundsCount+' rounds' : 'Open-ended')} · ${settings.timerSeconds}s timer · ${settings.difficulty} difficulty</p>
+    <div class="wait-wrap" style="flex:none; padding:16px 0 10px;">
+      <h1 class="title" style="font-size:22px;">Game Rules</h1>
+      <p class="sub" style="margin-bottom:0;">
+        ${isDash ? '⚡ Scatter-Dash Sprint' : (settings.roundsMode==='fixed' ? settings.roundsCount+' rounds' : 'Open-ended')} · ⏱ ${settings.timerSeconds}s timer · ${settings.difficulty} difficulty
+      </p>
     </div>
-    <div class="field-label">Players in room (${playerArr.length})</div>
+
+    <div style="margin:14px 0;">
+      <button class="btn ${isReady ? 'btn-mint' : 'btn-primary'}" id="btnToggleReady">
+        ${isReady ? '✅ YOU ARE READY' : '👍 I\'M READY'}
+      </button>
+    </div>
+
+    ${hostPlayerEntry ? `
+    <div class="field-label" style="margin-top:6px;">Host / Moderator</div>
+    <div class="player-row" style="border-color: rgba(242,183,5,0.4); background: rgba(242,183,5,0.06); margin-bottom:12px;">
+      <div class="avatar" style="background:${avatarColor(hostPlayerEntry[1].name)};">${esc(initials(hostPlayerEntry[1].name))}</div>
+      <div class="player-name">${esc(hostPlayerEntry[1].name)}</div>
+      <span class="host-badge">👑 HOST</span>
+    </div>` : ''}
+
+    <div class="field-label">Active Competitors (${nonHostPlayers.length})</div>
     <div class="player-list">
-      ${playerArr.map(([id,p],i)=>playerRowHtml(p.name,i)).join("")}
+      ${nonHostPlayers.length === 0 ? `<div class="empty-note">Waiting for competitors to join…</div>` :
+        nonHostPlayers.map(([id, p], i) => `
+          <div class="player-row" style="animation-delay:${Math.min(i*70, 420)}ms;">
+            <div class="avatar" style="background:${avatarColor(p.name)};">${esc(initials(p.name))}</div>
+            <div class="player-name">${esc(p.name)}</div>
+            <div style="font-size:0.85rem; font-weight:800; color:${p.isReady ? 'var(--mint)' : 'var(--muted)'};">
+              ${p.isReady ? 'READY ✓' : 'WAITING'}
+            </div>
+          </div>
+        `).join("")}
     </div>
   </div>`;
+}
+
+function wirePlayerLobby() {
+  const readyBtn = document.getElementById("btnToggleReady");
+  if (readyBtn) {
+    readyBtn.onclick = async () => {
+      readyBtn.disabled = true;
+      const currentReady = S.players[S.playerId] ? !!S.players[S.playerId].isReady : false;
+      await stSet("sg:" + S.roomCode + ":players:" + S.playerId + ":isReady", !currentReady);
+      sTap();
+    };
+  }
 }
 
 function screenCountdown(round, subtitle){
@@ -2425,9 +2523,9 @@ async function pollTick(){
 
     // Safely update players without overwriting non-host records when a snapshot is empty
     if(Object.keys(newPlayers).length > 0){
-      const playersChanged = JSON.stringify(Object.keys(newPlayers).sort()) !== JSON.stringify(Object.keys(S.players).sort());
+      const playersChanged = JSON.stringify(S.players) !== JSON.stringify(newPlayers);
       S.players = newPlayers;
-      if(S.role === "host" && S.screen === "hostLobby" && playersChanged){ sJoin(); render(); }
+      if(S.role === "host" && S.screen === "hostLobby" && playersChanged){ render(); }
     }
 
     if(!meta) return;
@@ -2492,8 +2590,9 @@ function handleHostPoll(prevStatus, playersChanged){
   if(S.screen === "hostLobby" && playersChanged){ sJoin(); render(); }
   if(S.screen === "hostRound"){
     updateHostTimerDisplay();
+    const activePlayerCount = Object.values(S.players).filter(p => !p.isHost).length;
     const el = document.getElementById("submittedCount");
-    if(el) el.textContent = (S.submittedCount||0) + "/" + Object.keys(S.players).length;
+    if(el) el.textContent = (S.submittedCount||0) + "/" + activePlayerCount;
   }
   if(S.meta.status === "reviewing" && S.screen === "hostRound" && !S.enteringReview){
     S.enteringReview = true;
@@ -2550,8 +2649,8 @@ async function handlePlayerPoll(prevStatus, prevRoundNum, playersChanged){
     return;
   }
 
-  // FIXED: Transition non-host players out of 'home' (loading screen) as soon as lobby status is detected
-  if(status === "lobby"){
+  // Transition non-host players out of 'home' (loading screen) or setup waiting view as soon as lobby status is detected
+  if(status === "lobby" || status === "lobby_setup"){
     if(S.screen === "home" || S.screen !== "playerLobby" || playersChanged){
       if(playersChanged && S.screen === "playerLobby") sJoin();
       S.screen = "playerLobby"; 
@@ -2569,7 +2668,7 @@ const wireMap = {
   hostScoreboard: wireHostScoreboard,
   hostFinal: wireFinal,
   playerJoin: wirePlayerJoin,
-  playerLobby: null,
+  playerLobby: wirePlayerLobby,
   playerRound: null,
   playerWait: null,
   playerResults: null,
@@ -2628,7 +2727,7 @@ async function boot(){
         if(data) S.players[pid] = data;
       }
       if(identity.role === "host"){
-        if(meta.status === "lobby") S.screen = "hostLobby";
+        if(meta.status === "lobby" || meta.status === "lobby_setup") S.screen = "hostLobby";
         else if(meta.status === "playing") S.screen = "hostRound";
         else if(meta.status === "reviewing"){ await buildReviewData(); S.screen = "hostReview"; }
         else if(meta.status === "scoreboard") S.screen = "hostScoreboard";
