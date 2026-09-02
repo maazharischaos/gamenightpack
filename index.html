@@ -626,9 +626,10 @@
 
         const roomData = snap.val();
 
-        if (roomData.status === 'PLAYING') {
+        // Allow joining if status is LOBBY or SETUP. Only block if actively IN_GAME
+        if (roomData.status === 'IN_GAME') {
           playErrorSfx();
-          alert('A game is currently in progress! Please wait until this round finishes to join.');
+          alert('A round is currently in progress! Please wait until the host returns to the lobby.');
           return;
         }
 
@@ -714,16 +715,26 @@
       isLaunchingGame = true;
       triggerLoadingOverlay(icon, `LAUNCHING ${name}...`);
 
+      // Failsafe timeout to unfreeze overlay if navigation stalls
+      const failsafe = setTimeout(() => {
+        isLaunchingGame = false;
+        const overlay = document.getElementById('launch-loading-overlay');
+        if (overlay) overlay.classList.remove('active');
+      }, 6000);
+
       db.ref(`master_rooms/${currentRoomCode}`).update({
-        status: 'PLAYING',
+        status: 'SETUP',
         launchedGame: file
       }).then(() => {
         setTimeout(() => {
+          clearTimeout(failsafe);
           window.location.href = `${file}?room=${currentRoomCode}&name=${encodeURIComponent(myName)}&pid=${myPid}&isHost=true`;
         }, 400);
       }).catch(err => {
+        clearTimeout(failsafe);
         isLaunchingGame = false;
-        document.getElementById('launch-loading-overlay').classList.remove('active');
+        const overlay = document.getElementById('launch-loading-overlay');
+        if (overlay) overlay.classList.remove('active');
         playErrorSfx();
         alert('Failed to launch game. Check your connection.');
         console.error('launchGame error:', err);
@@ -750,6 +761,22 @@
       }
     });
 
+    /* AUTOMATIC LOCALSTORAGE PURGE ON NEW BUILD RELEASE */
+    (function() {
+      const CURRENT_APP_VERSION = 'v16';
+      const storedVersion = localStorage.getItem('gamenight_app_version');
+
+      if (storedVersion !== CURRENT_APP_VERSION) {
+        const myPid = localStorage.getItem('gamenight_pid');
+
+        localStorage.clear();
+        sessionStorage.clear();
+
+        if (myPid) localStorage.setItem('gamenight_pid', myPid);
+        localStorage.setItem('gamenight_app_version', CURRENT_APP_VERSION);
+      }
+    })();
+
     /* AUTO-UPDATING SERVICE WORKER */
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -757,11 +784,13 @@
           reg.update();
           reg.addEventListener('updatefound', () => {
             const newWorker = reg.installing;
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                window.location.reload();
-              }
-            });
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  window.location.reload();
+                }
+              });
+            }
           });
         }).catch(() => {});
       });

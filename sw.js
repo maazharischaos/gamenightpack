@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gamenight-v13'; // <--- Incremented from v1 to force cache purge
+const CACHE_NAME = 'gamenight-v16';
 
 const ASSETS_TO_CACHE = [
   './',
@@ -7,14 +7,12 @@ const ASSETS_TO_CACHE = [
   './scattergo.html',
   './scramble.html',
   './vocabomb.html',
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png'
+  './manifest.json'
 ];
 
-// Install Event - Pre-cache all app assets
+// Force new service worker to activate immediately without waiting for tabs to close
 self.addEventListener('install', (event) => {
-  self.skipWaiting(); // Instantly activate new service worker
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
@@ -22,14 +20,15 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Activate Event - Clean up old cache versions
+// Purge all legacy caches on activation
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
+    caches.keys().then((cacheNames) => {
       return Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key); // Deletes old gamenight-v1 cache
+        cacheNames.map((cache) => {
+          if (cache !== CACHE_NAME) {
+            console.log('Purging legacy cache:', cache);
+            return caches.delete(cache);
           }
         })
       );
@@ -37,11 +36,19 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch Event - Network first for HTML, fallback to cache
+// Serve network version first; fallback to offline cache if network fails
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    fetch(event.request).catch(() => {
-      return caches.match(event.request);
-    })
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const responseClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseClone);
+          });
+        }
+        return networkResponse;
+      })
+      .catch(() => caches.match(event.request))
   );
 });

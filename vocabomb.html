@@ -1261,6 +1261,28 @@ function returnToLauncher() {
   window.location.href = `index.html?room=${room}&name=${encodeURIComponent(name)}&isHost=${isHost}`;
 }
 
+// UNIVERSAL MOBILE SOFT-KEYBOARD VIEWPORT ADAPTER
+(function() {
+  function handleFocusScroll(e) {
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
+      setTimeout(() => {
+        e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+      }, 300);
+    }
+  }
+
+  document.addEventListener('focusin', handleFocusScroll);
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+      const activeEl = document.activeElement;
+      if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+        activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+  }
+})();
+
 // SPLASH SCREEN AUTO-DISMISS & LAUNCHER BYPASS
 window.addEventListener('load', () => {
   const urlParams = new URLSearchParams(window.location.search);
@@ -1331,6 +1353,17 @@ window.addEventListener('load', () => {
         if (autoHost) {
           roomRef.child('host').set(myPlayerId);
         }
+
+        // Listen for master_rooms status to auto-return players when host disbands or leaves
+        db.ref(`master_rooms/${currentRoom}/status`).on('value', mSnap => {
+          const status = mSnap.val();
+          if (status === 'LOBBY' || status === 'DISBANDED' || !status) {
+            const isHostPlayer = autoHost || (roomData && roomData.host === myPlayerId);
+            if (!isHostPlayer) {
+              returnToLauncher();
+            }
+          }
+        });
 
         roomRef.on('value', (sSnap) => {
           roomData = sSnap.val();

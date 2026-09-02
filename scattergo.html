@@ -824,58 +824,40 @@ function wireHome(){
 }
 
 async function joinFromLauncher(roomCode, pName, pId, isHostFlag) {
+  // Parse incoming boolean parameter accurately
   const isHost = (isHostFlag === true || isHostFlag === 'true');
 
-  // Assign state synchronously before waiting on async network requests
-  S.roomCode = roomCode;
+  S.roomCode = String(roomCode).trim();
   S.playerName = pName;
-  S.playerId = pId || ('p_' + Math.random().toString(36).substr(2, 9));
+  S.playerId = pId || localStorage.getItem('gamenight_pid') || ('p_' + Math.random().toString(36).substr(2, 9));
+  localStorage.setItem('gamenight_pid', S.playerId);
   S.isHost = isHost;
   S.role = isHost ? 'host' : 'player';
+
+  // Route Host to setup and Players to lobby immediately
   S.screen = isHost ? 'hostSetup' : 'playerLobby';
-  
-  setupDraft.hostName = pName;
+  if (isHost) setupDraft.hostName = pName;
+
   saveIdentity();
-  render(); // Instantly switch screen to prevent UI bounce
+  render(); // Render immediately to prevent screen-flash
 
-  // Fetch existing room meta if already created
-  let existingMeta = typeof stGet === 'function' ? await stGet("sg:" + roomCode + ":meta") : null;
+  // Write player directly to database
+  await stSet("sg:" + S.roomCode + ":players:" + S.playerId, { name: pName, joinedAt: serverNow() });
 
-  if (isHost && !existingMeta) {
-    const isDash = setupDraft.gameMode === "dash";
-    existingMeta = {
-      hostId: S.playerId,
-      hostName: pName,
-      status: "lobby",
-      settings: {
-        gameMode: setupDraft.gameMode || "classic",
-        sprintPreset: setupDraft.sprintPreset || 60,
-        roundsMode: setupDraft.roundsMode || "fixed",
-        roundsCount: setupDraft.roundsCount || 5,
-        difficulty: setupDraft.difficulty || "medium",
-        timerSeconds: isDash ? (setupDraft.sprintPreset || 60) : (setupDraft.timerSeconds || 90),
-        letterMode: setupDraft.letterMode || "random"
-      },
-      roundsPlayed: 0,
-      usedIndices: { easy: [], medium: [], hard: [] },
-      round: null,
-      createdAt: typeof serverNow === 'function' ? serverNow() : Date.now(),
-      updatedAt: typeof serverNow === 'function' ? serverNow() : Date.now()
-    };
-    await stSet("sg:" + roomCode + ":meta", existingMeta);
+  // Add real-time listener on master_rooms so players auto-return when host disbands or finishes
+  if (typeof db !== 'undefined' && S.roomCode) {
+    db.ref(`master_rooms/${S.roomCode}/status`).on('value', snap => {
+      const status = snap.val();
+      if (status === 'LOBBY' || status === 'DISBANDED' || !status) {
+        if (!S.isHost) {
+          clearMainLoop();
+          clearIdentity();
+          window.location.href = `index.html?room=${S.roomCode}&name=${encodeURIComponent(S.playerName)}&isHost=false`;
+        }
+      }
+    });
   }
 
-  if (existingMeta) {
-    S.meta = existingMeta;
-  }
-
-  // Register player entry in database
-  await db.ref('scattergo/' + roomCode + '/players/' + S.playerId).set({
-    name: pName,
-    isHost: isHost
-  });
-
-  render();
   startMainLoop();
 }
 
@@ -963,11 +945,14 @@ function wireHostSetup(){
     });
   });
   const nameInput = document.getElementById("hostNameInput");
-  nameInput.addEventListener("input", ()=>{ setupDraft.hostName = nameInput.value; });
+  if (nameInput) {
+    nameInput.addEventListener("input", ()=>{ setupDraft.hostName = nameInput.value; });
+  }
   document.getElementById("btnCreateRoom").onclick = createRoom;
+  
+  // Return directly to Launcher when Back is clicked from setup
   document.getElementById("btnSetupBack").onclick = ()=>{
-    S.screen = S.roomCode ? "hostLobby" : "home";
-    render();
+    returnToLauncher();
   };
 }
 
@@ -1183,6 +1168,12 @@ async function startRound(manualLetter){
 
   const ok = await stSet("sg:"+S.roomCode+":meta", newMeta);
   if(!ok){ toast("Couldn't start the round — check your connection and try again."); return false; }
+
+  // Set master_rooms status to IN_GAME so Launcher blocks late joins during active gameplay
+  if (S.isHost && typeof db !== 'undefined' && S.roomCode) {
+    db.ref(`master_rooms/${S.roomCode}`).update({ status: 'IN_GAME' }).catch(console.error);
+  }
+
   S.meta = newMeta;
   S.dashCurrentIdx = 0;
   S.dashSkipped = new Set();
@@ -1793,46 +1784,6 @@ function returnToLauncher() {
   window.location.href = `index.html?room=${room}&name=${encodeURIComponent(name)}&isHost=${isHost}`;
 }
 
-async function joinFromLauncher(roomCode, pName, pId, isHostFlag) {
-  S.roomCode = roomCode;
-  S.playerName = pName;
-  S.playerId = pId || ('p_' + Math.random().toString(36).substr(2, 9));
-  S.isHost = isHostFlag;
-  S.role = isHostFlag ? 'host' : 'player';
-
-  const ref = db.ref('scattergo/' + roomCode);
-  let snap = await ref.get();
-
-  if (!snap.exists()) {
-    // Room shell created from Super App Launcher
-    await ref.set({
-      code: roomCode,
-      hostId: S.playerId,
-      status: 'lobby',
-      players: { [S.playerId]: { name: pName, isHost: isHostFlag } },
-      createdAt: serverNow()
-    });
-  } else {
-    await ref.child('players/' + S.playerId).set({
-      name: pName,
-      isHost: isHostFlag
-    });
-  }
-
-  saveIdentity();
-
-  // ROUTING FIX: Host lands directly on Game Setup Screen; Players land in Lobby
-  if (isHostFlag) {
-    setupDraft.hostName = pName;
-    S.screen = 'hostSetup';
-  } else {
-    S.screen = 'playerLobby';
-  }
-
-  render();
-  startMainLoop();
-}
-
 function screenFinal(isHost){
   const sorted = Object.entries(S.scores).sort((a,b)=> b[1]-a[1]);
   const winner = sorted[0];
@@ -2198,6 +2149,28 @@ function bindVisibilityFlush(){
     if(S.screen === "playerRound" && !S.submitted) saveAnswers(true, true);
   });
 }
+
+// UNIVERSAL MOBILE SOFT-KEYBOARD VIEWPORT ADAPTER
+(function() {
+  function handleFocusScroll(e) {
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
+      setTimeout(() => {
+        e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+      }, 300);
+    }
+  }
+
+  document.addEventListener('focusin', handleFocusScroll);
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+      const activeEl = document.activeElement;
+      if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+        activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+  }
+})();
 
 let draftSaveTimer = null;
 let draftDirty = false;
