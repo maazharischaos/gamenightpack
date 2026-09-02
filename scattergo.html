@@ -857,6 +857,32 @@ async function joinFromLauncher(roomCode, pName, pId, isHostFlag) {
   const playerRef = db.ref("scattergo/" + S.roomCode + "/players/" + S.playerId);
   await playerRef.set({ name: pName, isHost: isHost, isReady: false, joinedAt: serverNow() });
 
+  // Initialize room metadata during host setup phase
+  if (isHost) {
+    setupDraft.hostName = pName;
+    const isDash = setupDraft.gameMode === "dash";
+    const defaultMeta = {
+      hostId: S.playerId,
+      hostName: pName,
+      status: "lobby_setup",
+      settings: {
+        gameMode: setupDraft.gameMode,
+        sprintPreset: setupDraft.sprintPreset,
+        roundsMode: setupDraft.roundsMode,
+        roundsCount: setupDraft.roundsCount,
+        difficulty: setupDraft.difficulty,
+        timerSeconds: setupDraft.timerSeconds,
+        letterMode: setupDraft.letterMode
+      },
+      roundsPlayed: 0,
+      usedIndices: { easy: [], medium: [], hard: [] },
+      createdAt: serverNow(),
+      updatedAt: serverNow()
+    };
+    await stSet("sg:" + S.roomCode + ":meta", defaultMeta);
+    S.meta = defaultMeta;
+  }
+
   // 2. Read master room snapshot to guarantee no missing connected players are dropped
   if (typeof db !== 'undefined' && S.roomCode) {
     try {
@@ -892,7 +918,7 @@ async function joinFromLauncher(roomCode, pName, pId, isHostFlag) {
         S.meta = snap.val();
         if (!S.isHost) {
           if (S.meta.status === "lobby_setup" || !S.meta.status) {
-            S.screen = "home";
+            S.screen = "playerLobby";
           } else if (S.meta.status === "lobby") {
             S.screen = "playerLobby";
           } else if (S.meta.status === "playing") {
@@ -992,26 +1018,50 @@ function screenHostSetup(){
 }
 function wireHostSetup(){
   root.querySelectorAll("[data-set]").forEach(el=>{
-    el.addEventListener("click", ()=>{
+    el.addEventListener("click", async ()=>{
       const key = el.getAttribute("data-set");
       let val = el.getAttribute("data-val");
       if(key === "roundsCount") val = parseInt(val,10);
       if(key === "timerSeconds") val = parseInt(val,10);
       if(key === "sprintPreset") val = parseInt(val,10);
       setupDraft[key] = val;
+
+      // Broadcast live setting changes to connected non-host players
+      if (S.roomCode) {
+        const isDash = setupDraft.gameMode === "dash";
+        const settings = {
+          gameMode: setupDraft.gameMode || "classic",
+          sprintPreset: setupDraft.sprintPreset || 60,
+          roundsMode: setupDraft.roundsMode,
+          roundsCount: setupDraft.roundsCount,
+          difficulty: setupDraft.difficulty,
+          timerSeconds: isDash ? (setupDraft.sprintPreset || 60) : setupDraft.timerSeconds,
+          letterMode: setupDraft.letterMode
+        };
+        db.ref("scattergo/" + S.roomCode + "/meta").update({
+          hostName: setupDraft.hostName || "Host",
+          status: "lobby_setup",
+          settings: settings,
+          updatedAt: serverNow()
+        });
+      }
+
       render();
     });
   });
+
   const nameInput = document.getElementById("hostNameInput");
   if (nameInput) {
-    nameInput.addEventListener("input", ()=>{ setupDraft.hostName = nameInput.value; });
+    nameInput.addEventListener("input", ()=>{ 
+      setupDraft.hostName = nameInput.value; 
+      if (S.roomCode) {
+        db.ref("scattergo/" + S.roomCode + "/meta").update({ hostName: nameInput.value });
+      }
+    });
   }
+
   document.getElementById("btnCreateRoom").onclick = createRoom;
-  
-  // Return directly to Launcher when Back is clicked from setup
-  document.getElementById("btnSetupBack").onclick = ()=>{
-    returnToLauncher();
-  };
+  document.getElementById("btnSetupBack").onclick = returnToLauncher;
 }
 
 async function createRoom(){
@@ -1957,8 +2007,31 @@ function wireFinal(){
   const btn = document.getElementById("btnNewGame");
   if(btn) btn.onclick = ()=>{
     clearMainLoop();
-    clearIdentity();
-    S = Object.assign(S, { role:null, screen:'home', roomCode:null, playerId:null, playerName:null, meta:null, players:{}, scores:{}, localAnswers:[], lastRoundNumber:-1, submitted:false, dashCurrentIdx: 0, dashSkipped: new Set() });
+    const preservedName = S.playerName || setupDraft.hostName || "Host";
+    const preservedCode = S.roomCode;
+    const preservedPid = S.playerId;
+
+    // Reset room state for new game
+    S = Object.assign(S, {
+      isLauncherLaunch: false,
+      role: 'host',
+      screen: 'hostSetup',
+      isHost: true,
+      roomCode: preservedCode,
+      playerId: preservedPid,
+      playerName: preservedName,
+      meta: null,
+      players: {},
+      scores: {},
+      localAnswers: [],
+      lastRoundNumber: -1,
+      submitted: false,
+      dashCurrentIdx: 0,
+      dashSkipped: new Set()
+    });
+
+    setupDraft.hostName = preservedName;
+    saveIdentity();
     render();
   };
 
@@ -2027,27 +2100,12 @@ async function joinRoom(){
 }
 
 function screenPlayerLobby(){
-  const settings = S.meta ? S.meta.settings : null;
+  const settings = (S.meta && S.meta.settings) ? S.meta.settings : setupDraft;
   const nonHostPlayers = Object.entries(S.players).filter(([id, p]) => !p.isHost);
   const hostPlayerEntry = Object.entries(S.players).find(([id, p]) => p.isHost);
   const myPlayer = S.players[S.playerId] || {};
   const isReady = !!myPlayer.isReady;
-
-  // Pre-setup screen while host is actively picking game modes / settings
-  if (!S.meta || S.meta.status === 'lobby_setup') {
-    return `
-    <div class="screen">
-      <div class="topbar">
-        <div class="eyebrow" style="margin:0;">In Room <b>${S.roomCode}</b></div>
-        <div class="roompill">${esc(S.playerName)}</div>
-      </div>
-      <div class="wait-wrap" style="flex:none; padding:40px 0;">
-        <div class="spinner"></div>
-        <h1 class="title" style="font-size:22px; margin-top:12px;">${esc(S.meta ? S.meta.hostName : 'Host')} is setting up the game...</h1>
-        <p class="sub">Hang tight! The host is picking categories and timer settings.</p>
-      </div>
-    </div>`;
-  }
+  const isSetupPhase = S.meta && S.meta.status === 'lobby_setup';
 
   const isDash = settings.gameMode === "dash";
 
@@ -2058,11 +2116,13 @@ function screenPlayerLobby(){
       <div class="roompill">${esc(S.playerName)}</div>
     </div>
     ${!storageOK ? bannerNoSync() : ""}
+
     <div class="wait-wrap" style="flex:none; padding:16px 0 10px;">
       <h1 class="title" style="font-size:22px;">Game Rules</h1>
       <p class="sub" style="margin-bottom:0;">
         ${isDash ? '⚡ Scatter-Dash Sprint' : (settings.roundsMode==='fixed' ? settings.roundsCount+' rounds' : 'Open-ended')} · ⏱ ${settings.timerSeconds}s timer · ${settings.difficulty} difficulty
       </p>
+      ${isSetupPhase ? `<div style="font-size:12px; color:var(--marigold); font-weight:700; margin-top:6px;">⚙️ Host is selecting settings...</div>` : ''}
     </div>
 
     <div style="margin:14px 0;">
