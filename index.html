@@ -562,13 +562,16 @@
       isHostFlag = true;
 
       const roomRef = db.ref(`master_rooms/${currentRoomCode}`);
+      
       roomRef.set({
         hostId: myPid,
         status: 'LOBBY',
-        launchedGame: null,
-        players: {
-          [myPid]: { name: myName, isHost: true }
-        }
+        launchedGame: null
+      }).then(() => {
+        return roomRef.child(`players/${myPid}`).set({
+          name: myName,
+          isHost: true
+        });
       }).then(() => {
         restoreHostDashboard();
       }).catch(err => {
@@ -583,9 +586,13 @@
       if (!listEl) return;
       listEl.innerHTML = '';
       
-      // Render ALL connected players regardless of host status
-      Object.values(players).forEach(p => {
-        listEl.innerHTML += `<span class="player-pill">${p.name} ${p.isHost ? '👑' : ''}</span>`;
+      const playerArray = Object.values(players || {});
+      if (playerArray.length === 0) return;
+
+      playerArray.forEach(p => {
+        if (p && p.name) {
+          listEl.innerHTML += `<span class="player-pill">${p.name} ${p.isHost ? '👑' : ''}</span>`;
+        }
       });
     }
 
@@ -626,14 +633,16 @@
 
         const roomData = snap.val();
 
-        // Allow joining if status is LOBBY or SETUP. Only block if actively IN_GAME
         if (roomData.status === 'IN_GAME') {
           playErrorSfx();
           alert('A round is currently in progress! Please wait until the host returns to the lobby.');
           return;
         }
 
-        return roomRef.child(`players/${myPid}`).set({ name: myName, isHost: false }).then(() => {
+        return roomRef.child(`players/${myPid}`).set({ 
+          name: myName, 
+          isHost: false 
+        }).then(() => {
           reconnectPlayerLobby();
         });
       }).catch(err => {
@@ -658,15 +667,13 @@
 
       roomRef.child('launchedGame').on('value', gSnap => {
         const gameFile = gSnap.val();
-        // Only redirect if a game file string is explicitly present AND the master status is PLAYING
-        roomRef.child('status').once('value').then(sSnap => {
-          if (gameFile && sSnap.val() === 'PLAYING') {
-            triggerLoadingOverlay('🎮', 'LAUNCHING GAME...');
-            setTimeout(() => {
-              window.location.href = `${gameFile}?room=${currentRoomCode}&name=${encodeURIComponent(myName)}&pid=${myPid}&isHost=false`;
-            }, 400);
-          }
-        });
+        // Redirect as soon as launchedGame is set to a file (SETUP or PLAYING)
+        if (gameFile && typeof gameFile === 'string' && gameFile.trim() !== '') {
+          triggerLoadingOverlay('🎮', 'LAUNCHING GAME...');
+          setTimeout(() => {
+            window.location.href = `${gameFile}?room=${currentRoomCode}&name=${encodeURIComponent(myName)}&pid=${myPid}&isHost=false`;
+          }, 400);
+        }
       });
 
       roomRef.child('status').on('value', sSnap => {
@@ -763,7 +770,7 @@
 
     /* AUTOMATIC LOCALSTORAGE PURGE ON NEW BUILD RELEASE */
     (function() {
-      const CURRENT_APP_VERSION = 'v18';
+      const CURRENT_APP_VERSION = 'v19';
       const storedVersion = localStorage.getItem('gamenight_app_version');
 
       if (storedVersion !== CURRENT_APP_VERSION) {
