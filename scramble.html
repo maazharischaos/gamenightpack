@@ -6,25 +6,18 @@
   <meta name="theme-color" content="#070913" />
   <title>SCRAMBLE PANIC</title>
 
-  <!-- Android Chrome PWA Installability (Uses Real PNG Icon for WebAPK Prompt) -->
   <link rel="manifest" href="data:application/manifest+json;utf8,%7B%22name%22%3A%22Scramble%20Panic%22%2C%22short_name%22%3A%22ScramblePanic%22%2C%22start_url%22%3A%22index.html%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23070913%22%2C%22theme_color%22%3A%22%23070913%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fcdn-icons-png.flaticon.com%2F512%2F3063%2F3063822.png%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fpng%22%2C%22purpose%22%3A%22any%20maskable%22%7D%5D%7D">
-
-  <!-- iOS Safari PWA Icons & Native Standalone Display Mode -->
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3063/3063822.png">
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Scramble Panic" />
 
-  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
-  <!-- Firebase Legacy Compatibility CDN -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
-  <!-- Lightweight Canvas-Confetti CDN -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
   <style>
@@ -62,8 +55,9 @@
     }
 
     html, body {
-      min-height: 100vh;
-      min-height: -webkit-fill-available;
+      height: 100%;
+      height: 100dvh;
+      overflow: hidden;
     }
 
     body {
@@ -72,20 +66,16 @@
         radial-gradient(circle at 50% -10%, rgba(0, 240, 255, 0.15) 0%, transparent 60%),
         radial-gradient(circle at 50% 110%, rgba(255, 42, 85, 0.12) 0%, transparent 60%);
       color: var(--text-main);
-      min-height: 100vh;
-      min-height: 100dvh;
       display: flex;
       justify-content: center;
       align-items: center;
-      overflow: hidden;
     }
 
     #app-container {
       width: 100%;
       max-width: 420px;
-      height: 100vh;
+      height: 100%;
       height: 100dvh;
-      max-height: -webkit-fill-available;
       display: flex;
       flex-direction: column;
       position: relative;
@@ -292,15 +282,16 @@
       display: inline-flex; 
       align-items: center; 
       gap: 3px;
-      padding: 1px 4px; 
+      padding: 2px 8px; 
       background: rgba(255, 255, 255, 0.06);
-      border-radius: 4px; 
+      border-radius: 6px; 
       border: 1px solid var(--glass-border);
-      font-size: 0.65rem; 
+      font-size: 0.7rem; 
       font-weight: 800; 
       text-transform: uppercase;
       width: auto;
     }
+
     .award-card-styled {
       background: rgba(0, 240, 255, 0.06);
       border: 1px solid var(--cyan-neon);
@@ -309,11 +300,13 @@
       padding: 12px; margin-top: 10px;
     }
 
+    /* GAMEPLAY SCREEN STRUCTURAL FLEX LAYOUT FIX */
     #screen-game { 
       display: flex; 
       flex-direction: column; 
-      height: 100%; 
-      max-height: 100%;
+      flex: 1 1 auto;
+      height: 0; /* CRITICAL: allows flex item to collapse below content size */
+      min-height: 0;
       overflow: hidden; 
       padding: 0; 
       position: relative;
@@ -335,11 +328,11 @@
     }
 
     .cards-scroll-area { 
-      flex: 1 1 auto; 
+      flex: 1 1 0%; 
       min-height: 0;
       overflow-y: auto; 
       -webkit-overflow-scrolling: touch;
-      padding: 14px; 
+      padding: 14px 14px 20px 14px; 
     }
 
     .cards-grid { display: flex; flex-direction: column; gap: 10px; }
@@ -535,14 +528,13 @@
       <div id="game-submit-bar" class="sticky-submit-bar"></div>
     </div>
 
-    <!-- SUMMARY SCREEN (RANKING FIRST, AWARDS BELOW) -->
+    <!-- SUMMARY SCREEN -->
     <div id="screen-summary" class="screen">
       <div style="text-align: center; margin-bottom: 10px;">
         <h2 class="brand-title" style="font-size: 1.9rem;">MATCH RESULTS</h2>
         <div id="summary-subtitle" class="brand-subtitle">TIME EXPIRED</div>
       </div>
 
-      <!-- RANKINGS AT TOP PRIORITY -->
       <div class="glass-card" style="flex: 1; overflow-y: auto;">
         <div class="input-label">ROUND STANDINGS</div>
         <div id="podium-list" class="podium-list"></div>
@@ -550,18 +542,15 @@
         <div class="input-label" style="margin-top: 12px;">TOURNAMENT CUMULATIVE SCORE</div>
         <div id="tournament-list" class="podium-list"></div>
 
-        <!-- AWARDS PLACED BELOW STANDINGS -->
         <div id="awards-container" style="margin-top: 10px;"></div>
       </div>
 
      <div id="summary-host-controls" style="display: flex; flex-direction: column; gap: 6px;">
-        <!-- MID-MATCH BUTTONS (Shown after individual rounds) -->
         <div id="mid-round-controls" style="display: flex; flex-direction: column; gap: 6px; width: 100%;">
           <button id="btn-next-round" class="btn btn-amber">START NEXT ROUND 🚀</button>
           <button id="btn-end-tournament" class="btn btn-primary" style="background: var(--red-error); border-color: var(--red-error); color: #fff;">🏆 END GAME</button>
         </div>
 
-        <!-- FINAL STANDINGS BUTTONS (Shown after Host presses End Game) -->
         <div id="final-tournament-controls" style="display: none; flex-direction: column; gap: 6px; width: 100%;">
           <button id="btn-return-launcher-final" class="btn btn-primary" onclick="returnToLauncher()">🎮 GAME LAUNCHER</button>
           <button id="btn-replay-match" class="btn btn-secondary">🏠 RETURN TO LOBBY</button>
@@ -665,7 +654,7 @@
           playerRef.transaction((currentData) => {
             if (!currentData) {
               return {
-                name: GameState.playerName, isHost: GameState.isHost, isReady: GameState.isReady, online: true,
+                name: GameState.playerName || 'PLAYER', isHost: GameState.isHost, isReady: GameState.isReady, online: true,
                 score: action.payload.score || 0, solvedCount: action.payload.solvedCount || 0,
                 submittedAt: action.payload.submittedAt || null, answers: action.payload.answers || {},
                 joinedAt: GameState.joinedAt || NetworkEngine.getServerTime(), lastSeen: NetworkEngine.getServerTime(),
@@ -961,44 +950,46 @@
         this.db.ref('.info/connected').on('value', (snap) => {
           if (snap.val() === true) {
             myPlayerRef.update({
-              name: GameState.playerName, isHost: GameState.isHost, isReady: GameState.isReady, online: true,
-              score: GameState.playerState.score || 0, solvedCount: GameState.playerState.solvedCount || 0,
-              submittedAt: GameState.playerState.submittedAt || null, answers: GameState.playerState.answers || {},
-              joinedAt: GameState.joinedAt, lastSeen: this.getServerTime(), isEliminated: GameState.isEliminated || false
+              name: GameState.playerName || 'PLAYER', 
+              isHost: GameState.isHost, 
+              isReady: GameState.isReady, 
+              online: true,
+              score: GameState.playerState.score || 0, 
+              solvedCount: GameState.playerState.solvedCount || 0,
+              submittedAt: GameState.playerState.submittedAt || null, 
+              answers: GameState.playerState.answers || {},
+              joinedAt: GameState.joinedAt, 
+              lastSeen: this.getServerTime(), 
+              isEliminated: GameState.isEliminated || false
             });
             this.startHeartbeat();
           }
         });
 
-        // Direct instant write on load to bypass database locks
-        if (typeof db !== 'undefined' && roomCode) {
-          const myRef = GameState.playersRef.child(GameState.playerId);
-          myRef.update({
+        // Direct write on load to guarantee player entry is populated
+        if (this.db && roomCode) {
+          myPlayerRef.update({
             name: GameState.playerName || 'PLAYER',
             isHost: GameState.isHost,
-            isReady: false,
-            online: true,
-            score: 0,
-            solvedCount: 0
+            online: true
           });
 
-          // Sync incoming players instantly via child_added stream
-          db.ref(`master_rooms/${roomCode}/players`).on('child_added', pSnap => {
+          this.db.ref(`master_rooms/${roomCode}/players`).on('child_added', pSnap => {
             const pid = pSnap.key;
             const p = pSnap.val() || {};
             if (GameState.playersRef && pid) {
               GameState.playersRef.child(pid).once('value', existingSnap => {
                 const existing = existingSnap.val() || {};
                 GameState.playersRef.child(pid).update({
-                  name: p.name || existing.name || 'PLAYER',
-                  isHost: existing.isHost || !!p.isHost,
+                  name: p.name || existing.name || (pid === GameState.playerId ? GameState.playerName : 'PLAYER'),
+                  isHost: existing.isHost !== undefined ? existing.isHost : !!p.isHost,
                   online: true
                 });
               });
             }
           });
 
-          db.ref(`master_rooms/${roomCode}/status`).on('value', snap => {
+          this.db.ref(`master_rooms/${roomCode}/status`).on('value', snap => {
             const status = snap.val();
             if (status === 'LOBBY' || status === 'DISBANDED' || !status) {
               if (!GameState.isHost) {
@@ -1015,7 +1006,6 @@
           GameState.wordCategory = meta.wordCategory || 'mixed';
           GameState.isTournamentOver = !!meta.isTournamentOver;
           
-          // Safeguard host authority: only override if hostId is present and unambiguous
           if (meta.hostId && meta.hostId.trim() !== '') {
             GameState.isHost = (meta.hostId === GameState.playerId);
           }
@@ -1046,7 +1036,6 @@
           UIController.updateLeaderboardPill(playersObj);
           this.checkBlitzConditions(playersObj);
 
-          // Check if all players have submitted answers to auto-end round for Host
           if (GameState.isHost && fsm.currentState === GAME_STATES.PLAYING) {
             const players = Object.values(playersObj);
             const activePlayers = players.filter(p => !p.isEliminated);
@@ -1161,12 +1150,10 @@
           let earnedPoints = wordObj.points * Math.min(GameState.comboStreak, 3);
           if (GameState.isOvertimeActive) earnedPoints *= 2;
 
-          // Check live claim state directly from GameState.words array
           const liveWord = GameState.words.find(w => w.id === wordObj.id) || wordObj;
 
           if (liveWord.isGolden) {
             if (!liveWord.claimedBy) {
-              // First solver gets full golden points + combo streak
               earnedPoints = liveWord.points * Math.min(GameState.comboStreak, 3);
               if (GameState.isOvertimeActive) earnedPoints *= 2;
               
@@ -1180,7 +1167,6 @@
                 }
               }
             } else {
-              // Subsequent solver gets only original base points (no golden bonus)
               const originalBasePoints = Math.floor(liveWord.points / 2);
               earnedPoints = originalBasePoints;
               if (GameState.isOvertimeActive) earnedPoints *= 2;
@@ -1276,7 +1262,6 @@
         GameState.isSubmittingMatch = true;
         GameState.playerState.submittedAt = NetworkEngine.getServerTime();
 
-        // Lock inputs for local player
         document.querySelectorAll('.word-input').forEach(input => input.disabled = true);
         const submitBtn = document.getElementById('btn-submit-match');
         if (submitBtn) {
@@ -1395,6 +1380,7 @@
         fsm.transitionTo(GAME_STATES.ROOM);
       },
 
+      // HARDENED PLAYER LIST RENDERER PREVENTS "UNKNOWN" BADGES
       renderPlayerList(playersObj) {
         const container = document.getElementById('room-player-list');
         container.innerHTML = '';
@@ -1403,10 +1389,22 @@
         players.forEach(p => {
           const pill = document.createElement('div');
           pill.className = 'player-pill';
+          
+          // Strict fallback chain prevents UNKNOWN name glitches
+          let resolvedName = p.name;
+          if (!resolvedName || resolvedName.trim() === '' || resolvedName === 'UNKNOWN') {
+            resolvedName = (p.id === GameState.playerId) ? GameState.playerName : 'PLAYER';
+            
+            // Immediate background self-repair write to Firebase
+            if (GameState.playersRef && p.id) {
+              GameState.playersRef.child(p.id).update({ name: resolvedName });
+            }
+          }
+
           pill.innerHTML = `
             <div style="display:flex; align-items:center; gap:4px; overflow:hidden;">
               <div class="status-dot online" style="flex-shrink:0;"></div>
-              <span style="font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.name || 'UNKNOWN'} ${p.isHost ? '👑' : ''}</span>
+              <span style="font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${resolvedName} ${p.isHost ? '👑' : ''}</span>
             </div>
             <span style="font-size:0.65rem; font-weight:800; color:${p.isReady ? 'var(--cyan-neon)' : 'var(--text-muted)'}; flex-shrink:0;">
               ${p.isReady ? '✓' : '—'}
@@ -1430,7 +1428,8 @@
         const myRank = players.findIndex(p => p.id === GameState.playerId) + 1;
         const rival = players.find(p => p.id !== GameState.playerId);
 
-        let rivalText = rival ? ` | ⚡ ${rival.name || 'RIVAL'}: ${rival.solvedCount || 0}/12` : '';
+        let rivalName = rival ? (rival.name || 'RIVAL') : '';
+        let rivalText = rival ? ` | ⚡ ${rivalName}: ${rival.solvedCount || 0}/12` : '';
         document.getElementById('game-leader-pill').innerHTML = `<span>👑 #${myRank} ${GameState.playerName || 'YOU'}</span><span style="margin-left:6px;">${rivalText}</span>`;
       },
 
@@ -1522,7 +1521,6 @@
         const players = Object.keys(playersObj).map(k => ({ id: k, ...playersObj[k] }));
         const isTournamentEnd = GameState.isTournamentOver || false;
 
-        // Sort players by single-round performance
         players.sort((a, b) => {
           if ((b.solvedCount || 0) !== (a.solvedCount || 0)) return (b.solvedCount || 0) - (a.solvedCount || 0);
           if ((b.score || 0) !== (a.score || 0)) return (b.score || 0) - (a.score || 0);
@@ -1534,7 +1532,6 @@
           subtitle.textContent = isTournamentEnd ? "TOURNAMENT STANDINGS & AWARDS" : "ROUND STANDINGS";
         }
 
-        // 1. ROUND STANDINGS (Visible mid-match, hidden when tournament ends)
         const roundList = document.getElementById('podium-list');
         const roundLabel = document.querySelector('#screen-summary .input-label:nth-of-type(1)');
         
@@ -1549,7 +1546,7 @@
               const item = document.createElement('div');
               item.className = `podium-item ${idx === 0 ? 'mvp' : ''}`;
               item.innerHTML = `
-                <div><span style="font-weight:900;">#${idx + 1}</span> <b>${p.name || 'UNKNOWN'}</b> ${p.isEliminated ? '💀' : ''}</div>
+                <div><span style="font-weight:900;">#${idx + 1}</span> <b>${p.name || 'PLAYER'}</b> ${p.isEliminated ? '💀' : ''}</div>
                 <div style="font-weight:900; color:var(--cyan-neon);">${p.score || 0} PTS</div>
               `;
               roundList.appendChild(item);
@@ -1558,7 +1555,6 @@
           if (roundLabel) roundLabel.style.display = 'block';
         }
 
-        // 2. TOURNAMENT CUMULATIVE STANDINGS (Hidden mid-match, revealed on END GAME)
         const tourneyList = document.getElementById('tournament-list');
         const tourneyLabel = document.querySelector('#screen-summary .input-label:nth-of-type(2)');
 
@@ -1571,7 +1567,7 @@
               const item = document.createElement('div');
               item.className = `podium-item ${idx === 0 ? 'mvp' : ''}`;
               item.innerHTML = `
-                <div><span style="font-weight:900;">#${idx + 1}</span> <b>${p.name || 'UNKNOWN'}</b> ${idx === 0 ? '👑 CHAMPION' : ''}</div>
+                <div><span style="font-weight:900;">#${idx + 1}</span> <b>${p.name || 'PLAYER'}</b> ${idx === 0 ? '👑 CHAMPION' : ''}</div>
                 <div style="font-weight:900; color:var(--amber-warm);">${(p.cumulativeScore || 0) + (p.score || 0)} TOTAL PTS</div>
               `;
               tourneyList.appendChild(item);
@@ -1583,7 +1579,6 @@
           if (tourneyLabel) tourneyLabel.style.display = 'none';
         }
 
-        // 3. DISTINCT STYLED AWARDS CARD (Sits dynamically directly under standings)
         const awardsContainer = document.getElementById('awards-container');
         awardsContainer.innerHTML = '';
 
@@ -1615,7 +1610,6 @@
           awardsContainer.innerHTML = awardsHTML;
         }
 
-        // Toggle Control Panels & Buttons
         if (GameState.isHost) {
           document.getElementById('summary-host-controls').style.display = 'flex';
           document.getElementById('summary-client-wait').style.display = 'none';
@@ -1761,7 +1755,6 @@
       }
     };
 
-    // HELPER TO RETURN TO MASTER LAUNCHER (SUPER APP)
 function returnToLauncher() {
   try {
     sessionStorage.removeItem('scramble_panic_session');
@@ -1784,7 +1777,6 @@ function returnToLauncher() {
   window.location.href = `index.html?room=${room}&name=${encodeURIComponent(name)}&isHost=${isHost}`;
 }
 
-// UNIVERSAL MOBILE SOFT-KEYBOARD VIEWPORT ADAPTER
 (function() {
   function handleFocusScroll(e) {
     if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
@@ -1818,6 +1810,9 @@ window.addEventListener('DOMContentLoaded', () => {
     GameState.playerId = autoPid;
     sessionStorage.setItem('scramble_panic_pid', autoPid);
   }
+  if (autoName) {
+    GameState.playerName = autoName;
+  }
   GameState.isHost = autoHost;
 
   if (typeof NetworkEngine !== 'undefined') NetworkEngine.init();
@@ -1829,7 +1824,6 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('screen-lobby').classList.remove('active');
 
     GameState.roomCode = autoRoom;
-    GameState.playerName = autoName;
 
     document.getElementById('input-player-name').value = autoName;
     document.getElementById('input-room-code').value = autoRoom;
@@ -1849,11 +1843,19 @@ window.addEventListener('DOMContentLoaded', () => {
             }
           });
         }
-        if (autoHost) {
-          roomRef.child('meta').update({ hostId: GameState.playerId });
-          roomRef.child(`players/${GameState.playerId}`).update({ isHost: true });
-        } else {
-          roomRef.child(`players/${GameState.playerId}`).update({ isHost: false });
+        
+        // Synchronous write guarantees player entry exists before render
+        const playerUpdate = {
+          name: autoName,
+          isHost: autoHost,
+          online: true,
+          isReady: false
+        };
+
+        return roomRef.child(`players/${GameState.playerId}`).update(playerUpdate);
+      }).then(() => {
+        if (autoHost && NetworkEngine.db) {
+          NetworkEngine.db.ref(`rooms/${autoRoom}/meta`).update({ hostId: GameState.playerId });
         }
         UIController.initRoomView();
       });
