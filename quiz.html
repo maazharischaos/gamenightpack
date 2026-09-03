@@ -128,6 +128,9 @@
   .brain-pulse { font-size: 4.5rem; line-height: 1; filter: drop-shadow(0 0 25px var(--gold-glow)); animation: pulse 1.2s infinite alternate ease-in-out; margin-bottom: 16px; }
   @keyframes pulse { 0% { transform: scale(0.92); filter: drop-shadow(0 0 10px var(--gold-glow)); } 100% { transform: scale(1.15); filter: drop-shadow(0 0 35px var(--gold)); } }
   .fun-tip { font-size: 0.9rem; font-weight: 700; color: var(--gold); margin-top: 12px; letter-spacing: 0.5px; min-height: 24px; }
+  .ready-badge { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 12px; }
+  .ready-badge.is-ready { background: rgba(16, 185, 129, 0.2); color: var(--green); border: 1px solid var(--green); }
+  .ready-badge.not-ready { background: rgba(255, 42, 85, 0.15); color: var(--red); border: 1px solid var(--red); }
 </style>
 </head>
 <body>
@@ -398,15 +401,36 @@ function subscribeRoom(code) {
   roomListener = roomRef.on('value', snap => {
     const r = snap.val();
     if (!r) { 
-      // If room node isn't created yet because host is on setup screen, show lobby wait
-      renderWaitingForHostScreen(code);
+      // Host hasn't saved initial setup yet
+      if (ME.role === 'player') {
+        renderWaitingForHostSetup();
+      }
       return; 
     }
+
     const prev = lastRoom;
     if (prev && (prev.qIndex !== r.qIndex || (prev.phase === 'question' && r.phase !== 'question'))) {
       myLockedSig = null;
     }
     lastRoom = r;
+
+    // Both Host & Player render generating screen simultaneously
+    if (r.phase === 'generating') {
+      const label = r.topicLabel || "Trivia Questions";
+      screenGenerating(`Building Trivia Questions...`);
+      return;
+    }
+
+    // Player screen during Host setup
+    if (r.phase === 'setup') {
+      if (ME.role === 'mod') {
+        renderHostSetupUI(r);
+      } else {
+        renderPlayerSetupUI(r);
+      }
+      return;
+    }
+
     if (ME.role === 'player') playerTransitionSounds(prev, r);
     if (r.online && r.started && !r.finished) { startEngine(); startUITick(); } else if (!r.online) { stopEngine(); stopUITick(); }
     const st = timerStart(r);
@@ -420,6 +444,7 @@ function subscribeRoom(code) {
     else renderPlayer(r);
   });
 }
+
 function unsubscribeRoom() { if (roomRef && roomListener) roomRef.off('value', roomListener); roomRef = null; roomListener = null; }
 
 function playerTransitionSounds(prev, r) {
@@ -489,99 +514,250 @@ function screenHome() {
     </div>
   `;
 
-  document.getElementById('btn-host').onclick = () => { unlockAudio(); screenHostSetup(); };
+  document.getElementById('btn-host').onclick = () => { unlockAudio(); initHostRoomInFirebase(); };
   document.getElementById('btn-join').onclick = joinGame;
   document.getElementById('stest').onclick = () => { unlockAudio(); sBuzz(); toast('Sound working!'); };
 }
 
-/* Setup Screen */
-let setupSel = { cats: ["Bollywood"], count: 20, time: 15, mode: 'buzzer', online: false, suspense: false, dbl: true, neg: 0, topic: '' };
+/* Host Initializing Setup in Firebase */
+let defaultSetupSettings = { cats: [], count: 20, time: 15, mode: 'buzzer', online: false, suspense: false, dbl: true, neg: 0, topic: '' };
 
-function screenHostSetup() {
+async function initHostRoomInFirebase() {
+  const code = ME.code || newCode();
+  ME.code = code;
+
+  // Import lobby players from master_rooms if launched from Super App
+  const initialPlayers = {};
+  if (db && code) {
+    try {
+      const masterSnap = await db.ref(`master_rooms/${code}/players`).get();
+      if (masterSnap.exists()) {
+        const mPlayers = masterSnap.val() || {};
+        Object.entries(mPlayers).forEach(([pid, pData]) => {
+          if (pData && pData.name) {
+            initialPlayers[pid] = { name: pData.name, ready: pData.isHost ? true : false, isHost: !!pData.isHost };
+          }
+        });
+      }
+    } catch(e){}
+  }
+
+  const room = {
+    code,
+    phase: 'setup',
+    hostName: ME.name || 'Host',
+    settings: defaultSetupSettings,
+    players: initialPlayers,
+    scores: {}
+  };
+
+  await db.ref('rooms/' + code).set(room);
+  subscribeRoom(code);
+}
+
+/* RENDER HOST SETUP SCREEN */
+function renderHostSetupUI(r) {
+  const settings = r.settings || defaultSetupSettings;
+  const players = Object.entries(r.players || {});
+  const nonHostPlayers = players.filter(([pid, p]) => !p.isHost && pid !== 'mod');
+  
+  // Check if all joined non-host players are ready
+  const allPlayersReady = nonHostPlayers.length > 0 ? nonHostPlayers.every(([pid, p]) => p.ready) : true;
+  const hasSubject = (settings.topic && settings.topic.trim().length > 0) || (settings.cats && settings.cats.length > 0);
+  const canLaunch = allPlayersReady && hasSubject;
+
   app.innerHTML = `
     <div class="home-hero" style="padding:14px 0 2px">
       <h1>Game Setup</h1>
-      <div class="sub">Host Settings</div>
+      <div class="sub">Room #${r.code}</div>
     </div>
+
+    <!-- PLAYERS LOBBY CARD (NO HOST NAME INPUT) -->
     <div class="card">
-      <label>Host Name</label>
-      <input id="hname" placeholder="HOST NAME" maxlength="14" value="${esc(setupSel.name || '')}" autocomplete="off">
+      <label>Connected Players (${players.length})</label>
+      <div class="scores" style="margin-top:6px">
+        ${players.length ? players.map(([pid, p]) => `
+          <div class="srow">
+            <span>👤 ${esc(p.name)} ${p.isHost ? '👑' : ''}</span>
+            <span class="ready-badge ${p.ready ? 'is-ready' : 'not-ready'}">
+              ${p.ready ? '✅ READY' : '⏳ NOT READY'}
+            </span>
+          </div>
+        `).join('') : '<div class="mini">Waiting for players to join...</div>'}
+      </div>
+    </div>
 
-      <label style="margin-top:14px">Custom AI Topic <span style="color:var(--gold);font-weight:800">(ANY TOPIC)</span></label>
-      <input id="htopic" placeholder="E.G. CARS, MARVEL, 90S HIP HOP" maxlength="40" value="${esc(setupSel.topic || '')}" autocomplete="off">
-      <p class="hint">Type literally anything or choose a quick category below!</p>
+    <div class="card">
+      <label>Custom AI Topic <span style="color:var(--gold);font-weight:800">(ANY TOPIC)</span></label>
+      <input id="htopic" placeholder="E.G. CARS, MARVEL, 90S MUSIC" maxlength="40" value="${esc(settings.topic || '')}" autocomplete="off">
+      <p class="hint">Type literally anything or select quick categories below!</p>
 
-      <label style="margin-top:18px">Quick Categories</label>
+      <label style="margin-top:18px">Quick Categories <span style="color:var(--gold);font-weight:800">(SELECT MULTIPLE)</span></label>
       <div class="chips" id="chips">
-        ${PRESET_CATEGORIES.map(c => `<button class="chip ${setupSel.cats.includes(c) ? 'on' : ''}" data-c="${esc(c)}">${esc(c)}</button>`).join('')}
+        ${PRESET_CATEGORIES.map(c => `
+          <button class="chip ${(settings.cats || []).includes(c) ? 'on' : ''}" data-c="${esc(c)}">
+            ${(settings.cats || []).includes(c) ? '✓ ' : ''}${esc(c)}
+          </button>
+        `).join('')}
       </div>
 
       <label style="margin-top:18px">Play Style</label>
       <div class="seg" id="styleSeg">
-        <button class="segbtn ${!setupSel.online ? 'on' : ''}" data-o="0">🎤 Hosted<small>Host manages controls</small></button>
-        <button class="segbtn ${setupSel.online ? 'on' : ''}" data-o="1">🌐 Online<small>Autoplay for everyone</small></button>
+        <button class="segbtn ${!settings.online ? 'on' : ''}" data-o="0">🎤 Hosted<small>Host manages controls</small></button>
+        <button class="segbtn ${settings.online ? 'on' : ''}" data-o="1">🌐 Online<small>Autoplay for everyone</small></button>
       </div>
 
       <label style="margin-top:18px">Game Mode</label>
       <div class="seg" id="modeSeg">
-        <button class="segbtn ${setupSel.mode === 'buzzer' ? 'on' : ''}" data-m="buzzer">🔔 Buzzer<small>First to buzz answers</small></button>
-        <button class="segbtn ${setupSel.mode === 'fff' ? 'on' : ''}" data-m="fff">⚡ Fastest Finger<small>Multiple choice speed</small></button>
+        <button class="segbtn ${settings.mode === 'buzzer' ? 'on' : ''}" data-m="buzzer">🔔 Buzzer<small>First to buzz answers</small></button>
+        <button class="segbtn ${settings.mode === 'fff' ? 'on' : ''}" data-m="fff">⚡ Fastest Finger<small>Multiple choice speed</small></button>
       </div>
 
-      ${(!setupSel.online && setupSel.mode === 'buzzer') ? `
+      ${(!settings.online && settings.mode === 'buzzer') ? `
         <label style="margin-top:18px">Negative Marking <span style="color:var(--text-muted);font-weight:700">(Wrong Answer Penalty)</span></label>
         <div class="chips" id="negSeg">
-          ${[0, 2, 5, 10].map(v => `<button class="chip ${setupSel.neg === v ? 'on' : ''}" data-n="${v}">${v === 0 ? 'Off' : '−' + v + ' pts'}</button>`).join('')}
+          ${[0, 2, 5, 10].map(v => `<button class="chip ${settings.neg === v ? 'on' : ''}" data-n="${v}">${v === 0 ? 'Off' : '−' + v + ' pts'}</button>`).join('')}
         </div>
       ` : ''}
 
       <label style="margin-top:18px">Questions Count</label>
       <div class="chips" id="counts">
-        ${[10, 15, 20, 30].map(n => `<button class="chip ${setupSel.count === n ? 'on' : ''}" data-n="${n}">${n}</button>`).join('')}
+        ${[10, 15, 20, 30].map(n => `<button class="chip ${settings.count === n ? 'on' : ''}" data-n="${n}">${n}</button>`).join('')}
       </div>
 
       <label style="margin-top:18px">Time Limit Per Question</label>
       <div class="chips" id="times">
-        ${[5, 10, 15, 20, 30].map(t => `<button class="chip ${setupSel.time === t ? 'on' : ''}" data-t="${t}">${t}s</button>`).join('')}
+        ${[5, 10, 15, 20, 30].map(t => `<button class="chip ${settings.time === t ? 'on' : ''}" data-t="${t}">${t}s</button>`).join('')}
       </div>
 
-      <button class="btn btn-gold" id="create" style="margin-top:16px">Generate &amp; Launch Quiz ›</button>
+      <button class="btn btn-gold" id="btn-launch" ${canLaunch ? '' : 'disabled'} style="margin-top:20px">
+        🚀 Generate &amp; Launch Quiz
+      </button>
+      <p class="hint center" style="margin-top:6px; color:${canLaunch ? 'var(--green)' : 'var(--red)'}">
+        ${!hasSubject ? '⚠️ Please type a topic or select a category.' : (!allPlayersReady ? '⏳ Waiting for all players to tap READY...' : '✨ Everyone ready! Tap to launch.')}
+      </p>
     </div>
-    <div class="center"><button class="backlink" id="back">‹ Back</button></div>
+    <div class="center"><button class="backlink" onclick="returnToLauncher()">‹ Exit Room</button></div>
   `;
 
-  const keepValues = () => {
-    setupSel.name = (document.getElementById('hname').value || '').trim();
-    setupSel.topic = (document.getElementById('htopic').value || '').trim();
+  // Real-time update helper to Firebase
+  const updateSettings = (up) => {
+    db.ref(`rooms/${r.code}/settings`).update(up);
   };
 
-  document.querySelectorAll('#modeSeg .segbtn').forEach(b => b.onclick = () => { keepValues(); setupSel.mode = b.dataset.m; screenHostSetup(); });
-  document.querySelectorAll('#styleSeg .segbtn').forEach(b => b.onclick = () => { keepValues(); setupSel.online = b.dataset.o === '1'; screenHostSetup(); });
+  const topicInput = document.getElementById('htopic');
+  topicInput.oninput = () => updateSettings({ topic: topicInput.value.trim() });
+
+  document.querySelectorAll('#modeSeg .segbtn').forEach(b => b.onclick = () => updateSettings({ mode: b.dataset.m }));
+  document.querySelectorAll('#styleSeg .segbtn').forEach(b => b.onclick = () => updateSettings({ online: b.dataset.o === '1' }));
   
+  // Toggle multiple quick categories
   document.querySelectorAll('#chips .chip').forEach(b => b.onclick = () => {
-    keepValues();
     const c = b.dataset.c;
-    // Single select quick categories
-    setupSel.cats = [c];
-    document.getElementById('htopic').value = '';
-    setupSel.topic = '';
-    screenHostSetup();
+    let currentCats = [...(settings.cats || [])];
+    if (currentCats.includes(c)) {
+      currentCats = currentCats.filter(x => x !== c);
+    } else {
+      currentCats.push(c);
+    }
+    updateSettings({ cats: currentCats });
   });
 
   const negContainer = document.getElementById('negSeg');
   if (negContainer) {
-    negContainer.querySelectorAll('.chip').forEach(b => b.onclick = () => { keepValues(); setupSel.neg = parseInt(b.dataset.n, 10); screenHostSetup(); });
+    negContainer.querySelectorAll('.chip').forEach(b => b.onclick = () => updateSettings({ neg: parseInt(b.dataset.n, 10) }));
   }
 
-  document.querySelectorAll('#counts .chip').forEach(b => b.onclick = () => { keepValues(); setupSel.count = parseInt(b.dataset.n, 10); screenHostSetup(); });
-  document.querySelectorAll('#times .chip').forEach(b => b.onclick = () => { keepValues(); setupSel.time = parseInt(b.dataset.t, 10); screenHostSetup(); });
-  document.getElementById('back').onclick = returnToLauncher;
+  document.querySelectorAll('#counts .chip').forEach(b => b.onclick = () => updateSettings({ count: parseInt(b.dataset.n, 10) }));
+  document.querySelectorAll('#times .chip').forEach(b => b.onclick = () => updateSettings({ time: parseInt(b.dataset.t, 10) }));
 
-  document.getElementById('create').onclick = () => {
-    keepValues();
-    if (!setupSel.name) { toast('Enter host name'); return; }
-    createRoom();
+  const launchBtn = document.getElementById('btn-launch');
+  if (launchBtn) {
+    launchBtn.onclick = () => startQuestionGeneration(r);
+  }
+}
+
+/* RENDER PLAYER SETUP SCREEN (REAL-TIME SYNC) */
+function renderPlayerSetupUI(r) {
+  const settings = r.settings || defaultSetupSettings;
+  const myData = (r.players || {})[ME.id] || {};
+  const isReady = !!myData.ready;
+
+  const catsList = settings.cats && settings.cats.length ? settings.cats.join(', ') : '';
+  const topicLabel = settings.topic ? settings.topic : (catsList || 'General Knowledge');
+
+  app.innerHTML = `
+    <div class="home-hero" style="padding:14px 0 2px">
+      <h1>Room #${r.code}</h1>
+      <div class="sub">Host is setting up</div>
+    </div>
+
+    <div class="card">
+      <span class="tag" style="background:var(--gold);color:#07090e;margin-bottom:12px">LIVE GAME RULES</span>
+      
+      <div style="margin-top:10px">
+        <label>Selected Topic / Categories</label>
+        <div style="font-size:1.1rem;font-weight:900;color:#fff">${esc(topicLabel)}</div>
+      </div>
+
+      <div class="row" style="margin-top:14px">
+        <div style="flex:1">
+          <label>Game Mode</label>
+          <div style="font-weight:800;color:var(--cyan)">${settings.mode === 'buzzer' ? '🔔 Buzzer' : '⚡ Fastest Finger'}</div>
+        </div>
+        <div style="flex:1">
+          <label>Play Style</label>
+          <div style="font-weight:800;color:var(--gold)">${settings.online ? '🌐 Online Autoplay' : '🎤 Hosted'}</div>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:14px">
+        <div style="flex:1">
+          <label>Questions</label>
+          <div style="font-weight:800;color:#fff">${settings.count || 20} Questions</div>
+        </div>
+        <div style="flex:1">
+          <label>Timer</label>
+          <div style="font-weight:800;color:#fff">${settings.time || 15}s per Q</div>
+        </div>
+      </div>
+
+      ${(!settings.online && settings.mode === 'buzzer' && settings.neg) ? `
+        <div style="margin-top:14px">
+          <label>Wrong Answer Penalty</label>
+          <div style="font-weight:800;color:var(--red)">−${settings.neg} Points</div>
+        </div>
+      ` : ''}
+    </div>
+
+    <!-- PLAYER READY TOGGLE BUTTON -->
+    <div class="card center">
+      <label>YOUR STATUS</label>
+      <button class="btn ${isReady ? 'btn-teal' : 'btn-gold'}" id="btn-toggle-ready" style="font-size:1.1rem;padding:16px">
+        ${isReady ? '✅ YOU ARE READY! (Tap to un-ready)' : '✋ I AM READY'}
+      </button>
+    </div>
+
+    <div class="center"><button class="backlink" onclick="returnToLauncher()">Exit Room</button></div>
+  `;
+
+  document.getElementById('btn-toggle-ready').onclick = () => {
+    unlockAudio();
+    const nextState = !isReady;
+    db.ref(`rooms/${r.code}/players/${ME.id}/ready`).set(nextState);
   };
+}
+
+function renderWaitingForHostSetup() {
+  app.innerHTML = `
+    <div class="home-hero" style="margin: auto 0;">
+      <div class="brain-pulse">⚡</div>
+      <h1 style="font-size:1.8rem">CONNECTING TO ROOM</h1>
+      <div class="sub" style="margin-top:8px">ROOM #${ME.code}</div>
+      <div class="spinner" style="margin-top:20px"></div>
+    </div>
+    <div class="center"><button class="backlink" onclick="returnToLauncher()">Exit Room</button></div>
+  `;
 }
 
 const FUN_TRIVIA_TIPS = [
@@ -610,26 +786,13 @@ function screenGenerating(msg) {
   }
 }
 
-function renderWaitingForHostScreen(code) {
-  app.innerHTML = `
-    <div class="home-hero" style="margin: auto 0;">
-      <div class="brain-pulse">⚡</div>
-      <h1 style="font-size:1.8rem">HOST IS CHOOSING TOPIC</h1>
-      <div class="sub" style="margin-top:8px">ROOM #${code}</div>
-      <div class="pill-live" style="margin-top:16px"><span class="dot"></span>WAITING FOR HOST TO LAUNCH</div>
-      <div class="spinner" style="margin-top:20px"></div>
-    </div>
-    <div class="center"><button class="backlink" onclick="returnToLauncher()">Exit Room</button></div>
-  `;
-}
-
-/* Parallel AI Chunk Engine */
+/* Parallel AI Chunk Engine with Equal Subject Split */
 async function callGenChunk(topic, cats, count, avoid) {
   try {
     const res = await fetch('/api/questions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ topic: topic || '', categories: cats, count, avoid: avoid || [] })
+      body: JSON.stringify({ topic: topic || '', categories: cats || [], count, avoid: avoid || [] })
     });
     if (!res.ok) return [];
     const data = await res.json();
@@ -641,14 +804,34 @@ async function callGenChunk(topic, cats, count, avoid) {
 }
 
 async function generateAllAIParallel(topic, cats, totalWanted) {
-  const CHUNK_SIZE = 5;
-  const chunkCount = Math.ceil(totalWanted / CHUNK_SIZE);
-  const tasks = [];
-
-  for (let i = 0; i < chunkCount; i++) {
-    const qty = Math.min(CHUNK_SIZE, totalWanted - (i * CHUNK_SIZE));
-    tasks.push(callGenChunk(topic, cats, qty, []));
+  let subjects = [];
+  if (topic && topic.trim().length > 0) {
+    subjects.push(topic.trim());
   }
+  if (Array.isArray(cats) && cats.length > 0) {
+    cats.forEach(c => {
+      if (c && !subjects.includes(c)) subjects.push(c);
+    });
+  }
+  if (subjects.length === 0) {
+    subjects = ["General Knowledge"];
+  }
+
+  // Equal division per subject
+  const perSubject = Math.floor(totalWanted / subjects.length);
+  let remainder = totalWanted % subjects.length;
+
+  const tasks = [];
+  const CHUNK_SIZE = 5;
+
+  subjects.forEach((subj, idx) => {
+    let qty = perSubject + (idx === 0 ? remainder : 0);
+    const numChunks = Math.ceil(qty / CHUNK_SIZE);
+    for (let i = 0; i < numChunks; i++) {
+      const chunkQty = Math.min(CHUNK_SIZE, qty - (i * CHUNK_SIZE));
+      tasks.push(callGenChunk(subj, [], chunkQty, []));
+    }
+  });
 
   const results = await Promise.all(tasks);
   const combined = [];
@@ -664,81 +847,66 @@ async function generateAllAIParallel(topic, cats, totalWanted) {
   return combined;
 }
 
-async function createRoom() {
+async function startQuestionGeneration(r) {
   unlockAudio();
-  
-  // Use ME.code if launched from Super App, else generate code
-  let code = ME.code || newCode();
-  if (!ME.code) {
-    for (let i = 0; i < 4; i++) { const s = await db.ref('rooms/' + code).get(); if (!s.exists()) break; code = newCode(); }
-  }
+  const settings = r.settings || defaultSetupSettings;
+  const total = settings.count || 20;
+  const topicLabel = settings.topic || (settings.cats ? settings.cats.join(', ') : 'General Knowledge');
 
-  const total = setupSel.count || 20;
-  const topicLabel = setupSel.topic || setupSel.cats.join(', ');
-  screenGenerating(`Building ${total} Trivia Questions...`);
+  // Broadcast 'generating' phase to ALL players in Firebase
+  await db.ref(`rooms/${r.code}`).update({
+    phase: 'generating',
+    topicLabel: topicLabel
+  });
 
-  const aiQ = await generateAllAIParallel(setupSel.topic, setupSel.cats, total);
+  const aiQ = await generateAllAIParallel(settings.topic, settings.cats, total);
 
   if (aiQ.length < 3) {
-    alert('AI question generation failed or returned too few questions. Please check connection and try again.');
-    screenHostSetup();
+    alert('AI question generation returned too few questions. Please check connection and try again.');
+    await db.ref(`rooms/${r.code}/phase`).set('setup');
     return;
   }
 
-  let tl = Math.min(30, Math.max(5, setupSel.time));
+  let tl = Math.min(30, Math.max(5, settings.time));
   const dblSet = {};
-  if (setupSel.dbl) {
+  if (settings.dbl) {
     for (let i = 0; i < aiQ.length; i++) { if (Math.random() < 0.25) dblSet[i] = true; }
   }
 
-  const myId = setupSel.online ? uid() : 'mod';
-  const initialPlayers = {};
-  const initialScores = {};
+  const myId = settings.online ? uid() : 'mod';
+  const players = r.players || {};
+  const scores = {};
+  Object.keys(players).forEach(pid => { scores[pid] = 0; });
 
-  if (setupSel.online) { 
-    initialPlayers[myId] = setupSel.name; 
-    initialScores[myId] = 0; 
-  }
-
-  // Pull existing players from Super App lobby so they connect automatically
-  if (ME.code && db) {
-    try {
-      const masterSnap = await db.ref(`master_rooms/${ME.code}/players`).get();
-      if (masterSnap.exists()) {
-        const mPlayers = masterSnap.val() || {};
-        Object.entries(mPlayers).forEach(([pid, pData]) => {
-          if (pData && pData.name) {
-            initialPlayers[pid] = pData.name;
-            initialScores[pid] = 0;
-          }
-        });
-      }
-    } catch(e){}
-  }
-
-  const room = {
-    code, created: firebase.database.ServerValue.TIMESTAMP,
-    hostName: setupSel.name, mode: setupSel.mode,
-    online: !!setupSel.online, suspense: !!setupSel.suspense,
-    dblEnabled: !!setupSel.dbl, dblSet, dbl: false, neg: setupSel.neg || 0,
-    engineId: setupSel.online ? myId : null,
-    phase: 'countdown', phaseAt: null, seq: 0,
-    cats: setupSel.cats, timeLimit: tl,
-    src: 'ai', topic: setupSel.topic || null, aiQ,
-    started: false, finished: false, qIndex: 0,
-    revealed: false, revealedAt: null,
-    buzzedBy: null, buzzedAt: null, result: null,
-    answers: null, showAnswer: false, options: null,
-    players: initialPlayers, scores: initialScores
-  };
-
-  await db.ref('rooms/' + code).set(room);
-
-  ME = setupSel.online
-    ? { role: 'player', name: setupSel.name, code, id: myId }
-    : { role: 'mod', name: setupSel.name, code, id: 'mod' };
-
-  subscribeRoom(code);
+  // Update room with questions and start game
+  await db.ref('rooms/' + r.code).update({
+    hostName: r.hostName || 'Host',
+    mode: settings.mode,
+    online: !!settings.online,
+    suspense: !!settings.suspense,
+    dblEnabled: !!settings.dbl,
+    dblSet, dbl: false,
+    neg: settings.neg || 0,
+    engineId: settings.online ? myId : null,
+    phase: 'countdown',
+    phaseAt: firebase.database.ServerValue.TIMESTAMP,
+    seq: 0,
+    timeLimit: tl,
+    src: 'ai',
+    aiQ,
+    started: true,
+    finished: false,
+    qIndex: 0,
+    revealed: false,
+    revealedAt: null,
+    buzzedBy: null,
+    buzzedAt: null,
+    result: null,
+    answers: null,
+    showAnswer: false,
+    options: null,
+    scores
+  });
 }
 
 async function joinGame() {
@@ -752,12 +920,12 @@ async function joinGame() {
     const snap = await db.ref('rooms/' + code).get();
     if (!snap.exists()) { toast('Room not found'); return; }
     const existing = Object.values(snap.val().players || {});
-    if (existing.some(n => String(n).trim().toLowerCase() === name.toLowerCase())) {
+    if (existing.some(n => String(n.name).trim().toLowerCase() === name.toLowerCase())) {
       toast('Name already taken'); return;
     }
     const id = uid();
     const up = {};
-    up['rooms/' + code + '/players/' + id] = name;
+    up['rooms/' + code + '/players/' + id] = { name, ready: false };
     up['rooms/' + code + '/scores/' + id] = 0;
     await db.ref().update(up);
 
@@ -783,7 +951,6 @@ function returnToLauncher() {
 
 async function joinFromLauncher(roomCode, pName, pId, isHostFlag) {
   ME = { role: isHostFlag ? 'mod' : 'player', name: pName, code: roomCode, id: isHostFlag ? 'mod' : (pId || uid()) };
-  setupSel.name = pName;
 
   if (typeof db !== 'undefined' && roomCode) {
     db.ref(`master_rooms/${roomCode}/status`).on('value', snap => {
@@ -794,11 +961,18 @@ async function joinFromLauncher(roomCode, pName, pId, isHostFlag) {
   }
 
   if (isHostFlag) { 
-    screenHostSetup(); 
+    initHostRoomInFirebase();
     return; 
   }
 
-  // Subscribe to room updates gracefully
+  // Sync player registration into room
+  if (db) {
+    await db.ref(`rooms/${roomCode}/players/${ME.id}`).update({
+      name: pName,
+      ready: false
+    });
+  }
+
   subscribeRoom(roomCode);
 }
 
@@ -807,7 +981,7 @@ function renderResults(r) {
   stopTicking();
   const players = Object.entries(playersObj(r));
   const sc = scoresObj(r);
-  const ranked = players.map(([id, nm]) => ({ id, nm, pts: sc[id] || 0 })).sort((a, b) => b.pts - a.pts);
+  const ranked = players.map(([id, p]) => ({ id, nm: typeof p === 'object' ? p.name : p, pts: sc[id] || 0 })).sort((a, b) => b.pts - a.pts);
   const medal = p => p === 1 ? '🥇' : p === 2 ? '🥈' : p === 3 ? '🥉' : '#' + p;
   const w = ranked[0];
 
@@ -849,7 +1023,7 @@ function renderOnline(r) {
       </div>
       <div class="scores">
         <div class="ans-label">Players Connected (${players.length})</div>
-        ${players.map(([id, nm]) => `<div class="srow"><span>👤 ${esc(nm)}</span></div>`).join('')}
+        ${players.map(([id, p]) => `<div class="srow"><span>👤 ${esc(typeof p === 'object' ? p.name : p)}</span></div>`).join('')}
       </div>
       <div style="margin-top:auto">
         ${isEngine ? `<button class="btn btn-gold" id="start">▶ Start Quiz</button>` : `<div class="mini">Waiting for host to begin…</div>`}
@@ -931,7 +1105,7 @@ function renderMod(r) {
       <div class="modbar"><div><div class="sub">Host Control</div><div class="pin">#${r.code}</div></div></div>
       <div class="qbox center"><div class="ans-label">Room Code</div><div style="font-size:44px;font-weight:900;color:var(--gold)">${r.code}</div></div>
       <div class="scores"><div class="ans-label">Players Joined (${players.length})</div>
-        ${players.map(([id, nm]) => `<div class="srow"><span>👤 ${esc(nm)}</span></div>`).join('')}
+        ${players.map(([id, p]) => `<div class="srow"><span>👤 ${esc(typeof p === 'object' ? p.name : p)}</span></div>`).join('')}
       </div>
       <button class="btn btn-gold" id="start" ${players.length ? '' : 'disabled'} style="margin-top:auto">Start Game</button>`;
     const s = document.getElementById('start');
@@ -952,7 +1126,8 @@ function renderMod(r) {
     const lock = document.getElementById('lock'); if (lock) lock.onclick = fffLock;
     const next = document.getElementById('next'); if (next) next.onclick = () => modNav(1);
   } else {
-    const bName = r.buzzedBy ? playersObj(r)[r.buzzedBy] : null;
+    const bData = r.buzzedBy ? playersObj(r)[r.buzzedBy] : null;
+    const bName = typeof bData === 'object' ? bData.name : bData;
     app.innerHTML = `
       <div class="modbar"><div><div class="sub">Host Buzzer Control</div></div><div class="qprog">Q ${r.qIndex + 1}/${deckLen(r)}</div></div>
       <div class="qbox"><span class="cat-chip">${esc(q.c)}</span><div class="qtext">${esc(q.q)}</div></div>

@@ -4,9 +4,15 @@
 const GEMINI_MODEL = 'gemini-3.6-flash';
 
 function buildPrompt({ topic, categories, count, avoid }) {
-  const subject = topic
-    ? `the topic "${topic}"`
-    : `these categories: ${(categories || ['General Knowledge']).join(', ')}`;
+  let subject = '';
+  if (topic && String(topic).trim()) {
+    subject = `the topic "${String(topic).trim()}"`;
+  } else if (Array.isArray(categories) && categories.length > 0) {
+    subject = `these categories: ${categories.join(', ')}`;
+  } else {
+    subject = 'General Knowledge trivia';
+  }
+
   const avoidLine = (avoid && avoid.length)
     ? `\nDo NOT repeat or rephrase any of these questions:\n- ${avoid.slice(0, 30).join('\n- ')}\n`
     : '';
