@@ -124,17 +124,13 @@
   .optbtn.wrongpick .letter { background: var(--red); color: #fff; }
 
   /* Animated Loading & Fun Overlay */
-  .loading-hero { text-align: center; padding: 30px 16px; margin: auto; }
-  .brain-pulse { font-size: 4.5rem; line-height: 1; filter: drop-shadow(0 0 25px var(--gold-glow)); animation: pulse 1.2s infinite alternate ease-in-out; margin-bottom: 12px; }
+  .loading-hero { text-align: center; padding: 20px 16px; margin: auto 0; display: flex; flex-direction: column; align-items: center; }
+  .brain-pulse { font-size: 4rem; line-height: 1; filter: drop-shadow(0 0 25px var(--gold-glow)); animation: pulse 1.2s infinite alternate ease-in-out; margin-bottom: 10px; }
   @keyframes pulse { 0% { transform: scale(0.92); filter: drop-shadow(0 0 10px var(--gold-glow)); } 100% { transform: scale(1.15); filter: drop-shadow(0 0 35px var(--gold)); } }
-  .fun-tip { font-size: 0.9rem; font-weight: 700; color: var(--gold); margin-top: 10px; letter-spacing: 0.5px; min-height: 24px; }
+  .fun-tip { font-size: 0.85rem; font-weight: 700; color: var(--gold); margin-top: 8px; letter-spacing: 0.5px; min-height: 24px; }
   .ready-badge { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 12px; }
   .ready-badge.is-ready { background: rgba(16, 185, 129, 0.2); color: var(--green); border: 1px solid var(--green); }
   .ready-badge.not-ready { background: rgba(255, 42, 85, 0.15); color: var(--red); border: 1px solid var(--red); }
-
-  /* Mini Reaction Test Button */
-  .reaction-box { margin-top: 20px; background: rgba(255, 255, 255, 0.05); border: 1.5px solid var(--glass-border); border-radius: 16px; padding: 16px; }
-  .react-btn { background: var(--gold); color: #07090e; font-weight: 900; font-size: 1.1rem; border: none; border-radius: 12px; padding: 14px; width: 100%; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -205,16 +201,18 @@ function playersObj(r) { return r.players || {}; }
 function scoresObj(r) { return r.scores || {}; }
 function answersObj(r) { return r.answers || {}; }
 function deckLen(r) { return r && r.targetCount ? r.targetCount : (r && r.aiQ ? r.aiQ.length : 20); }
+
 function currentQ(r) {
-  if (r && r.aiQ && r.aiQ.length) {
+  if (r && r.aiQ && Array.isArray(r.aiQ) && r.aiQ.length > 0 && r.aiQ[r.qIndex]) {
     const q = r.aiQ[Math.min(r.qIndex, r.aiQ.length - 1)];
-    return { c: q.cat || 'AI', q: q.q, a: q.a, opts: q.opts };
+    return { c: q.cat || 'AI', q: q.q, a: q.a, opts: q.opts, valid: true };
   }
-  return { c: 'AI', q: 'Loading question...', a: '', opts: [] };
+  return { c: 'AI', q: 'Loading question...', a: '', opts: [], valid: false };
 }
+
 function optionsForRoom(r) {
   const q = currentQ(r);
-  return q.opts && q.opts.length >= 4 ? shuffle(q.opts.slice(0, 4)) : [];
+  return q.valid && q.opts && q.opts.length >= 4 ? shuffle(q.opts.slice(0, 4)) : [];
 }
 function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
@@ -765,77 +763,102 @@ function renderWaitingForHostSetup() {
 
 const FUN_TRIVIA_TIPS = [
   "🧠 Warming up AI brain cells...",
-  "⚡ Polishing the buzzers for maximum speed...",
+  "⚡ Polishing buzzers for maximum speed...",
   "✨ Crafting spicy trivia questions...",
-  "🎯 Balancing difficulty levels for party night...",
+  "🎯 Balancing difficulty for party night...",
   "🔥 Fact-checking trivia in the matrix..."
 ];
 
 let reactionStartTime = 0;
 let reactionBestScore = null;
 
+/* REDESIGNED INTERACTIVE LOADING SCREEN WITH CIRCULAR BUZZER */
 function screenGenerating(msg) {
   let tipIndex = 0;
   app.innerHTML = `<div class="loading-hero">
-    <div class="brain-pulse">🧠</div>
-    <div class="qtext" style="font-size: 1.3rem;">Building Trivia Questions...</div>
-    <div class="fun-tip" id="loading-fun-tip">${FUN_TRIVIA_TIPS[0]}</div>
-    
-    <!-- INTERACTIVE REACTION TEST MINI-GAME -->
-    <div class="reaction-box">
-      <label>Warm-up Mini Game</label>
-      <p class="hint" style="margin-bottom:10px">Test your tap speed while questions generate!</p>
-      <button class="react-btn" id="react-target">⚡ TAP WHEN GOLD!</button>
-      <div class="mini" id="react-score" style="margin-top:8px;font-weight:800;color:var(--cyan)">
-        ${reactionBestScore ? 'Your speed: ' + reactionBestScore + 'ms' : 'Tap to test reaction time'}
+    <div class="modbar" style="width:100%">
+      <div><div class="sub">AI Room</div><div class="pin">#${ME.code || '----'}</div></div>
+      <div class="pill-live"><span class="dot"></span>GENERATING</div>
+    </div>
+
+    <div style="text-align:center; margin-top: 10px;">
+      <div class="brain-pulse">🧠</div>
+      <div class="qtext" style="font-size: 1.2rem;">Building Trivia Questions...</div>
+      <div class="fun-tip" id="loading-fun-tip">${FUN_TRIVIA_TIPS[0]}</div>
+    </div>
+
+    <!-- INTERACTIVE CIRCULAR GAME BUZZER -->
+    <div class="buzzer" style="margin-top: 24px; flex-direction: column; align-items: center;">
+      <button class="bz" id="react-target" style="font-size: clamp(15px, 4.2vw, 20px); line-height: 1.2; padding: 10px;">
+        TAP TO WARM UP!
+      </button>
+      <div class="mini" id="react-score" style="margin-top: 14px; font-weight: 800; color: var(--cyan); font-size: 13px;">
+        ${reactionBestScore ? '⚡ Best Speed: ' + reactionBestScore + ' ms' : 'Tap the buzzer to test your speed!'}
       </div>
     </div>
 
-    <div class="spinner" style="margin-top: 20px;"></div>
+    <div class="spinner" style="margin-top: 24px;"></div>
   </div>`;
 
   const tipEl = document.getElementById('loading-fun-tip');
   if (tipEl) {
-    setInterval(() => {
+    clearInterval(window._tipTimer);
+    window._tipTimer = setInterval(() => {
       tipIndex = (tipIndex + 1) % FUN_TRIVIA_TIPS.length;
-      if (tipEl) tipEl.innerText = FUN_TRIVIA_TIPS[tipIndex];
+      const el = document.getElementById('loading-fun-tip');
+      if (el) el.innerText = FUN_TRIVIA_TIPS[tipIndex];
     }, 2000);
   }
 
-  // Interactive Reaction Speed Mini-Game logic
+  // Interactive Reaction Speed Mini-Game logic using native .bz styles
   const reactBtn = document.getElementById('react-target');
   const scoreEl = document.getElementById('react-score');
   let state = 'idle';
 
   if (reactBtn) {
     reactBtn.onclick = () => {
+      unlockAudio();
       if (state === 'idle') {
         state = 'waiting';
-        reactBtn.style.background = '#333';
-        reactBtn.style.color = '#fff';
+        reactBtn.className = 'bz locked';
         reactBtn.innerText = 'WAIT FOR GOLD...';
         const delay = 1000 + Math.random() * 2000;
         setTimeout(() => {
-          if (state === 'waiting') {
+          if (state === 'waiting' && document.getElementById('react-target')) {
             state = 'ready';
             reactionStartTime = Date.now();
-            reactBtn.style.background = 'var(--gold)';
-            reactBtn.style.color = '#07090e';
-            reactBtn.innerText = '⚡ TAP NOW!';
+            const b = document.getElementById('react-target');
+            if (b) {
+              b.className = 'bz mine';
+              b.innerText = '⚡ BUZZ NOW!';
+            }
           }
         }, delay);
       } else if (state === 'waiting') {
         state = 'idle';
-        reactBtn.style.background = 'var(--red)';
-        reactBtn.innerText = 'TOO EARLY! Tap to Retry';
+        sWrong();
+        reactBtn.className = 'bz locked';
+        reactBtn.innerText = 'TOO EARLY!';
+        setTimeout(() => {
+          if (document.getElementById('react-target')) {
+            reactBtn.className = 'bz';
+            reactBtn.innerText = 'TAP TO RETRY';
+          }
+        }, 1000);
       } else if (state === 'ready') {
         const ms = Date.now() - reactionStartTime;
         reactionBestScore = reactionBestScore ? Math.min(reactionBestScore, ms) : ms;
         state = 'idle';
         sCorrect();
-        reactBtn.style.background = 'var(--green)';
-        reactBtn.innerText = `${ms} ms! TAP TO RETRY`;
+        reactBtn.className = 'bz mine';
+        reactBtn.innerText = `${ms} ms!`;
         if (scoreEl) scoreEl.innerText = `⚡ Best Speed: ${reactionBestScore} ms`;
+        setTimeout(() => {
+          if (document.getElementById('react-target')) {
+            reactBtn.className = 'bz';
+            reactBtn.innerText = 'TAP AGAIN';
+          }
+        }, 1500);
       }
     };
   }
@@ -844,7 +867,7 @@ function screenGenerating(msg) {
 /* Parallel AI Chunk Engine with 8.5s Timeout Safeguard */
 async function callGenChunkWithTimeout(topic, cats, count, avoid) {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 8500); // 8.5 seconds timeout
+  const timeoutId = setTimeout(() => controller.abort(), 8500);
 
   try {
     const res = await fetch('/api/questions', {
@@ -911,10 +934,9 @@ async function streamRemainingQuestionsInBackground(code, topic, cats, targetCou
     const newBatch = await fetchAIBatch(topic, cats, missingCount, currentQuestions);
 
     if (newBatch.length === 0) {
-      // Small pause before retrying once if network stalled
       await new Promise(r => setTimeout(r, 1500));
       const retryBatch = await fetchAIBatch(topic, cats, missingCount, currentQuestions);
-      if (retryBatch.length === 0) break; // Keep whatever deck we currently have
+      if (retryBatch.length === 0) break;
       currentQuestions = currentQuestions.concat(retryBatch);
     } else {
       currentQuestions = currentQuestions.concat(newBatch);
@@ -937,13 +959,23 @@ async function startQuestionGeneration(r) {
     topicLabel: topicLabel
   });
 
-  // Step 1: Initial Batch Request
-  const initialBatchNeeded = Math.min(10, total);
-  let initialQuestions = await fetchAIBatch(settings.topic, settings.cats, initialBatchNeeded, []);
+  // Step 1: Initial Batch Request with Retry Loop - DO NOT LAUNCH UNTIL WE HAVE QUESTIONS
+  let initialQuestions = [];
+  let attempts = 0;
 
-  // Step 2: Emergency Retry if initial batch timed out or returned < 3
-  if (initialQuestions.length < 3) {
-    initialQuestions = await fetchAIBatch(settings.topic, settings.cats, 5, initialQuestions);
+  while (initialQuestions.length === 0 && attempts < 4) {
+    attempts++;
+    initialQuestions = await fetchAIBatch(settings.topic, settings.cats, Math.min(5, total), []);
+    if (initialQuestions.length === 0) {
+      await new Promise(res => setTimeout(res, 1500));
+    }
+  }
+
+  // Fallback: If network still returned 0 questions after 4 attempts, return to setup UI
+  if (initialQuestions.length === 0) {
+    toast('AI service delayed. Please tap Launch again.');
+    await db.ref(`rooms/${r.code}/phase`).set('setup');
+    return;
   }
 
   let tl = Math.min(30, Math.max(5, settings.time));
@@ -963,7 +995,7 @@ async function startQuestionGeneration(r) {
     scores[myId] = 0;
   }
 
-  // Step 3: Launch Game Immediately with target count locked in
+  // Step 2: ONLY NOW transition to countdown and active gameplay
   await db.ref('rooms/' + r.code).update({
     hostName: r.hostName || 'Host',
     mode: settings.mode,
@@ -999,7 +1031,7 @@ async function startQuestionGeneration(r) {
     ? { role: 'player', name: r.hostName || 'Host', code: r.code, id: myId }
     : { role: 'mod', name: r.hostName || 'Host', code: r.code, id: 'mod' };
 
-  // Step 4: Stream remaining questions silently in the background
+  // Step 3: Stream remaining questions silently in the background
   if (initialQuestions.length < total) {
     streamRemainingQuestionsInBackground(r.code, settings.topic, settings.cats, total, initialQuestions);
   }
@@ -1142,6 +1174,13 @@ function renderOnline(r) {
   }
 
   const q = currentQ(r);
+
+  // Safety Gate: If question at qIndex isn't synced yet, show loading screen
+  if (!q.valid) {
+    screenGenerating('Syncing Question...');
+    return;
+  }
+
   const head = `<div class="modbar">
     <div><div class="sub">${esc(ME.name)}</div><div style="font-weight:900">#${r.code}</div></div>
     <div class="center"><div class="ans-label">${r.suspense ? 'Hidden' : 'Score'}</div><div style="font-size:22px;font-weight:900;color:var(--gold)">${myScoreDisplay(r)}</div></div>
@@ -1263,6 +1302,11 @@ function renderMod(r) {
   const players = Object.entries(playersObj(r));
   const q = currentQ(r);
 
+  if (!q.valid) {
+    screenGenerating('Syncing Question...');
+    return;
+  }
+
   if (!r.started) {
     app.innerHTML = `
       <div class="modbar"><div><div class="sub">Host Control</div><div class="pin">#${r.code}</div></div></div>
@@ -1379,6 +1423,11 @@ function renderPlayer(r) {
   const opts = r.options || [];
   const ans = answersObj(r);
   const my = ans[ME.id];
+
+  if (!q.valid) {
+    screenGenerating('Syncing Question...');
+    return;
+  }
 
   if (!r.started) {
     app.innerHTML = `<div class="qbox center" style="margin:auto"><div style="font-size:38px">⏳</div><div class="qtext">Waiting for host to start…</div></div>`;
