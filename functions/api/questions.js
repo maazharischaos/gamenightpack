@@ -1,7 +1,7 @@
-// Cloudflare Pages Function: generates quiz questions strictly via Gemini 2.0 Flash.
+// Cloudflare Pages Function: generates quiz questions strictly via Gemini 3.6 Flash.
 // Reachable at /api/questions
 
-const GEMINI_MODEL = 'gemini-2.0-flash';
+const GEMINI_MODEL = 'gemini-3.6-flash';
 
 function buildPrompt({ topic, categories, count, avoid }) {
   let subject = '';
@@ -66,7 +66,7 @@ function clean(list, count, seenKeys) {
 }
 
 async function callGemini(key, prompt) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(key)}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
   
   const payload = {
     contents: [{ parts: [{ text: prompt }] }],
@@ -79,7 +79,10 @@ async function callGemini(key, prompt) {
 
   const res = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'x-goog-api-key': key
+    },
     body: JSON.stringify(payload)
   });
 
