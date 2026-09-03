@@ -123,11 +123,11 @@
   .optbtn.wrongpick { border-color: var(--red); background: rgba(255, 42, 85, 0.2); }
   .optbtn.wrongpick .letter { background: var(--red); color: #fff; }
 
-  /* Animated Loading & Fun Overlay */
-  .loading-hero { text-align: center; padding: 10px 16px; margin: 0; display: flex; flex-direction: column; align-items: center; flex: 1; justify-content: center; }
-  .brain-pulse { font-size: 3.5rem; line-height: 1; filter: drop-shadow(0 0 25px var(--gold-glow)); animation: pulse 1.2s infinite alternate ease-in-out; margin-bottom: 6px; }
+  /* Adjusted Loading Screen Spacing & Layout */
+  .loading-hero { text-align: center; padding: 10px 16px; margin: 0; display: flex; flex-direction: column; align-items: center; flex: 1; justify-content: space-between; min-height: 100%; }
+  .brain-pulse { font-size: 5rem; line-height: 1; filter: drop-shadow(0 0 25px var(--gold-glow)); animation: pulse 1.2s infinite alternate ease-in-out; margin-bottom: 12px; }
   @keyframes pulse { 0% { transform: scale(0.92); filter: drop-shadow(0 0 10px var(--gold-glow)); } 100% { transform: scale(1.15); filter: drop-shadow(0 0 35px var(--gold)); } }
-  .fun-tip { font-size: 0.85rem; font-weight: 700; color: var(--gold); margin-top: 6px; letter-spacing: 0.5px; min-height: 20px; }
+  .fun-tip { font-size: 1rem; font-weight: 700; color: var(--gold); margin-top: 10px; letter-spacing: 0.5px; min-height: 24px; }
   .ready-badge { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 12px; }
   .ready-badge.is-ready { background: rgba(16, 185, 129, 0.2); color: var(--green); border: 1px solid var(--green); }
   .ready-badge.not-ready { background: rgba(255, 42, 85, 0.15); color: var(--red); border: 1px solid var(--red); }
@@ -198,15 +198,18 @@ function bindTap(el, fn) {
 }
 
 function playersObj(r) { return (r && r.players) || {}; }
+
 function realPlayersObj(r) {
   const pMap = playersObj(r);
   const out = {};
   Object.entries(pMap).forEach(([id, p]) => {
+    if (!p) return;
     const isHost = (typeof p === 'object' && p.isHost) || id === 'mod';
     if (!isHost) out[id] = p;
   });
   return out;
 }
+
 function scoresObj(r) { return (r && r.scores) || {}; }
 function answersObj(r) { return (r && r.answers) || {}; }
 function deckLen(r) { return r && r.targetCount ? r.targetCount : (r && r.aiQ ? r.aiQ.length : 20); }
@@ -562,13 +565,18 @@ async function initHostRoomInFirebase() {
   subscribeRoom(code);
 }
 
-/* RENDER HOST SETUP SCREEN */
+/* RENDER HOST SETUP SCREEN (FIXED FOCUS UN-SELECTING BUG) */
 function renderHostSetupUI(r) {
+  const activeEl = document.activeElement;
+  const isTopicFocused = activeEl && activeEl.id === 'htopic';
+  const selStart = isTopicFocused ? activeEl.selectionStart : null;
+  const selEnd = isTopicFocused ? activeEl.selectionEnd : null;
+
   const settings = r.settings || defaultSetupSettings;
   const players = Object.entries(r.players || {});
-  const nonHostPlayers = players.filter(([pid, p]) => !p.isHost && pid !== 'mod');
+  const nonHostPlayers = players.filter(([pid, p]) => p && !p.isHost && pid !== 'mod');
   
-  const allPlayersReady = nonHostPlayers.length > 0 ? nonHostPlayers.every(([pid, p]) => p.ready) : true;
+  const allPlayersReady = nonHostPlayers.length > 0 ? nonHostPlayers.every(([pid, p]) => p && p.ready) : true;
   const hasSubject = (settings.topic && settings.topic.trim().length > 0) || (settings.cats && settings.cats.length > 0);
   const canLaunch = allPlayersReady && hasSubject;
 
@@ -581,14 +589,19 @@ function renderHostSetupUI(r) {
     <div class="card">
       <label>Connected Players (${players.length})</label>
       <div class="scores" style="margin-top:6px">
-        ${players.length ? players.map(([pid, p]) => `
-          <div class="srow">
-            <span>👤 ${esc(p.name)} ${p.isHost ? '👑' : ''}</span>
-            <span class="ready-badge ${p.ready ? 'is-ready' : 'not-ready'}">
-              ${p.ready ? '✅ READY' : '⏳ NOT READY'}
-            </span>
-          </div>
-        `).join('') : '<div class="mini">Waiting for players to join...</div>'}
+        ${players.length ? players.map(([pid, p]) => {
+          const pName = (p && typeof p === 'object' ? p.name : p) || 'Player';
+          const isReady = p && typeof p === 'object' ? !!p.ready : false;
+          const isHost = p && typeof p === 'object' ? !!p.isHost : false;
+          return `
+            <div class="srow">
+              <span>👤 ${esc(pName)} ${isHost ? '👑' : ''}</span>
+              <span class="ready-badge ${isReady ? 'is-ready' : 'not-ready'}">
+                ${isReady ? '✅ READY' : '⏳ NOT READY'}
+              </span>
+            </div>
+          `;
+        }).join('') : '<div class="mini">Waiting for players to join...</div>'}
       </div>
     </div>
 
@@ -655,6 +668,17 @@ function renderHostSetupUI(r) {
     <div class="center"><button class="backlink" onclick="returnToLauncher()">‹ Exit Room</button></div>
   `;
 
+  // Preserve focus & cursor position on input re-render
+  if (isTopicFocused) {
+    const input = document.getElementById('htopic');
+    if (input) {
+      input.focus();
+      if (selStart !== null && selEnd !== null) {
+        try { input.setSelectionRange(selStart, selEnd); } catch(e){}
+      }
+    }
+  }
+
   const updateSettings = (up) => {
     db.ref(`rooms/${r.code}/settings`).update(up);
   };
@@ -693,7 +717,7 @@ function renderHostSetupUI(r) {
   }
 }
 
-/* RENDER PLAYER SETUP SCREEN */
+/* RENDER PLAYER SETUP SCREEN (WITH RULES & EXPLANATIONS) */
 function renderPlayerSetupUI(r) {
   const settings = r.settings || defaultSetupSettings;
   const myData = (r.players || {})[ME.id] || {};
@@ -738,18 +762,46 @@ function renderPlayerSetupUI(r) {
         </div>
       </div>
 
+      <div class="row" style="margin-top:14px">
+        <div style="flex:1">
+          <label>2x Double Rounds</label>
+          <div style="font-weight:800;color:${settings.dbl ? 'var(--green)' : 'var(--text-muted)'}">${settings.dbl ? '⚡ ON (Random 2x)' : 'OFF'}</div>
+        </div>
+        <div style="flex:1">
+          <label>Suspense Mode</label>
+          <div style="font-weight:800;color:${settings.suspense ? 'var(--gold)' : 'var(--text-muted)'}">${settings.suspense ? '🙈 ON (Scores Hidden)' : 'OFF'}</div>
+        </div>
+      </div>
+
       ${(!settings.online && settings.mode === 'buzzer' && settings.neg) ? `
         <div style="margin-top:14px">
           <label>Wrong Answer Penalty</label>
           <div style="font-weight:800;color:var(--red)">−${settings.neg} Points</div>
         </div>
       ` : ''}
+
+      <!-- Detailed Rule Explanation Breakdown -->
+      <div style="margin-top:18px; border-top:1px solid var(--glass-border); padding-top:14px;">
+        <label style="color:var(--gold)">HOW TO PLAY</label>
+        <ul style="list-style:none; padding:0; margin-top:8px; font-size:12px; line-height:1.65; color:var(--text-muted); text-align:left;">
+          <li style="margin-bottom:6px"><strong style="color:#fff">🔔 Buzzer:</strong> First to press the buzzer gets to answer.</li>
+          <li style="margin-bottom:6px"><strong style="color:#fff">⚡ Negative marking:</strong> Wrong answer will be (-${settings.neg || 0} pts).</li>
+          <li style="margin-bottom:6px"><strong style="color:#fff">🎯 Round:</strong> ${settings.count || 20} questions total.</li>
+          <li style="margin-bottom:6px"><strong style="color:#fff">💡 Topic:</strong> ${esc(topicLabel)}.</li>
+          <li style="margin-bottom:6px"><strong style="color:#fff">🎤 Playstyle:</strong> Host is not playing the game (manages controls).</li>
+          <li style="margin-bottom:6px"><strong style="color:#fff">⏱️ Timer:</strong> You get ${settings.time || 15}s to answer after buzzing.</li>
+        </ul>
+      </div>
     </div>
 
+    <!-- Ready Button on Two Distinct Lines -->
     <div class="card center">
       <label>YOUR STATUS</label>
-      <button class="btn ${isReady ? 'btn-teal' : 'btn-gold'}" id="btn-toggle-ready" style="font-size:1.1rem;padding:16px">
-        ${isReady ? '✅ YOU ARE READY! (Tap to un-ready)' : '✋ I AM READY'}
+      <button class="btn ${isReady ? 'btn-teal' : 'btn-gold'}" id="btn-toggle-ready" style="font-size:1.1rem;padding:14px 16px;line-height:1.35">
+        ${isReady 
+          ? 'YOU ARE READY!<br><span style="font-size:0.75em;font-weight:700;opacity:0.85;text-transform:none">(Tap to unready)</span>' 
+          : 'I AM READY<br><span style="font-size:0.75em;font-weight:700;opacity:0.85;text-transform:none">(Tap when ready to play)</span>'
+        }
       </button>
     </div>
 
@@ -786,30 +838,31 @@ const FUN_TRIVIA_TIPS = [
 let reactionStartTime = 0;
 let reactionBestScore = null;
 
+/* ADJUSTED LOADING SCREEN POSITIONING & SIZES */
 function screenGenerating(msg) {
   let tipIndex = 0;
   app.innerHTML = `<div class="loading-hero">
-    <div class="modbar" style="width:100%">
-      <div><div class="sub">AI Room</div><div class="pin">#${ME.code || '----'}</div></div>
+    <div class="modbar" style="width:100%; margin-bottom: clamp(6px, 1.5vh, 12px);">
+      <div><div class="sub">AI ROOM</div><div class="pin">#${ME.code || '----'}</div></div>
       <div class="pill-live"><span class="dot"></span>GENERATING</div>
     </div>
 
-    <div style="text-align:center; margin-top: 6px;">
-      <div class="brain-pulse">🧠</div>
-      <div class="qtext" style="font-size: 1.2rem;">Building Trivia Questions...</div>
-      <div class="fun-tip" id="loading-fun-tip">${FUN_TRIVIA_TIPS[0]}</div>
+    <div style="text-align:center; margin-top: clamp(6px, 2vh, 16px);">
+      <div class="brain-pulse" style="font-size: 5.5rem; margin-bottom: 14px;">🧠</div>
+      <div class="qtext" style="font-size: clamp(22px, 6.5vw, 28px); font-weight: 900;">Building Trivia Questions...</div>
+      <div class="fun-tip" id="loading-fun-tip" style="font-size: 1rem; margin-top: 10px;">${FUN_TRIVIA_TIPS[0]}</div>
     </div>
 
-    <div class="buzzer" style="margin-top: 16px; flex-direction: column; align-items: center;">
+    <div class="buzzer" style="margin-top: auto; margin-bottom: clamp(20px, 5vh, 40px); flex-direction: column; align-items: center;">
       <button class="bz" id="react-target" style="font-size: clamp(15px, 4.2vw, 20px); line-height: 1.2; padding: 10px;">
         TAP TO WARM UP!
       </button>
-      <div class="mini" id="react-score" style="margin-top: 10px; font-weight: 800; color: var(--cyan); font-size: 13px;">
+      <div class="mini" id="react-score" style="margin-top: 14px; font-weight: 800; color: var(--cyan); font-size: 13px;">
         ${reactionBestScore ? '⚡ Best Speed: ' + reactionBestScore + ' ms' : 'Tap the buzzer to test your speed!'}
       </div>
     </div>
 
-    <div class="spinner" style="margin-top: 16px;"></div>
+    <div class="spinner" style="margin-bottom: 8px;"></div>
   </div>`;
 
   const tipEl = document.getElementById('loading-fun-tip');
@@ -897,6 +950,7 @@ async function fetchFullQuizSingleCall(topic, cats, totalCount) {
   }
 }
 
+/* ROBUST START QUESTION GENERATION & STATE TRANSITION */
 async function startQuestionGeneration(r) {
   unlockAudio();
   const settings = r.settings || defaultSetupSettings;
@@ -932,6 +986,8 @@ async function startQuestionGeneration(r) {
     scores[myId] = 0;
   }
 
+  const activePhase = settings.online ? 'countdown' : 'question';
+
   await db.ref('rooms/' + r.code).update({
     hostName: r.hostName || 'Host',
     mode: settings.mode,
@@ -941,7 +997,7 @@ async function startQuestionGeneration(r) {
     dblSet, dbl: false,
     neg: settings.neg || 0,
     engineId: settings.online ? myId : null,
-    phase: 'countdown',
+    phase: activePhase,
     phaseAt: firebase.database.ServerValue.TIMESTAMP,
     seq: 0,
     timeLimit: tl,
@@ -1038,7 +1094,7 @@ function renderResults(r) {
   stopTicking();
   const players = Object.entries(realPlayersObj(r));
   const sc = scoresObj(r);
-  const ranked = players.map(([id, p]) => ({ id, nm: typeof p === 'object' ? p.name : p, pts: sc[id] || 0 })).sort((a, b) => b.pts - a.pts);
+  const ranked = players.map(([id, p]) => ({ id, nm: (p && typeof p === 'object' ? p.name : p) || 'Player', pts: sc[id] || 0 })).sort((a, b) => b.pts - a.pts);
   const medal = p => p === 1 ? '🥇' : p === 2 ? '🥈' : p === 3 ? '🥉' : '#' + p;
   const w = ranked[0];
 
@@ -1091,7 +1147,7 @@ function renderOnline(r) {
       </div>
       <div class="scores">
         <div class="ans-label">Players Connected (${players.length})</div>
-        ${players.map(([id, p]) => `<div class="srow"><span>👤 ${esc(typeof p === 'object' ? p.name : p)}</span></div>`).join('')}
+        ${players.map(([id, p]) => `<div class="srow"><span>👤 ${esc(p && typeof p === 'object' ? p.name : p)}</span></div>`).join('')}
       </div>
       <div style="margin-top:auto">
         ${isEngine ? `<button class="btn btn-gold" id="start">▶ Start Quiz</button>` : `<div class="mini">Waiting for host to begin…</div>`}
@@ -1155,7 +1211,7 @@ function renderOnline(r) {
   if (r.mode === 'buzzer') {
     const buzzed = !!r.buzzedBy, mine = r.buzzedBy === ME.id;
     const bData = buzzed ? playersObj(r)[r.buzzedBy] : '';
-    const bName = typeof bData === 'object' ? bData.name : bData;
+    const bName = bData ? (typeof bData === 'object' ? bData.name : bData) : 'Player';
 
     if (buzzed && mine && !my) {
       app.innerHTML = `${head}
@@ -1237,7 +1293,7 @@ function renderMod(r) {
       <div class="modbar"><div><div class="sub">Host Control</div><div class="pin">#${r.code}</div></div></div>
       <div class="qbox center"><div class="ans-label">Room Code</div><div style="font-size:44px;font-weight:900;color:var(--gold)">${r.code}</div></div>
       <div class="scores"><div class="ans-label">Players Joined (${players.length})</div>
-        ${players.map(([id, p]) => `<div class="srow"><span>👤 ${esc(typeof p === 'object' ? p.name : p)}</span></div>`).join('')}
+        ${players.map(([id, p]) => `<div class="srow"><span>👤 ${esc(p && typeof p === 'object' ? p.name : p)}</span></div>`).join('')}
       </div>
       <button class="btn btn-gold" id="start" ${players.length ? '' : 'disabled'} style="margin-top:auto">Start Game</button>`;
     const s = document.getElementById('start');
@@ -1263,12 +1319,11 @@ function renderMod(r) {
     /* HOSTED BUZZER STATE MACHINE */
     const res = r.result;
     const bData = r.buzzedBy ? playersObj(r)[r.buzzedBy] : null;
-    const bName = typeof bData === 'object' ? bData.name : bData;
+    const bName = bData ? (typeof bData === 'object' ? bData.name : bData) : 'Player';
 
     let actionContent = '';
 
     if (res) {
-      // Step 4: Outcome Banner Active
       actionContent = `
         <div class="result-banner ${res.correct ? 'result-correct' : 'result-wrong'}">
           <div class="result-emoji">${res.correct ? '✅' : '❌'}</div>
@@ -1278,7 +1333,6 @@ function renderMod(r) {
         <button class="btn btn-gold" id="next" style="margin-top:14px">Next Question ›</button>
       `;
     } else if (r.buzzedBy) {
-      // Step 3: Player Buzzed In
       const gain = r.dbl ? 20 : 10;
       const penalty = (r.neg || 0) * (r.dbl ? 2 : 1);
       actionContent = `
@@ -1292,13 +1346,11 @@ function renderMod(r) {
         </div>
       `;
     } else if (r.revealed) {
-      // Step 2: Question Revealed / Active
       actionContent = `
         <div class="status" style="margin-top:14px">Question sent! Waiting for buzzes...</div>
         <button class="btn btn-ghost" id="next" style="margin-top:14px">Skip Question ›</button>
       `;
     } else {
-      // Step 1: Question Ready (Host Reviewing)
       actionContent = `
         <button class="btn ${r.dbl ? 'btn-teal' : 'btn-ghost'}" id="dbl" style="margin-top:10px">${r.dbl ? '✖️2 DOUBLE POINTS ON' : '✖️2 Make Double Round'}</button>
         <button class="btn btn-gold" id="reveal" style="margin-top:10px">🚀 Reveal / Send Question</button>
@@ -1345,7 +1397,7 @@ async function modJudge(correct) {
   const r = lastRoom, bid = r.buzzedBy;
   if (!bid) return;
   const bData = playersObj(r)[bid];
-  const bName = typeof bData === 'object' ? bData.name : (bData || 'Player');
+  const bName = bData ? (typeof bData === 'object' ? bData.name : bData) : 'Player';
   
   const gain = r.dbl ? 20 : 10;
   const penalty = (r.neg || 0) * (r.dbl ? 2 : 1);
@@ -1450,10 +1502,9 @@ function renderPlayer(r) {
     const res = r.result;
     const buzzed = !!r.buzzedBy, mine = r.buzzedBy === ME.id;
     const bData = buzzed ? playersObj(r)[r.buzzedBy] : null;
-    const bName = typeof bData === 'object' ? bData.name : bData;
+    const bName = bData ? (typeof bData === 'object' ? bData.name : bData) : 'Player';
 
     if (res) {
-      // Step 4: Result Feedback View
       app.innerHTML = `
         <div class="result-banner ${res.correct ? 'result-correct' : 'result-wrong'}" style="margin:auto">
           <div class="result-emoji">${res.correct ? '✅' : '❌'}</div>
@@ -1465,7 +1516,6 @@ function renderPlayer(r) {
     }
 
     if (!r.revealed) {
-      // Step 1: Waiting for host to reveal
       app.innerHTML = `
         <div class="getready" style="margin:auto">
           <div class="big">👂</div>
@@ -1476,7 +1526,6 @@ function renderPlayer(r) {
       return;
     }
 
-    // Step 2 & 3: Question Active / Buzzed
     app.innerHTML = `
       <div class="qbox"><span class="cat-chip">${esc(q.c)}</span><div class="qtext">${esc(q.q)}</div></div>
       <div id="timerHolder">${timerHTML(r)}</div>
