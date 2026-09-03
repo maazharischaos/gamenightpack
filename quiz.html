@@ -805,7 +805,7 @@ function screenGenerating(msg) {
   // Interactive Reaction Speed Mini-Game logic
   const reactBtn = document.getElementById('react-target');
   const scoreEl = document.getElementById('react-score');
-  let state = 'idle'; // idle, waiting, ready
+  let state = 'idle';
 
   if (reactBtn) {
     reactBtn.onclick = () => {
@@ -841,10 +841,10 @@ function screenGenerating(msg) {
   }
 }
 
-/* Parallel AI Chunk Engine with AbortController 4s Timeout */
+/* Parallel AI Chunk Engine with 8.5s Timeout Safeguard */
 async function callGenChunkWithTimeout(topic, cats, count, avoid) {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 4000);
+  const timeoutId = setTimeout(() => controller.abort(), 8500); // 8.5 seconds timeout
 
   try {
     const res = await fetch('/api/questions', {
@@ -910,9 +910,15 @@ async function streamRemainingQuestionsInBackground(code, topic, cats, targetCou
     const missingCount = targetCount - currentQuestions.length;
     const newBatch = await fetchAIBatch(topic, cats, missingCount, currentQuestions);
 
-    if (newBatch.length === 0) break; // Network stopped returning, keep current deck
-
-    currentQuestions = currentQuestions.concat(newBatch);
+    if (newBatch.length === 0) {
+      // Small pause before retrying once if network stalled
+      await new Promise(r => setTimeout(r, 1500));
+      const retryBatch = await fetchAIBatch(topic, cats, missingCount, currentQuestions);
+      if (retryBatch.length === 0) break; // Keep whatever deck we currently have
+      currentQuestions = currentQuestions.concat(retryBatch);
+    } else {
+      currentQuestions = currentQuestions.concat(newBatch);
+    }
 
     // Silently stream new questions into Firebase room array
     await db.ref(`rooms/${code}/aiQ`).set(currentQuestions);
@@ -931,21 +937,13 @@ async function startQuestionGeneration(r) {
     topicLabel: topicLabel
   });
 
-  // Step 1: Initial Fast Micro-Batch (First 5-10 questions in ~1.5s)
+  // Step 1: Initial Batch Request
   const initialBatchNeeded = Math.min(10, total);
   let initialQuestions = await fetchAIBatch(settings.topic, settings.cats, initialBatchNeeded, []);
 
-  // Step 2: Emergency Immediate Top-up if initial batch returned < 5
-  if (initialQuestions.length < 5) {
-    const topUp = await fetchAIBatch(settings.topic, settings.cats, 5, initialQuestions);
-    initialQuestions = initialQuestions.concat(topUp);
-  }
-
-  // Fallback safety guard
-  if (initialQuestions.length === 0) {
-    alert('Network request timed out. Please tap Launch again.');
-    await db.ref(`rooms/${r.code}/phase`).set('setup');
-    return;
+  // Step 2: Emergency Retry if initial batch timed out or returned < 3
+  if (initialQuestions.length < 3) {
+    initialQuestions = await fetchAIBatch(settings.topic, settings.cats, 5, initialQuestions);
   }
 
   let tl = Math.min(30, Math.max(5, settings.time));
@@ -965,7 +963,7 @@ async function startQuestionGeneration(r) {
     scores[myId] = 0;
   }
 
-  // Step 3: Launch Game Immediately with promised target count (e.g. 20)
+  // Step 3: Launch Game Immediately with target count locked in
   await db.ref('rooms/' + r.code).update({
     hostName: r.hostName || 'Host',
     mode: settings.mode,
