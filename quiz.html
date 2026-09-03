@@ -22,102 +22,107 @@
     --purple: #a855f7;
     --text-main: #f8fafc;
     --text-muted: #94a3b8;
-    --radius-lg: 20px;
-    --radius-md: 14px;
+    --radius-lg: 18px;
+    --radius-md: 12px;
     --font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-family); user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
   body { background-color: var(--bg-midnight); background-image: radial-gradient(circle at 50% -10%, rgba(255, 200, 42, 0.15) 0%, transparent 60%), radial-gradient(circle at 50% 110%, rgba(168, 85, 247, 0.12) 0%, transparent 60%); color: var(--text-main); min-height: 100vh; min-height: 100dvh; display: flex; justify-content: center; align-items: stretch; overflow-x: hidden; }
-  .wrap { width: 100%; max-width: 520px; min-height: 100dvh; height: 100dvh; display: flex; flex-direction: column; padding: max(12px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)); overflow-y: auto; background: rgba(7, 9, 19, 0.85); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 1px var(--glass-border); flex: 1; }
-  h1 { font-size: clamp(22px, 7vw, 30px); margin: 0; line-height: 1; font-weight: 900; background: linear-gradient(180deg, #ffffff 40%, #cbd5e1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .wrap { width: 100%; max-width: 520px; min-height: 100dvh; height: 100dvh; display: flex; flex-direction: column; padding: max(10px, env(safe-area-inset-top)) 14px max(12px, env(safe-area-inset-bottom)); overflow-y: auto; background: rgba(7, 9, 19, 0.85); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 1px var(--glass-border); flex: 1; }
+  h1 { font-size: clamp(20px, 6vw, 26px); margin: 0; line-height: 1; font-weight: 900; background: linear-gradient(180deg, #ffffff 40%, #cbd5e1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
   .z { color: var(--gold); background: rgba(255, 200, 42, 0.15); border: 1px solid var(--gold-glow); padding: 2px 8px; border-radius: 8px; -webkit-text-fill-color: var(--gold); }
-  .sub { color: var(--text-muted); font-size: clamp(10px, 2.9vw, 12px); margin-top: 6px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 800; }
-  .home-hero { text-align: center; padding: clamp(12px, 4vw, 24px) 0 8px; }
-  .bolt { font-size: clamp(36px, 11vw, 56px); line-height: 1; filter: drop-shadow(0 0 20px var(--gold-glow)); }
-  .card { background: var(--glass-card); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: clamp(14px, 3.5vw, 20px); margin-top: clamp(8px, 2vw, 14px); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4); }
-  label { display: block; font-weight: 800; font-size: clamp(10px, 2.9vw, 12px); margin: 0 0 6px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); }
-  input { width: 100%; font-size: clamp(15px, 4.4vw, 18px); padding: clamp(10px, 2.5vw, 14px); border: 1.5px solid var(--glass-border); border-radius: var(--radius-md); background: rgba(11, 14, 20, 0.6); font-family: inherit; font-weight: 800; text-align: center; letter-spacing: 2px; text-transform: uppercase; color: #fff; outline: none; transition: all 0.2s ease; }
-  input:focus { border-color: var(--gold); box-shadow: 0 0 20px var(--gold-glow); background: rgba(11, 14, 20, 0.85); }
-  .btn { touch-action: manipulation; width: 100%; border: none; border-radius: var(--radius-md); padding: clamp(12px, 2.8vw, 15px); font-size: clamp(13px, 3.6vw, 15px); font-weight: 800; font-family: inherit; cursor: pointer; margin-top: 10px; letter-spacing: 1px; text-transform: uppercase; transition: transform 0.12s ease; background: linear-gradient(135deg, var(--gold) 0%, #e6a800 100%); color: #07090e; box-shadow: 0 8px 20px var(--gold-glow); }
+  .sub { color: var(--text-muted); font-size: clamp(9px, 2.5vw, 11px); margin-top: 4px; letter-spacing: 1.2px; text-transform: uppercase; font-weight: 800; }
+  .home-hero { text-align: center; padding: clamp(8px, 3vw, 16px) 0 4px; }
+  .bolt { font-size: clamp(32px, 9vw, 48px); line-height: 1; filter: drop-shadow(0 0 20px var(--gold-glow)); }
+  .card { background: var(--glass-card); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: clamp(10px, 3vw, 16px); margin-top: clamp(6px, 1.5vw, 10px); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4); }
+  label { display: block; font-weight: 800; font-size: clamp(9px, 2.5vw, 11px); margin: 0 0 4px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-muted); }
+  input { width: 100%; font-size: clamp(13px, 3.8vw, 16px); padding: clamp(8px, 2vw, 10px); border: 1.5px solid var(--glass-border); border-radius: var(--radius-md); background: rgba(11, 14, 20, 0.6); font-family: inherit; font-weight: 800; text-align: center; letter-spacing: 1.5px; text-transform: uppercase; color: #fff; outline: none; transition: all 0.2s ease; }
+  input:focus { border-color: var(--gold); box-shadow: 0 0 15px var(--gold-glow); background: rgba(11, 14, 20, 0.85); }
+  .btn { touch-action: manipulation; width: 100%; border: none; border-radius: var(--radius-md); padding: clamp(10px, 2.4vw, 13px); font-size: clamp(12px, 3.2vw, 14px); font-weight: 800; font-family: inherit; cursor: pointer; margin-top: 8px; letter-spacing: 1px; text-transform: uppercase; transition: transform 0.12s ease; background: linear-gradient(135deg, var(--gold) 0%, #e6a800 100%); color: #07090e; box-shadow: 0 8px 20px var(--gold-glow); }
   .btn:active { transform: scale(0.97); }
   .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
   .btn-gold { background: linear-gradient(135deg, var(--gold) 0%, #e6a800 100%); color: #07090e; }
   .btn-teal { background: linear-gradient(135deg, var(--cyan) 0%, #0284c7 100%); color: #07090e; box-shadow: 0 8px 20px var(--cyan-glow); }
   .btn-cerise { background: linear-gradient(135deg, var(--red) 0%, #dc2626 100%); color: #fff; box-shadow: 0 8px 20px var(--red-glow); }
   .btn-ghost { background: rgba(255, 255, 255, 0.05); color: #fff; border: 1px solid var(--glass-border); box-shadow: none; }
-  .btn-sm { padding: clamp(8px, 2vw, 10px) 14px; font-size: clamp(11px, 3vw, 13px); margin-top: 0; width: auto; }
-  .row { display: flex; gap: 8px; }
-  .divider { text-align: center; font-size: 11px; margin: 12px 0 4px; font-weight: 800; letter-spacing: 2px; color: var(--text-muted); }
-  .tag { display: inline-block; background: rgba(255, 200, 42, 0.15); color: var(--gold); border: 1px solid var(--gold-glow); font-size: 10px; font-weight: 800; padding: 4px 12px; border-radius: 20px; letter-spacing: 1px; text-transform: uppercase; }
-  .hint { font-size: clamp(10px, 2.9vw, 12px); color: var(--text-muted); margin-top: 8px; line-height: 1.45; }
-  .cat-chip { display: inline-block; font-size: clamp(9px, 2.7vw, 11px); font-weight: 800; padding: 4px 12px; border-radius: 20px; letter-spacing: 1px; text-transform: uppercase; color: var(--gold); background: rgba(255, 200, 42, 0.15); border: 1px solid var(--gold-glow); }
-  .qbox { background: var(--glass-card); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: clamp(14px, 3.5vw, 20px); margin-top: clamp(8px, 2vw, 12px); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4); }
-  .qnum { font-size: clamp(9px, 2.7vw, 11px); color: var(--text-muted); font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
-  .qtext { font-size: clamp(16px, 4.8vw, 22px); font-weight: 800; line-height: 1.3; margin-top: 8px; color: #fff; }
+  .btn-sm { padding: clamp(6px, 1.8vw, 8px) 12px; font-size: clamp(10px, 2.7vw, 12px); margin-top: 0; width: auto; }
+  .row { display: flex; gap: 6px; }
+  .divider { text-align: center; font-size: 10px; margin: 8px 0 2px; font-weight: 800; letter-spacing: 2px; color: var(--text-muted); }
+  .tag { display: inline-block; background: rgba(255, 200, 42, 0.15); color: var(--gold); border: 1px solid var(--gold-glow); font-size: 9px; font-weight: 800; padding: 3px 10px; border-radius: 20px; letter-spacing: 1px; text-transform: uppercase; }
+  .hint { font-size: clamp(9px, 2.5vw, 11px); color: var(--text-muted); margin-top: 4px; line-height: 1.35; }
+  .cat-chip { display: inline-block; font-size: clamp(9px, 2.7vw, 11px); font-weight: 800; padding: 3px 10px; border-radius: 20px; letter-spacing: 1px; text-transform: uppercase; color: var(--gold); background: rgba(255, 200, 42, 0.15); border: 1px solid var(--gold-glow); }
+  
+  /* Sleek Setup Grid System */
+  .setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .setup-box { background: rgba(11, 14, 20, 0.4); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 8px 10px; display: flex; flex-direction: column; justify-content: center; }
+  .chips-scroll { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; -ms-overflow-style: none; }
+  .chips-scroll::-webkit-scrollbar { display: none; }
+
+  .qbox { background: var(--glass-card); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: clamp(12px, 3vw, 18px); margin-top: clamp(6px, 1.5vw, 10px); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4); }
+  .qtext { font-size: clamp(15px, 4.4vw, 20px); font-weight: 800; line-height: 1.3; margin-top: 6px; color: #fff; }
   
   /* Lift Buzzer Container to Prevent Clipping */
-  .buzzer { margin-top: auto; padding: clamp(12px, 3vw, 20px) 0 clamp(48px, 12vh, 70px); display: flex; justify-content: center; }
-  .bz { touch-action: manipulation; width: min(100%, 32vh); aspect-ratio: 1/1; border-radius: 50%; border: 3px solid var(--gold); background: linear-gradient(135deg, rgba(255, 200, 42, 0.2), rgba(255, 200, 42, 0.05)); color: var(--gold); font-size: clamp(28px, 9vw, 44px); font-weight: 900; letter-spacing: 2px; box-shadow: 0 0 30px var(--gold-glow); cursor: pointer; transition: transform 0.1s ease; }
+  .buzzer { margin-top: auto; padding: clamp(10px, 2.5vw, 16px) 0 clamp(44px, 10vh, 60px); display: flex; justify-content: center; }
+  .bz { touch-action: manipulation; width: min(100%, 30vh); aspect-ratio: 1/1; border-radius: 50%; border: 3px solid var(--gold); background: linear-gradient(135deg, rgba(255, 200, 42, 0.2), rgba(255, 200, 42, 0.05)); color: var(--gold); font-size: clamp(26px, 8vw, 40px); font-weight: 900; letter-spacing: 2px; box-shadow: 0 0 30px var(--gold-glow); cursor: pointer; transition: transform 0.1s ease; }
   .bz:active { transform: scale(0.94); }
   .bz.locked { border-color: var(--text-muted); background: rgba(255, 255, 255, 0.05); color: var(--text-muted); box-shadow: none; cursor: default; }
   .bz.mine { border-color: var(--green); background: rgba(16, 185, 129, 0.2); color: var(--green); box-shadow: 0 0 30px var(--green-glow); }
-  .status { text-align: center; font-size: clamp(12px, 3.6vw, 15px); font-weight: 800; margin-top: 10px; min-height: 20px; color: var(--text-muted); }
-  .modbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
-  .pin { font-size: clamp(18px, 6vw, 24px); font-weight: 900; letter-spacing: 3px; color: var(--gold); text-shadow: 0 0 15px var(--gold-glow); }
-  .ans { background: rgba(16, 185, 129, 0.12); border: 1.5px solid var(--green); border-radius: var(--radius-md); padding: clamp(10px, 2.8vw, 14px); margin-top: 10px; }
-  .ans-label { font-size: clamp(9px, 2.6vw, 11px); font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); }
-  .ans-text { font-size: clamp(15px, 4.6vw, 20px); font-weight: 900; margin-top: 4px; color: var(--green); }
-  .buzzed { background: var(--glass-card); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: clamp(12px, 3vw, 16px); margin-top: 10px; text-align: center; }
-  .buzzed .who { font-size: clamp(18px, 5.6vw, 24px); font-weight: 900; color: #fff; }
-  .buzzed.none { background: transparent; color: var(--text-muted); border-style: dashed; }
-  .scores { margin-top: 12px; }
-  .srow { display: flex; align-items: center; justify-content: space-between; background: var(--glass-card); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: clamp(8px, 2.2vw, 12px) 14px; margin-bottom: 8px; font-weight: 800; font-size: clamp(12px, 3.6vw, 15px); }
-  .srow .pts { background: rgba(255, 200, 42, 0.15); color: var(--gold); border: 1px solid var(--gold-glow); border-radius: 20px; padding: 2px 12px; min-width: 44px; text-align: center; }
-  .qprog { font-size: clamp(9px, 2.6vw, 11px); font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; text-align: center; margin-top: 4px; color: var(--text-muted); }
-  .mini { font-size: clamp(10px, 2.9vw, 12px); color: var(--text-muted); text-align: center; margin-top: 8px; }
-  .pill-live { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; color: var(--green); }
-  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green-glow); animation: pl 1s infinite; }
+  .status { text-align: center; font-size: clamp(11px, 3.2vw, 14px); font-weight: 800; margin-top: 8px; min-height: 18px; color: var(--text-muted); }
+  .modbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+  .pin { font-size: clamp(16px, 5vw, 22px); font-weight: 900; letter-spacing: 3px; color: var(--gold); text-shadow: 0 0 15px var(--gold-glow); }
+  .ans { background: rgba(16, 185, 129, 0.12); border: 1.5px solid var(--green); border-radius: var(--radius-md); padding: clamp(8px, 2.4vw, 12px); margin-top: 8px; }
+  .ans-label { font-size: clamp(9px, 2.5vw, 10px); font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-muted); }
+  .ans-text { font-size: clamp(14px, 4.2vw, 18px); font-weight: 900; margin-top: 2px; color: var(--green); }
+  .buzzed { background: var(--glass-card); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: clamp(10px, 2.5vw, 14px); margin-top: 8px; text-align: center; }
+  .buzzed .who { font-size: clamp(16px, 5vw, 22px); font-weight: 900; color: #fff; }
+  .scores { margin-top: 8px; }
+  .srow { display: flex; align-items: center; justify-content: space-between; background: var(--glass-card); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: clamp(6px, 1.8vw, 10px) 12px; margin-bottom: 6px; font-weight: 800; font-size: clamp(11px, 3.2vw, 14px); }
+  .srow .pts { background: rgba(255, 200, 42, 0.15); color: var(--gold); border: 1px solid var(--gold-glow); border-radius: 20px; padding: 2px 10px; min-width: 40px; text-align: center; }
+  .qprog { font-size: clamp(9px, 2.5vw, 10px); font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; text-align: center; margin-top: 2px; color: var(--text-muted); }
+  .mini { font-size: clamp(9px, 2.6vw, 11px); color: var(--text-muted); text-align: center; margin-top: 6px; }
+  .pill-live { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 800; color: var(--green); }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green-glow); animation: pl 1s infinite; }
   @keyframes pl { 50% { opacity: 0.3; } }
   .center { text-align: center; }
-  .backlink { background: none; border: none; color: var(--text-muted); font-weight: 800; font-size: clamp(11px, 3.2vw, 13px); cursor: pointer; padding: 8px; font-family: inherit; }
-  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: rgba(18, 24, 38, 0.95); border: 1.5px solid var(--glass-border); color: #fff; padding: 12px 20px; border-radius: 30px; font-weight: 800; font-size: 13px; opacity: 0; transition: opacity 0.25s; pointer-events: none; z-index: 50; max-width: 90%; text-align: center; backdrop-filter: blur(16px); }
+  .backlink { background: none; border: none; color: var(--text-muted); font-weight: 800; font-size: clamp(10px, 2.8vw, 12px); cursor: pointer; padding: 6px; font-family: inherit; }
+  .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: rgba(18, 24, 38, 0.95); border: 1.5px solid var(--glass-border); color: #fff; padding: 10px 18px; border-radius: 30px; font-weight: 800; font-size: 12px; opacity: 0; transition: opacity 0.25s; pointer-events: none; z-index: 50; max-width: 90%; text-align: center; backdrop-filter: blur(16px); }
   .toast.show { opacity: 1; }
   .conn { position: fixed; top: 10px; right: 10px; font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 20px; background: rgba(18, 24, 38, 0.8); border: 1px solid var(--glass-border); color: var(--text-muted); z-index: 40; }
   .conn.ok { border-color: var(--green); color: var(--green); }
-  .timer { margin-top: 10px; text-align: center; }
-  .timer-num { font-size: clamp(24px, 8vw, 36px); font-weight: 900; line-height: 1; color: var(--gold); }
+  .timer { margin-top: 8px; text-align: center; }
+  .timer-num { font-size: clamp(22px, 7vw, 32px); font-weight: 900; line-height: 1; color: var(--gold); }
   .timer-num.warn { color: var(--red); animation: pl 0.5s ease-in-out infinite; }
-  .timer-bar { height: 6px; border-radius: 10px; background: rgba(255, 255, 255, 0.08); margin-top: 6px; overflow: hidden; }
+  .timer-bar { height: 5px; border-radius: 10px; background: rgba(255, 255, 255, 0.08); margin-top: 4px; overflow: hidden; }
   .timer-fill { height: 100%; background: var(--gold); width: 100%; border-radius: 10px; transition: width 0.2s linear; }
   .timer-fill.warn { background: var(--red); }
-  .timer-label { font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); }
-  .rank-hero { text-align: center; padding: 12px 0 4px; }
-  .rank-hero .trophy { font-size: clamp(36px, 10vw, 56px); filter: drop-shadow(0 0 20px var(--gold-glow)); }
-  .rank-row { display: flex; align-items: center; gap: 12px; background: var(--glass-card); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: clamp(10px, 2.5vw, 14px) 16px; margin-bottom: 8px; }
-  .rank-pos { font-size: clamp(15px, 4.8vw, 20px); font-weight: 900; min-width: 32px; text-align: center; color: var(--text-muted); }
-  .rank-name { flex: 1; font-weight: 800; font-size: clamp(14px, 4vw, 17px); color: #fff; }
-  .rank-pts { background: rgba(255, 200, 42, 0.15); color: var(--gold); border: 1px solid var(--gold-glow); border-radius: 20px; padding: 4px 14px; font-weight: 900; font-size: clamp(12px, 3.6vw, 15px); }
-  .you-badge { font-size: 9px; font-weight: 800; background: var(--gold); color: #07090e; padding: 2px 8px; border-radius: 20px; margin-left: 6px; }
-  .result-banner { border: 1.5px solid var(--glass-border); border-radius: var(--radius-lg); padding: clamp(14px, 4vw, 22px); text-align: center; margin-top: 12px; background: var(--glass-card); }
+  .timer-label { font-size: 9px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-muted); }
+  .rank-hero { text-align: center; padding: 8px 0 2px; }
+  .rank-hero .trophy { font-size: clamp(32px, 9vw, 48px); filter: drop-shadow(0 0 20px var(--gold-glow)); }
+  .rank-row { display: flex; align-items: center; gap: 10px; background: var(--glass-card); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: clamp(8px, 2.2vw, 12px) 14px; margin-bottom: 6px; }
+  .rank-pos { font-size: clamp(14px, 4.2vw, 18px); font-weight: 900; min-width: 28px; text-align: center; color: var(--text-muted); }
+  .rank-name { flex: 1; font-weight: 800; font-size: clamp(13px, 3.6vw, 16px); color: #fff; }
+  .rank-pts { background: rgba(255, 200, 42, 0.15); color: var(--gold); border: 1px solid var(--gold-glow); border-radius: 20px; padding: 3px 12px; font-weight: 900; font-size: clamp(11px, 3.2vw, 14px); }
+  .you-badge { font-size: 8px; font-weight: 800; background: var(--gold); color: #07090e; padding: 2px 6px; border-radius: 20px; margin-left: 4px; }
+  .result-banner { border: 1.5px solid var(--glass-border); border-radius: var(--radius-lg); padding: clamp(12px, 3.5vw, 18px); text-align: center; margin-top: 10px; background: var(--glass-card); }
   .result-correct { border-color: var(--green); background: rgba(16, 185, 129, 0.12); }
   .result-wrong { border-color: var(--red); background: rgba(255, 42, 85, 0.12); }
-  .result-emoji { font-size: clamp(32px, 10vw, 48px); line-height: 1; }
-  .result-text { font-size: clamp(18px, 5.4vw, 24px); font-weight: 900; margin-top: 6px; color: #fff; }
-  .result-sub { font-size: clamp(11px, 3.4vw, 13px); font-weight: 700; color: var(--text-muted); margin-top: 4px; }
-  .getready { text-align: center; padding: clamp(16px, 5vw, 32px) 12px; }
-  .getready .big { font-size: clamp(32px, 11vw, 48px); }
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-  .chip { border: 1px solid var(--glass-border); background: rgba(11, 14, 20, 0.6); border-radius: 20px; padding: clamp(6px, 1.8vw, 8px) clamp(10px, 2.5vw, 14px); font-size: clamp(11px, 2.8vw, 13px); font-weight: 800; font-family: inherit; cursor: pointer; color: var(--text-muted); transition: all 0.15s ease; }
-  .chip.on { background: var(--gold); color: #07090e; border-color: var(--gold); box-shadow: 0 0 14px var(--gold-glow); }
-  .seg { display: flex; gap: 8px; margin-top: 8px; }
-  .seg .segbtn { flex: 1; border: 1px solid var(--glass-border); background: rgba(11, 14, 20, 0.6); border-radius: var(--radius-md); padding: clamp(8px, 2vw, 12px) 8px; font-weight: 900; font-family: inherit; font-size: clamp(11px, 3.2vw, 13px); cursor: pointer; color: var(--text-muted); transition: all 0.15s ease; }
-  .seg .segbtn.on { background: var(--gold); color: #07090e; border-color: var(--gold); box-shadow: 0 0 14px var(--gold-glow); }
-  .seg .segbtn small { display: block; font-weight: 700; font-size: clamp(8px, 2.3vw, 10px); opacity: 0.75; margin-top: 2px; text-transform: none; }
-  .opts { display: flex; flex-direction: column; gap: clamp(6px, 1.8vw, 10px); margin-top: clamp(8px, 2vw, 12px); }
-  .optbtn { width: 100%; border: 1.5px solid var(--glass-border); background: var(--glass-card); border-radius: var(--radius-md); padding: clamp(12px, 2.8vw, 15px); font-size: clamp(14px, 3.8vw, 16px); font-weight: 800; font-family: inherit; text-align: left; cursor: pointer; color: #fff; transition: all 0.15s ease; display: flex; align-items: center; gap: 12px; }
+  .result-emoji { font-size: clamp(28px, 8vw, 40px); line-height: 1; }
+  .result-text { font-size: clamp(16px, 4.8vw, 22px); font-weight: 900; margin-top: 4px; color: #fff; }
+  .result-sub { font-size: clamp(10px, 3vw, 12px); font-weight: 700; color: var(--text-muted); margin-top: 2px; }
+  .getready { text-align: center; padding: clamp(12px, 4vw, 24px) 10px; }
+  .getready .big { font-size: clamp(28px, 9vw, 40px); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  .chip { border: 1px solid var(--glass-border); background: rgba(11, 14, 20, 0.6); border-radius: 16px; padding: clamp(4px, 1.4vw, 6px) clamp(8px, 2vw, 12px); font-size: clamp(10px, 2.5vw, 12px); font-weight: 800; font-family: inherit; cursor: pointer; color: var(--text-muted); transition: all 0.15s ease; white-space: nowrap; }
+  .chip.on { background: var(--gold); color: #07090e; border-color: var(--gold); box-shadow: 0 0 10px var(--gold-glow); }
+  .seg { display: flex; gap: 6px; margin-top: 4px; }
+  .seg .segbtn { flex: 1; border: 1px solid var(--glass-border); background: rgba(11, 14, 20, 0.6); border-radius: var(--radius-md); padding: clamp(6px, 1.6vw, 8px) 6px; font-weight: 900; font-family: inherit; font-size: clamp(10px, 2.8vw, 12px); cursor: pointer; color: var(--text-muted); transition: all 0.15s ease; }
+  .seg .segbtn.on { background: var(--gold); color: #07090e; border-color: var(--gold); box-shadow: 0 0 10px var(--gold-glow); }
+  .seg .segbtn small { display: block; font-weight: 700; font-size: clamp(8px, 2vw, 9px); opacity: 0.75; margin-top: 1px; text-transform: none; }
+  .opts { display: flex; flex-direction: column; gap: clamp(5px, 1.5vw, 8px); margin-top: clamp(6px, 1.5vw, 10px); }
+  .optbtn { width: 100%; border: 1.5px solid var(--glass-border); background: var(--glass-card); border-radius: var(--radius-md); padding: clamp(10px, 2.4vw, 13px); font-size: clamp(13px, 3.4vw, 15px); font-weight: 800; font-family: inherit; text-align: left; cursor: pointer; color: #fff; transition: all 0.15s ease; display: flex; align-items: center; gap: 10px; }
   .optbtn:active { transform: scale(0.98); }
-  .optbtn .letter { background: rgba(255, 255, 255, 0.1); color: var(--text-muted); width: 28px; height: 28px; min-width: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 12px; }
+  .optbtn .letter { background: rgba(255, 255, 255, 0.1); color: var(--text-muted); width: 24px; height: 28px; min-width: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 11px; }
   .optbtn.picked { border-color: var(--gold); background: rgba(255, 200, 42, 0.15); }
   .optbtn.picked .letter { background: var(--gold); color: #07090e; }
   .optbtn.correct { border-color: var(--green); background: rgba(16, 185, 129, 0.2); }
@@ -126,11 +131,11 @@
   .optbtn.wrongpick .letter { background: var(--red); color: #fff; }
 
   /* Loading Screen Layout */
-  .loading-hero { text-align: center; padding: 10px 16px; margin: 0; display: flex; flex-direction: column; align-items: center; flex: 1; justify-content: space-between; min-height: 100%; }
-  .brain-pulse { font-size: 5.5rem; line-height: 1; filter: drop-shadow(0 0 25px var(--gold-glow)); animation: pulse 1.2s infinite alternate ease-in-out; margin-bottom: 12px; }
+  .loading-hero { text-align: center; padding: 8px 12px; margin: 0; display: flex; flex-direction: column; align-items: center; flex: 1; justify-content: space-between; min-height: 100%; }
+  .brain-pulse { font-size: 4.8rem; line-height: 1; filter: drop-shadow(0 0 25px var(--gold-glow)); animation: pulse 1.2s infinite alternate ease-in-out; margin-bottom: 8px; }
   @keyframes pulse { 0% { transform: scale(0.92); filter: drop-shadow(0 0 10px var(--gold-glow)); } 100% { transform: scale(1.15); filter: drop-shadow(0 0 35px var(--gold)); } }
-  .fun-tip { font-size: 1rem; font-weight: 700; color: var(--gold); margin-top: 10px; letter-spacing: 0.5px; min-height: 24px; }
-  .ready-badge { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 12px; }
+  .fun-tip { font-size: 0.9rem; font-weight: 700; color: var(--gold); margin-top: 6px; letter-spacing: 0.5px; min-height: 20px; }
+  .ready-badge { font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 10px; }
   .ready-badge.is-ready { background: rgba(16, 185, 129, 0.2); color: var(--green); border: 1px solid var(--green); }
   .ready-badge.not-ready { background: rgba(255, 42, 85, 0.15); color: var(--red); border: 1px solid var(--red); }
 </style>
@@ -413,7 +418,6 @@ async function onlineStartQuestion(r) {
   });
 }
 
-/* Online Mode End Question with Negative Marking Support */
 async function onlineEndQuestion(r) {
   const q = currentQ(r), ans = answersObj(r);
   const up = {};
@@ -455,7 +459,7 @@ async function onlineNext(r) {
   });
 }
 
-/* Subscribe & Audio Diff Sync */
+/* Subscribe & Audio Diff Sync (Host Identification Fixed) */
 function subscribeRoom(code) {
   unsubscribeRoom();
   roomRef = db.ref('rooms/' + code);
@@ -480,8 +484,15 @@ function subscribeRoom(code) {
     }
 
     if (r.phase === 'setup') {
-      if (ME.role === 'mod') renderHostSetupUI(r);
-      else renderPlayerSetupUI(r);
+      const isHostUser = ME.role === 'mod' || 
+                         (r.players && r.players[ME.id] && r.players[ME.id].isHost) || 
+                         (r.hostName && ME.name && r.hostName.toLowerCase() === ME.name.toLowerCase());
+      if (isHostUser) {
+        ME.role = 'mod';
+        renderHostSetupUI(r);
+      } else {
+        renderPlayerSetupUI(r);
+      }
       return;
     }
 
@@ -516,11 +527,7 @@ function handleRoomAudioDiff(prev, r) {
         const bid = r.buzzedBy;
         const myAns = answersObj(r)[bid];
         const q = currentQ(r);
-        if (bid === ME.id) {
-          if (myAns && myAns.choice === q.a) sCorrect(); else sWrong();
-        } else {
-          if (myAns && myAns.choice === q.a) sCorrect(); else sWrong();
-        }
+        if (myAns && myAns.choice === q.a) sCorrect(); else sWrong();
       } else {
         const my = answersObj(r)[ME.id], q = currentQ(r);
         if (my && my.choice === q.a) sCorrect(); else sWrong();
@@ -573,12 +580,12 @@ function screenHome() {
     <div class="divider">— OR —</div>
     <div class="card">
       <span class="tag" style="background:var(--cyan);color:#07090e">Join Existing Room</span>
-      <label style="margin-top:12px">Your Name</label>
+      <label style="margin-top:10px">Your Name</label>
       <input type="text" id="pname" placeholder="NAME" maxlength="14" autocomplete="off">
-      <label style="margin-top:12px">Room Code</label>
+      <label style="margin-top:10px">Room Code</label>
       <input type="text" id="pcode" placeholder="0000" inputmode="numeric" maxlength="4">
       <button class="btn btn-teal" id="btn-join">Join Room</button>
-      <div class="soundbar"><button class="btn btn-ghost btn-sm" id="stest" style="margin-top:10px;width:100%">🔊 Test Sound</button></div>
+      <div class="soundbar"><button class="btn btn-ghost btn-sm" id="stest" style="margin-top:8px;width:100%">🔊 Test Sound</button></div>
     </div>
   `;
 
@@ -622,7 +629,7 @@ async function initHostRoomInFirebase() {
   subscribeRoom(code);
 }
 
-/* RENDER HOST SETUP SCREEN */
+/* SLEEK SINGLE-SCREEN HOST SETUP UI (NO SCROLL REQUIRED) */
 function renderHostSetupUI(r) {
   const activeEl = document.activeElement;
   const isTopicFocused = activeEl && activeEl.id === 'htopic';
@@ -633,96 +640,95 @@ function renderHostSetupUI(r) {
   const players = Object.entries(r.players || {});
   const nonHostPlayers = players.filter(([pid, p]) => p && !p.isHost && pid !== 'mod');
   
+  const readyCount = nonHostPlayers.filter(([pid, p]) => p && p.ready).length;
   const allPlayersReady = nonHostPlayers.length > 0 ? nonHostPlayers.every(([pid, p]) => p && p.ready) : true;
   const hasSubject = (settings.topic && settings.topic.trim().length > 0) || (settings.cats && settings.cats.length > 0);
   const canLaunch = allPlayersReady && hasSubject;
 
   app.innerHTML = `
-    <div class="home-hero" style="padding:14px 0 2px">
+    <div class="home-hero" style="padding:4px 0 0">
       <h1>Game Setup</h1>
-      <div class="sub">Room #${r.code}</div>
+      <div class="sub">Room #${r.code} • ${players.length} Connected (${readyCount}/${nonHostPlayers.length} Ready)</div>
     </div>
 
-    <div class="card">
-      <label>Connected Players (${players.length})</label>
-      <div class="scores" style="margin-top:6px">
-        ${players.length ? players.map(([pid, p]) => {
-          const pName = (p && typeof p === 'object' ? p.name : p) || 'Player';
-          const isReady = p && typeof p === 'object' ? !!p.ready : false;
-          const isHost = p && typeof p === 'object' ? !!p.isHost : false;
-          return `
-            <div class="srow">
-              <span>👤 ${esc(pName)} ${isHost ? '👑' : ''}</span>
-              <span class="ready-badge ${isReady ? 'is-ready' : 'not-ready'}">
-                ${isReady ? '✅ READY' : '⏳ NOT READY'}
-              </span>
-            </div>
-          `;
-        }).join('') : '<div class="mini">Waiting for players to join...</div>'}
-      </div>
-    </div>
-
-    <div class="card">
-      <label>Custom AI Topic <span style="color:var(--gold);font-weight:800">(ANY TOPIC)</span></label>
-      <input id="htopic" placeholder="E.G. CARS, MARVEL, 90S MUSIC" maxlength="40" value="${esc(settings.topic || '')}" autocomplete="off">
-      <p class="hint">Type literally anything or select quick categories below!</p>
-
-      <label style="margin-top:18px">Quick Categories</label>
-      <div class="chips" id="chips">
-        ${PRESET_CATEGORIES.map(c => `
-          <button class="chip ${(settings.cats || []).includes(c) ? 'on' : ''}" data-c="${esc(c)}">
-            ${(settings.cats || []).includes(c) ? '✓ ' : ''}${esc(c)}
-          </button>
-        `).join('')}
-      </div>
-
-      <label style="margin-top:18px">Play Style</label>
-      <div class="seg" id="styleSeg">
-        <button class="segbtn ${!settings.online ? 'on' : ''}" data-o="0">🎤 Hosted<small>Host manages controls</small></button>
-        <button class="segbtn ${settings.online ? 'on' : ''}" data-o="1">🌐 Online<small>Autoplay for everyone</small></button>
-      </div>
-
-      <label style="margin-top:18px">Game Mode</label>
-      <div class="seg" id="modeSeg">
-        <button class="segbtn ${settings.mode === 'buzzer' ? 'on' : ''}" data-m="buzzer">🔔 Buzzer<small>First to buzz answers</small></button>
-        <button class="segbtn ${settings.mode === 'fff' ? 'on' : ''}" data-m="fff">⚡ Fastest Finger<small>Multiple choice speed</small></button>
-      </div>
-
-      <label style="margin-top:18px">Game Enhancements</label>
-      <div class="chips" id="enhancements">
-        <button class="chip ${settings.dbl ? 'on' : ''}" id="toggle-dbl">
-          ${settings.dbl ? '✓ ' : ''}x2 Double Rounds
-        </button>
-        <button class="chip ${settings.suspense ? 'on' : ''}" id="toggle-suspense">
-          ${settings.suspense ? '✓ ' : ''}Suspense Mode
-        </button>
-      </div>
-
-      ${(settings.mode === 'buzzer') ? `
-        <label style="margin-top:18px">Negative Marking <span style="color:var(--text-muted);font-weight:700">(Wrong Answer Penalty)</span></label>
-        <div class="chips" id="negSeg">
-          ${[0, 2, 5, 10].map(v => `<button class="chip ${settings.neg === v ? 'on' : ''}" data-n="${v}">${v === 0 ? 'Off' : '−' + v + ' pts'}</button>`).join('')}
+    <div class="card" style="margin-top:6px; padding:10px 12px; display:flex; flex-direction:column; gap:8px;">
+      
+      <div>
+        <label>Custom AI Topic</label>
+        <input id="htopic" placeholder="E.G. CARS, MARVEL, 90S MUSIC" maxlength="40" value="${esc(settings.topic || '')}" autocomplete="off" style="padding:7px 10px;">
+        <div class="chips-scroll" id="chips" style="margin-top:6px;">
+          ${PRESET_CATEGORIES.map(c => `
+            <button class="chip ${(settings.cats || []).includes(c) ? 'on' : ''}" data-c="${esc(c)}">
+              ${(settings.cats || []).includes(c) ? '✓ ' : ''}${esc(c)}
+            </button>
+          `).join('')}
         </div>
-      ` : ''}
-
-      <label style="margin-top:18px">Questions Count</label>
-      <div class="chips" id="counts">
-        ${[10, 15, 20, 30].map(n => `<button class="chip ${settings.count === n ? 'on' : ''}" data-n="${n}">${n}</button>`).join('')}
       </div>
 
-      <label style="margin-top:18px">Time Limit Per Question</label>
-      <div class="chips" id="times">
-        ${[5, 10, 15, 20, 30].map(t => `<button class="chip ${settings.time === t ? 'on' : ''}" data-t="${t}">${t}s</button>`).join('')}
+      <div class="setup-grid">
+        <div class="setup-box">
+          <label>Play Style</label>
+          <div class="seg" id="styleSeg">
+            <button class="segbtn ${!settings.online ? 'on' : ''}" data-o="0">🎤 Hosted</button>
+            <button class="segbtn ${settings.online ? 'on' : ''}" data-o="1">🌐 Online</button>
+          </div>
+        </div>
+        <div class="setup-box">
+          <label>Game Mode</label>
+          <div class="seg" id="modeSeg">
+            <button class="segbtn ${settings.mode === 'buzzer' ? 'on' : ''}" data-m="buzzer">🔔 Buzzer</button>
+            <button class="segbtn ${settings.mode === 'fff' ? 'on' : ''}" data-m="fff">⚡ Fastest</button>
+          </div>
+        </div>
       </div>
 
-      <button class="btn btn-gold" id="btn-launch" ${canLaunch ? '' : 'disabled'} style="margin-top:20px">
-        🚀 Generate &amp; Launch Quiz
+      <div class="setup-grid">
+        <div class="setup-box">
+          <label>Enhancements</label>
+          <div class="chips" id="enhancements" style="margin-top:2px;">
+            <button class="chip ${settings.dbl ? 'on' : ''}" id="toggle-dbl">
+              ${settings.dbl ? '✓ ' : ''}2x Dbl
+            </button>
+            <button class="chip ${settings.suspense ? 'on' : ''}" id="toggle-suspense">
+              ${settings.suspense ? '✓ ' : ''}Suspense
+            </button>
+          </div>
+        </div>
+
+        <div class="setup-box">
+          <label>${settings.mode === 'buzzer' ? 'Wrong Penalty' : 'Options'}</label>
+          <div class="chips" id="negSeg" style="margin-top:2px;">
+            ${settings.mode === 'buzzer' ? [0, 2, 5, 10].map(v => `
+              <button class="chip ${settings.neg === v ? 'on' : ''}" data-n="${v}">${v === 0 ? 'Off' : '−' + v}</button>
+            `).join('') : '<span class="mini" style="margin:auto">N/A</span>'}
+          </div>
+        </div>
+      </div>
+
+      <div class="setup-grid">
+        <div class="setup-box">
+          <label>Questions</label>
+          <div class="chips" id="counts" style="margin-top:2px;">
+            ${[10, 15, 20, 30].map(n => `<button class="chip ${settings.count === n ? 'on' : ''}" data-n="${n}">${n}</button>`).join('')}
+          </div>
+        </div>
+
+        <div class="setup-box">
+          <label>Timer</label>
+          <div class="chips" id="times" style="margin-top:2px;">
+            ${[5, 10, 15, 20, 30].map(t => `<button class="chip ${settings.time === t ? 'on' : ''}" data-t="${t}">${t}s</button>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-gold" id="btn-launch" ${canLaunch ? '' : 'disabled'} style="margin-top:4px;">
+        🚀 Launch Quiz
       </button>
-      <p class="hint center" style="margin-top:6px; color:${canLaunch ? 'var(--green)' : 'var(--red)'}">
-        ${!hasSubject ? '⚠️ Please type a topic or select a category.' : (!allPlayersReady ? '⏳ Waiting for all players to tap READY...' : '✨ Everyone ready! Tap to launch.')}
+      <p class="hint center" style="margin-top:2px; font-size:10px; color:${canLaunch ? 'var(--green)' : 'var(--red)'}">
+        ${!hasSubject ? '⚠️ Type a topic or select a category.' : (!allPlayersReady ? '⏳ Waiting for players to tap READY...' : '✨ Everyone ready! Tap to launch.')}
       </p>
     </div>
-    <div class="center"><button class="backlink" onclick="returnToLauncher()">‹ Exit Room</button></div>
+    <div class="center" style="margin-top:2px;"><button class="backlink" onclick="returnToLauncher()">‹ Exit Room</button></div>
   `;
 
   if (isTopicFocused) {
@@ -787,20 +793,20 @@ function renderPlayerSetupUI(r) {
     : 'Host is not playing the game (manages controls)';
 
   app.innerHTML = `
-    <div class="home-hero" style="padding:14px 0 2px">
+    <div class="home-hero" style="padding:10px 0 2px">
       <h1>Room #${r.code}</h1>
       <div class="sub">Host is setting up</div>
     </div>
 
     <div class="card">
-      <span class="tag" style="background:var(--gold);color:#07090e;margin-bottom:12px">LIVE GAME RULES</span>
+      <span class="tag" style="background:var(--gold);color:#07090e;margin-bottom:8px">LIVE GAME RULES</span>
       
-      <div style="margin-top:10px">
+      <div style="margin-top:6px">
         <label>Selected Topic / Categories</label>
-        <div style="font-size:1.1rem;font-weight:900;color:#fff">${esc(topicLabel)}</div>
+        <div style="font-size:1rem;font-weight:900;color:#fff">${esc(topicLabel)}</div>
       </div>
 
-      <div class="row" style="margin-top:14px">
+      <div class="row" style="margin-top:10px">
         <div style="flex:1">
           <label>Game Mode</label>
           <div style="font-weight:800;color:var(--cyan)">${settings.mode === 'buzzer' ? '🔔 Buzzer' : '⚡ Fastest Finger'}</div>
@@ -811,7 +817,7 @@ function renderPlayerSetupUI(r) {
         </div>
       </div>
 
-      <div class="row" style="margin-top:14px">
+      <div class="row" style="margin-top:10px">
         <div style="flex:1">
           <label>Questions</label>
           <div style="font-weight:800;color:#fff">${settings.count || 20} Questions</div>
@@ -822,7 +828,7 @@ function renderPlayerSetupUI(r) {
         </div>
       </div>
 
-      <div class="row" style="margin-top:14px">
+      <div class="row" style="margin-top:10px">
         <div style="flex:1">
           <label>2x Double Rounds</label>
           <div style="font-weight:800;color:${settings.dbl ? 'var(--green)' : 'var(--text-muted)'}">${settings.dbl ? '⚡ ON (Random 2x)' : 'OFF'}</div>
@@ -834,30 +840,28 @@ function renderPlayerSetupUI(r) {
       </div>
 
       ${(settings.mode === 'buzzer' && settings.neg) ? `
-        <div style="margin-top:14px">
+        <div style="margin-top:10px">
           <label>Wrong Answer Penalty</label>
           <div style="font-weight:800;color:var(--red)">−${settings.neg} Points</div>
         </div>
       ` : ''}
 
-      <!-- Detailed Rule Explanation Breakdown -->
-      <div style="margin-top:18px; border-top:1px solid var(--glass-border); padding-top:14px;">
+      <div style="margin-top:12px; border-top:1px solid var(--glass-border); padding-top:10px;">
         <label style="color:var(--gold)">HOW TO PLAY</label>
-        <ul style="list-style:none; padding:0; margin-top:8px; font-size:12px; line-height:1.65; color:var(--text-muted); text-align:left;">
-          <li style="margin-bottom:6px"><strong style="color:#fff">🔔 Buzzer:</strong> First to press the buzzer gets to answer.</li>
-          <li style="margin-bottom:6px"><strong style="color:#fff">⚡ Negative marking:</strong> Wrong answer will be (-${settings.neg || 0} pts).</li>
-          <li style="margin-bottom:6px"><strong style="color:#fff">🎯 Round:</strong> ${settings.count || 20} questions total.</li>
-          <li style="margin-bottom:6px"><strong style="color:#fff">💡 Topic:</strong> ${esc(topicLabel)}.</li>
-          <li style="margin-bottom:6px"><strong style="color:#fff">🎤 Playstyle:</strong> ${playstyleRuleText}.</li>
-          <li style="margin-bottom:6px"><strong style="color:#fff">⏱️ Timer:</strong> You get ${settings.time || 15}s to answer after buzzing.</li>
+        <ul style="list-style:none; padding:0; margin-top:6px; font-size:11px; line-height:1.5; color:var(--text-muted); text-align:left;">
+          <li style="margin-bottom:4px"><strong style="color:#fff">🔔 Buzzer:</strong> First to press the buzzer gets to answer.</li>
+          <li style="margin-bottom:4px"><strong style="color:#fff">⚡ Negative marking:</strong> Wrong answer will be (-${settings.neg || 0} pts).</li>
+          <li style="margin-bottom:4px"><strong style="color:#fff">🎯 Round:</strong> ${settings.count || 20} questions total.</li>
+          <li style="margin-bottom:4px"><strong style="color:#fff">💡 Topic:</strong> ${esc(topicLabel)}.</li>
+          <li style="margin-bottom:4px"><strong style="color:#fff">🎤 Playstyle:</strong> ${playstyleRuleText}.</li>
+          <li style="margin-bottom:4px"><strong style="color:#fff">⏱️ Timer:</strong> You get ${settings.time || 15}s to answer after buzzing.</li>
         </ul>
       </div>
     </div>
 
-    <!-- Ready Button Split into 2 Lines -->
-    <div class="card center">
+    <div class="card center" style="margin-top:8px">
       <label>YOUR STATUS</label>
-      <button class="btn ${isReady ? 'btn-teal' : 'btn-gold'}" id="btn-toggle-ready" style="font-size:1.1rem;padding:14px 16px;line-height:1.35">
+      <button class="btn ${isReady ? 'btn-teal' : 'btn-gold'}" id="btn-toggle-ready" style="font-size:1rem;padding:12px 14px;line-height:1.3">
         ${isReady 
           ? 'YOU ARE READY!<br><span style="font-size:0.75em;font-weight:700;opacity:0.85;text-transform:none">(Tap to unready)</span>' 
           : 'I AM READY<br><span style="font-size:0.75em;font-weight:700;opacity:0.85;text-transform:none">(Tap when ready to play)</span>'
@@ -928,16 +932,16 @@ function screenGenerating(msg) {
     </div>
 
     <div style="text-align:center; margin-top: clamp(6px, 2vh, 16px);">
-      <div class="brain-pulse" style="font-size: 5.5rem; margin-bottom: 14px;">🧠</div>
-      <div class="qtext" style="font-size: clamp(22px, 6.5vw, 28px); font-weight: 900;">Building Trivia Questions...</div>
-      <div class="fun-tip" id="loading-fun-tip" style="font-size: 1rem; margin-top: 10px;">${FUN_TRIVIA_TIPS[0]}</div>
+      <div class="brain-pulse" style="font-size: 4.8rem; margin-bottom: 10px;">🧠</div>
+      <div class="qtext" style="font-size: clamp(20px, 6vw, 24px); font-weight: 900;">Building Trivia Questions...</div>
+      <div class="fun-tip" id="loading-fun-tip" style="font-size: 0.9rem; margin-top: 8px;">${FUN_TRIVIA_TIPS[0]}</div>
     </div>
 
     <div class="buzzer" style="margin-top: auto; margin-bottom: clamp(20px, 5vh, 40px); flex-direction: column; align-items: center;">
-      <button class="bz" id="react-target" style="font-size: clamp(15px, 4.2vw, 20px); line-height: 1.2; padding: 10px;">
+      <button class="bz" id="react-target" style="font-size: clamp(14px, 4vw, 18px); line-height: 1.2; padding: 8px;">
         TAP TO WARM UP!
       </button>
-      <div class="mini" id="react-score" style="margin-top: 14px; font-weight: 800; color: var(--cyan); font-size: 13px;">
+      <div class="mini" id="react-score" style="margin-top: 12px; font-weight: 800; color: var(--cyan); font-size: 12px;">
         ⚡ Your Best: ${reactionBestScore ? reactionBestScore + ' ms' : '--'}<br>
         <span id="lobby-best-tag">${lobbyBestText}</span>
       </div>
@@ -1192,7 +1196,9 @@ function renderResults(r) {
 
   const medal = p => p === 1 ? '🥇' : p === 2 ? '🥈' : p === 3 ? '🥉' : '#' + p;
   const w = ranked[0];
-  const isHost = ME.role === 'mod' || (r.players && r.players[ME.id] && r.players[ME.id].isHost);
+  const isHost = ME.role === 'mod' || 
+                 (r.players && r.players[ME.id] && r.players[ME.id].isHost) ||
+                 (r.hostName && ME.name && r.hostName.toLowerCase() === ME.name.toLowerCase());
 
   app.innerHTML = `
     <div class="rank-hero">
@@ -1232,11 +1238,17 @@ async function restartGameSetup(r) {
   const resetPlayers = {};
   
   Object.entries(currentPlayers).forEach(([pid, p]) => {
+    const pObj = typeof p === 'object' ? p : { name: p };
     resetPlayers[pid] = {
-      ...(typeof p === 'object' ? p : { name: p }),
-      ready: p && p.isHost ? true : false
+      ...pObj,
+      ready: pObj.isHost ? true : false
     };
   });
+
+  // Explicitly restore host role locally
+  if (r.hostName && ME.name && r.hostName.toLowerCase() === ME.name.toLowerCase()) {
+    ME.role = 'mod';
+  }
 
   await db.ref('rooms/' + r.code).update({
     phase: 'setup',
@@ -1256,8 +1268,8 @@ async function restartGameSetup(r) {
 }
 
 function dblBanner(r) {
-  return r.dbl ? `<div class="result-banner" style="background:var(--gold);border-color:var(--gold);padding:12px;margin-top:10px;color:#07090e">
-    <div style="font-size:20px;font-weight:900">✖️2 DOUBLE POINTS ROUND</div>
+  return r.dbl ? `<div class="result-banner" style="background:var(--gold);border-color:var(--gold);padding:10px;margin-top:8px;color:#07090e">
+    <div style="font-size:18px;font-weight:900">✖️2 DOUBLE POINTS ROUND</div>
     <div class="result-sub" style="color:#333">Every point counts double!</div></div>` : '';
 }
 
@@ -1279,7 +1291,7 @@ function renderOnline(r) {
       </div>
       <div class="qbox center">
         <div class="ans-label">Room Code</div>
-        <div style="font-size:46px;font-weight:900;color:var(--gold);margin:6px 0">${r.code}</div>
+        <div style="font-size:42px;font-weight:900;color:var(--gold);margin:4px 0">${r.code}</div>
         <div class="mini">${deckLen(r)} AI Questions promised</div>
       </div>
       <div class="scores">
@@ -1304,7 +1316,7 @@ function renderOnline(r) {
 
   const head = `<div class="modbar">
     <div><div class="sub">${esc(ME.name)}</div><div style="font-weight:900">#${r.code}</div></div>
-    <div class="center"><div class="ans-label">${r.suspense ? 'Hidden' : 'Score'}</div><div style="font-size:22px;font-weight:900;color:var(--gold)">${myScoreDisplay(r)}</div></div>
+    <div class="center"><div class="ans-label">${r.suspense ? 'Hidden' : 'Score'}</div><div style="font-size:20px;font-weight:900;color:var(--gold)">${myScoreDisplay(r)}</div></div>
   </div>`;
 
   if (r.phase === 'countdown') {
@@ -1354,7 +1366,7 @@ function renderOnline(r) {
           <div class="result-text">${title}</div>
           <div class="result-sub">${ptsText}Correct Answer: ${esc(q.a)}</div>
         </div>
-        <div class="opts" style="margin-top:14px">
+        <div class="opts" style="margin-top:10px">
           ${opts.map((o, i) => `<button class="optbtn ${o === q.a ? 'correct' : (my && my.choice === o ? 'wrongpick' : '')}" disabled>
             <span class="letter">${'ABCD'[i]}</span><span>${esc(o)}</span></button>`).join('')}
         </div>`;
@@ -1371,7 +1383,7 @@ function renderOnline(r) {
           <div class="result-text">${ok ? (myRank === 0 ? '⚡ Fastest!' : 'Correct!') : 'Wrong'}</div>
           <div class="result-sub">${r.suspense ? '' : (ok ? '+' + pts + ' Points' : '')} Answer: ${esc(q.a)}</div>
         </div>
-        <div class="opts" style="margin-top:14px">
+        <div class="opts" style="margin-top:10px">
           ${opts.map((o, i) => `<button class="optbtn ${o === q.a ? 'correct' : (my && my.choice === o ? 'wrongpick' : '')}" disabled>
             <span class="letter">${'ABCD'[i]}</span><span>${esc(o)}</span></button>`).join('')}
         </div>`;
@@ -1466,7 +1478,7 @@ function renderMod(r) {
   if (!r.started) {
     app.innerHTML = `
       <div class="modbar"><div><div class="sub">Host Control</div><div class="pin">#${r.code}</div></div></div>
-      <div class="qbox center"><div class="ans-label">Room Code</div><div style="font-size:44px;font-weight:900;color:var(--gold)">${r.code}</div></div>
+      <div class="qbox center"><div class="ans-label">Room Code</div><div style="font-size:40px;font-weight:900;color:var(--gold)">${r.code}</div></div>
       <div class="scores"><div class="ans-label">Players Joined (${players.length})</div>
         ${players.map(([id, p]) => `<div class="srow"><span>👤 ${esc(p && typeof p === 'object' ? p.name : p)}</span></div>`).join('')}
       </div>
@@ -1481,7 +1493,7 @@ function renderMod(r) {
       <div class="modbar"><div><div class="sub">Host Control</div></div><div class="qprog">Q ${r.qIndex + 1}/${deckLen(r)}</div></div>
       <div class="qbox"><span class="cat-chip">${esc(q.c)}</span><div class="qtext">${esc(q.q)}</div></div>
       <div class="ans"><div class="ans-label">Correct Answer</div><div class="ans-text">${esc(q.a)}</div></div>
-      ${!r.revealed ? `<button class="btn ${r.dbl ? 'btn-teal' : 'btn-ghost'}" id="dbl" style="margin-top:10px">${r.dbl ? '✖️2 DOUBLE POINTS ON' : '✖️2 Make Double Round'}</button>` : ''}
+      ${!r.revealed ? `<button class="btn ${r.dbl ? 'btn-teal' : 'btn-ghost'}" id="dbl" style="margin-top:8px">${r.dbl ? '✖️2 DOUBLE POINTS ON' : '✖️2 Make Double Round'}</button>` : ''}
       ${!r.revealed ? `<button class="btn btn-gold" id="rev">Reveal Options</button>` : ''}
       ${r.revealed && !r.showAnswer ? `<button class="btn btn-teal" id="lock">Show Answer &amp; Points</button>` : ''}
       ${r.showAnswer ? `<button class="btn btn-gold" id="next">Next Question ›</button>` : ''}`;
@@ -1505,7 +1517,7 @@ function renderMod(r) {
           <div class="result-text">${esc(res.winnerName)} ${res.correct ? 'was Correct!' : 'was Wrong!'}</div>
           <div class="result-sub">${res.pts >= 0 ? '+' + res.pts : res.pts} Points | Correct Answer: ${esc(q.a)}</div>
         </div>
-        <button class="btn btn-gold" id="next" style="margin-top:14px">Next Question ›</button>
+        <button class="btn btn-gold" id="next" style="margin-top:12px">Next Question ›</button>
       `;
     } else if (r.buzzedBy) {
       const gain = r.dbl ? 20 : 10;
@@ -1514,7 +1526,7 @@ function renderMod(r) {
         <div class="buzzed">
           <div class="who">🔔 ${esc(bName)} BUZZED!</div>
           <div id="timerHolder">${timerHTML(r)}</div>
-          <div class="row" style="margin-top:10px">
+          <div class="row" style="margin-top:8px">
             <button class="btn btn-teal" id="ok">Correct (+${gain})</button>
             <button class="btn btn-cerise" id="no">Wrong ${r.neg ? '(−' + penalty + ')' : ''}</button>
           </div>
@@ -1522,13 +1534,13 @@ function renderMod(r) {
       `;
     } else if (r.revealed) {
       actionContent = `
-        <div class="status" style="margin-top:14px">Question sent! Waiting for buzzes...</div>
-        <button class="btn btn-ghost" id="next" style="margin-top:14px">Skip Question ›</button>
+        <div class="status" style="margin-top:10px">Question sent! Waiting for buzzes...</div>
+        <button class="btn btn-ghost" id="next" style="margin-top:10px">Skip Question ›</button>
       `;
     } else {
       actionContent = `
-        <button class="btn ${r.dbl ? 'btn-teal' : 'btn-ghost'}" id="dbl" style="margin-top:10px">${r.dbl ? '✖️2 DOUBLE POINTS ON' : '✖️2 Make Double Round'}</button>
-        <button class="btn btn-gold" id="reveal" style="margin-top:10px">🚀 Reveal / Send Question</button>
+        <button class="btn ${r.dbl ? 'btn-teal' : 'btn-ghost'}" id="dbl" style="margin-top:8px">${r.dbl ? '✖️2 DOUBLE POINTS ON' : '✖️2 Make Double Round'}</button>
+        <button class="btn btn-gold" id="reveal" style="margin-top:8px">🚀 Reveal / Send Question</button>
       `;
     }
 
