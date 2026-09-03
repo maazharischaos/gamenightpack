@@ -17,7 +17,9 @@ function buildPrompt({ topic, categories, count, avoid }) {
     ? `\nDo NOT repeat or rephrase any of these questions:\n- ${avoid.slice(0, 40).join('\n- ')}\n`
     : '';
 
-  return `Write exactly ${count} DISTINCT multiple-choice trivia questions about ${subject}.${avoidLine}
+  return `System: You are an ultra-fast, JSON-only trivia generator. Return ONLY a valid JSON array of questions without markdown formatting.
+
+User: Write exactly ${count} DISTINCT multiple-choice trivia questions about ${subject}.${avoidLine}
 
 Hard Rules:
 - Return ONLY a raw JSON array.
@@ -65,10 +67,9 @@ function clean(list, count, seenKeys) {
 
 async function callGemini(key, prompt) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(key)}`;
+  
+  // REST API expects system_instruction (snake_case) or embedded in prompt
   const payload = {
-    systemInstruction: {
-      parts: [{ text: "You are a fast JSON-only quiz generator. Return only a valid JSON array of questions without markdown formatting." }]
-    },
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: {
       temperature: 0.8,
@@ -84,7 +85,7 @@ async function callGemini(key, prompt) {
   });
 
   const raw = await res.text();
-  if (!res.ok) throw new Error(`Gemini HTTP ${res.status}: ${raw.slice(0, 200)}`);
+  if (!res.ok) throw new Error(`Google API ${res.status}: ${raw.slice(0, 200)}`);
 
   const data = JSON.parse(raw);
   const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '';
@@ -106,7 +107,7 @@ export async function onRequest(context) {
   if (context.request.method !== 'POST') return new Response(JSON.stringify({ error: 'Use POST' }), { status: 405, headers: CORS });
 
   const geminiKey = context.env?.GEMINI_API_KEY;
-  if (!geminiKey) return new Response(JSON.stringify({ error: 'GEMINI_API_KEY missing.' }), { status: 500, headers: CORS });
+  if (!geminiKey) return new Response(JSON.stringify({ error: 'GEMINI_API_KEY environment variable is missing in Cloudflare Pages.' }), { status: 500, headers: CORS });
 
   let body = {};
   try { body = await context.request.json(); } catch (_) {}
@@ -120,8 +121,9 @@ export async function onRequest(context) {
     if (questions.length >= 1) {
       return new Response(JSON.stringify({ questions, provider: 'gemini-3.6-flash', asked: count, got: questions.length }), { status: 200, headers: CORS });
     }
-    return new Response(JSON.stringify({ error: 'No valid questions returned' }), { status: 502, headers: CORS });
+    return new Response(JSON.stringify({ error: 'No valid questions returned from AI' }), { status: 500, headers: CORS });
   } catch (e) {
-    return new Response(JSON.stringify({ error: e.message }), { status: 502, headers: CORS });
+    // Return exact error message so you can see why Google rejected it
+    return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: CORS });
   }
 }
