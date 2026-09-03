@@ -165,6 +165,23 @@ const PRESET_CATEGORIES = [
 function catColor(c) { return '#111111'; }
 function shuffle(arr) { const a = arr.slice(); for(let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
+/* Wake Lock System */
+let wakeLock = null;
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      wakeLock = await navigator.wakeLock.request('screen');
+    }
+  } catch (err) {
+    console.log('Wake Lock Error:', err);
+  }
+}
+document.addEventListener('visibilitychange', async () => {
+  if (wakeLock !== null && document.visibilityState === 'visible') {
+    await requestWakeLock();
+  }
+});
+
 /* Firebase Init */
 let db = null, serverOffset = 0;
 function configured() { return FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.databaseURL; }
@@ -201,7 +218,7 @@ function bindTap(el, fn) {
 
 function playersObj(r) { return (r && r.players) || {}; }
 
-/* Real Players Filter (Includes Host in Online Mode, Excludes Dedicated Host in Hosted Mode) */
+/* Real Players Filter */
 function realPlayersObj(r) {
   const pMap = playersObj(r);
   const out = {};
@@ -239,6 +256,7 @@ function esc(s) { return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;
 let AC = null, soundReady = false;
 function ensureAC() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { return null; } } return AC; }
 function unlockAudio() {
+  requestWakeLock();
   const ac = ensureAC(); if (!ac) return;
   if (ac.state === 'suspended') ac.resume();
   if (!soundReady) {
@@ -269,18 +287,28 @@ function sGo() { tone(660, 0, 0.10, 0.3, 'sine'); tone(990, 0.12, 0.22, 0.32, 's
 let tickInterval = null, lastBeepSecond = null, playedTimeUp = false;
 function timerStart(r) {
   if (!r || !r.timeLimit) return null;
-  if (r.online) return (r.phase === 'question') ? r.phaseAt : null;
+  if (r.online) {
+    if (r.phase !== 'question') return null;
+    if (r.mode === 'buzzer') return r.buzzedBy ? (r.buzzedAt || r.phaseAt) : null;
+    return r.phaseAt;
+  }
   if (r.mode === 'fff') return r.revealed ? r.revealedAt : null;
   return r.buzzedAt || null;
 }
+
 function remainingSecs(r) {
   const st = timerStart(r);
   if (!r || !r.started || !r.timeLimit || !st) return null;
-  if (r.online) return (r.phase === 'question') ? Math.max(0, r.timeLimit - ((serverNow() - st) / 1000)) : null;
+  if (r.online) {
+    if (r.phase !== 'question') return null;
+    const limit = (r.mode === 'buzzer' && r.buzzedBy) ? BUZZ_ANSWER_S : r.timeLimit;
+    return Math.max(0, limit - ((serverNow() - st) / 1000));
+  }
   if (r.mode === 'fff' && r.showAnswer) return null;
   if (r.mode !== 'fff' && r.result) return null;
   return Math.max(0, r.timeLimit - ((serverNow() - st) / 1000));
 }
+
 function startTicking() {
   if (tickInterval) return;
   tickInterval = setInterval(() => {
@@ -314,7 +342,8 @@ function timerHTML(r) {
   const rem = remainingSecs(r);
   if (rem === null) return '';
   const warn = rem <= ((r.timeLimit <= 5) ? 2 : 5);
-  const pct = Math.max(0, Math.min(100, (rem / r.timeLimit) * 100));
+  const limit = (r.online && r.mode === 'buzzer' && r.buzzedBy) ? BUZZ_ANSWER_S : r.timeLimit;
+  const pct = Math.max(0, Math.min(100, (rem / limit) * 100));
   if (rem <= 0) return `<div class="timer"><div class="timeup">⏰ Time's up!</div></div>`;
   return `<div class="timer">
     <div class="timer-label">Time to answer</div>
@@ -483,8 +512,19 @@ function handleRoomAudioDiff(prev, r) {
   if (r.online) {
     if (prev.phase !== 'question' && r.phase === 'question') sGo();
     if (prev.phase !== 'reveal' && r.phase === 'reveal') {
-      const my = answersObj(r)[ME.id], q = currentQ(r);
-      if (my && my.choice === q.a) sCorrect(); else sWrong();
+      if (r.mode === 'buzzer') {
+        const bid = r.buzzedBy;
+        const myAns = answersObj(r)[bid];
+        const q = currentQ(r);
+        if (bid === ME.id) {
+          if (myAns && myAns.choice === q.a) sCorrect(); else sWrong();
+        } else {
+          if (myAns && myAns.choice === q.a) sCorrect(); else sWrong();
+        }
+      } else {
+        const my = answersObj(r)[ME.id], q = currentQ(r);
+        if (my && my.choice === q.a) sCorrect(); else sWrong();
+      }
     }
   } else if (r.mode === 'fff') {
     if (!prev.showAnswer && r.showAnswer) {
@@ -582,7 +622,7 @@ async function initHostRoomInFirebase() {
   subscribeRoom(code);
 }
 
-/* RENDER HOST SETUP SCREEN (PRESERVES FOCUS & CURSOR) */
+/* RENDER HOST SETUP SCREEN */
 function renderHostSetupUI(r) {
   const activeEl = document.activeElement;
   const isTopicFocused = activeEl && activeEl.id === 'htopic';
@@ -658,7 +698,7 @@ function renderHostSetupUI(r) {
         </button>
       </div>
 
-      ${(!settings.online && settings.mode === 'buzzer') ? `
+      ${(settings.mode === 'buzzer') ? `
         <label style="margin-top:18px">Negative Marking <span style="color:var(--text-muted);font-weight:700">(Wrong Answer Penalty)</span></label>
         <div class="chips" id="negSeg">
           ${[0, 2, 5, 10].map(v => `<button class="chip ${settings.neg === v ? 'on' : ''}" data-n="${v}">${v === 0 ? 'Off' : '−' + v + ' pts'}</button>`).join('')}
@@ -733,7 +773,7 @@ function renderHostSetupUI(r) {
   }
 }
 
-/* RENDER PLAYER SETUP SCREEN (UPDATED RULE EXPLANATIONS) */
+/* RENDER PLAYER SETUP SCREEN */
 function renderPlayerSetupUI(r) {
   const settings = r.settings || defaultSetupSettings;
   const myData = (r.players || {})[ME.id] || {};
@@ -793,13 +833,14 @@ function renderPlayerSetupUI(r) {
         </div>
       </div>
 
-      ${(!settings.online && settings.mode === 'buzzer' && settings.neg) ? `
+      ${(settings.mode === 'buzzer' && settings.neg) ? `
         <div style="margin-top:14px">
           <label>Wrong Answer Penalty</label>
           <div style="font-weight:800;color:var(--red)">−${settings.neg} Points</div>
         </div>
       ` : ''}
 
+      <!-- Detailed Rule Explanation Breakdown -->
       <div style="margin-top:18px; border-top:1px solid var(--glass-border); padding-top:14px;">
         <label style="color:var(--gold)">HOW TO PLAY</label>
         <ul style="list-style:none; padding:0; margin-top:8px; font-size:12px; line-height:1.65; color:var(--text-muted); text-align:left;">
@@ -813,6 +854,7 @@ function renderPlayerSetupUI(r) {
       </div>
     </div>
 
+    <!-- Ready Button Split into 2 Lines -->
     <div class="card center">
       <label>YOUR STATUS</label>
       <button class="btn ${isReady ? 'btn-teal' : 'btn-gold'}" id="btn-toggle-ready" style="font-size:1.1rem;padding:14px 16px;line-height:1.35">
@@ -856,8 +898,29 @@ const FUN_TRIVIA_TIPS = [
 let reactionStartTime = 0;
 let reactionBestScore = null;
 
+async function recordReactionScore(ms) {
+  if (!ME.code || !ME.id) return;
+  try {
+    await db.ref(`rooms/${ME.code}/reactionScores/${ME.id}`).set({
+      name: ME.name || 'Player',
+      time: ms
+    });
+  } catch(e){}
+}
+
 function screenGenerating(msg) {
   let tipIndex = 0;
+
+  let lobbyBestText = '👑 Lobby Best: None yet';
+  if (lastRoom && lastRoom.reactionScores) {
+    const scores = Object.values(lastRoom.reactionScores).filter(s => s && s.time);
+    if (scores.length > 0) {
+      scores.sort((a,b) => a.time - b.time);
+      const best = scores[0];
+      lobbyBestText = `👑 Lobby Best: ${esc(best.name)} (${best.time} ms)`;
+    }
+  }
+
   app.innerHTML = `<div class="loading-hero">
     <div class="modbar" style="width:100%; margin-bottom: clamp(6px, 1.5vh, 12px);">
       <div><div class="sub">AI ROOM</div><div class="pin">#${ME.code || '----'}</div></div>
@@ -875,7 +938,8 @@ function screenGenerating(msg) {
         TAP TO WARM UP!
       </button>
       <div class="mini" id="react-score" style="margin-top: 14px; font-weight: 800; color: var(--cyan); font-size: 13px;">
-        ${reactionBestScore ? '⚡ Best Speed: ' + reactionBestScore + ' ms' : 'Tap the buzzer to test your speed!'}
+        ⚡ Your Best: ${reactionBestScore ? reactionBestScore + ' ms' : '--'}<br>
+        <span id="lobby-best-tag">${lobbyBestText}</span>
       </div>
     </div>
 
@@ -893,7 +957,6 @@ function screenGenerating(msg) {
   }
 
   const reactBtn = document.getElementById('react-target');
-  const scoreEl = document.getElementById('react-score');
   let state = 'idle';
 
   if (reactBtn) {
@@ -929,11 +992,11 @@ function screenGenerating(msg) {
       } else if (state === 'ready') {
         const ms = Date.now() - reactionStartTime;
         reactionBestScore = reactionBestScore ? Math.min(reactionBestScore, ms) : ms;
+        recordReactionScore(reactionBestScore);
         state = 'idle';
         sCorrect();
         reactBtn.className = 'bz mine';
         reactBtn.innerText = `${ms} ms!`;
-        if (scoreEl) scoreEl.innerText = `⚡ Best Speed: ${reactionBestScore} ms`;
         setTimeout(() => {
           if (document.getElementById('react-target')) {
             reactBtn.className = 'bz';
@@ -1261,22 +1324,59 @@ function renderOnline(r) {
   const my = ans[ME.id];
 
   if (r.phase === 'reveal' || r.showAnswer) {
-    const ok = my && my.choice === q.a;
-    const correct = Object.entries(ans).filter(([id, a]) => a.choice === q.a).sort((a, b) => a[1].at - b[1].at);
-    const myRank = correct.findIndex(([id]) => id === ME.id);
-    const pts = ok ? pointsFor(r, myRank) : 0;
+    if (r.mode === 'buzzer') {
+      const buzzedId = r.buzzedBy;
+      const buzzedData = buzzedId ? playersObj(r)[buzzedId] : null;
+      const buzzedName = buzzedData ? (typeof buzzedData === 'object' ? buzzedData.name : buzzedData) : 'Player';
+      const buzzedAns = buzzedId ? ans[buzzedId] : null;
+      const isBuzzedCorrect = buzzedAns && buzzedAns.choice === q.a;
+      const isMeBuzzed = buzzedId === ME.id;
 
-    app.innerHTML = `${head}
-      <div class="result-banner ${ok ? 'result-correct' : 'result-wrong'}">
-        <div class="result-emoji">${ok ? '✅' : '❌'}</div>
-        <div class="result-text">${ok ? (r.mode === 'fff' && myRank === 0 ? '⚡ Fastest!' : 'Correct!') : 'Wrong'}</div>
-        <div class="result-sub">${r.suspense ? '' : (ok ? '+' + pts + ' Points' : '')} Answer: ${esc(q.a)}</div>
-      </div>
-      <div class="opts" style="margin-top:14px">
-        ${opts.map((o, i) => `<button class="optbtn ${o === q.a ? 'correct' : (my && my.choice === o ? 'wrongpick' : '')}" disabled>
-          <span class="letter">${'ABCD'[i]}</span><span>${esc(o)}</span></button>`).join('')}
-      </div>`;
-    return;
+      let title = '';
+      let ok = false;
+      if (isMeBuzzed) {
+        ok = isBuzzedCorrect;
+        title = ok ? 'You were Correct!' : 'You were Wrong!';
+      } else if (buzzedId) {
+        ok = isBuzzedCorrect;
+        title = ok ? `${esc(buzzedName)} guessed right!` : `${esc(buzzedName)} guessed wrong!`;
+      } else {
+        ok = false;
+        title = 'No one buzzed in!';
+      }
+
+      const pts = (isMeBuzzed && ok) ? (r.dbl ? 20 : 10) : 0;
+      const ptsText = (!r.suspense && isMeBuzzed && ok) ? `+${pts} Points | ` : '';
+
+      app.innerHTML = `${head}
+        <div class="result-banner ${ok ? 'result-correct' : 'result-wrong'}">
+          <div class="result-emoji">${ok ? '✅' : '❌'}</div>
+          <div class="result-text">${title}</div>
+          <div class="result-sub">${ptsText}Correct Answer: ${esc(q.a)}</div>
+        </div>
+        <div class="opts" style="margin-top:14px">
+          ${opts.map((o, i) => `<button class="optbtn ${o === q.a ? 'correct' : (my && my.choice === o ? 'wrongpick' : '')}" disabled>
+            <span class="letter">${'ABCD'[i]}</span><span>${esc(o)}</span></button>`).join('')}
+        </div>`;
+      return;
+    } else {
+      const ok = my && my.choice === q.a;
+      const correct = Object.entries(ans).filter(([id, a]) => a.choice === q.a).sort((a, b) => a[1].at - b[1].at);
+      const myRank = correct.findIndex(([id]) => id === ME.id);
+      const pts = ok ? pointsFor(r, myRank) : 0;
+
+      app.innerHTML = `${head}
+        <div class="result-banner ${ok ? 'result-correct' : 'result-wrong'}">
+          <div class="result-emoji">${ok ? '✅' : '❌'}</div>
+          <div class="result-text">${ok ? (myRank === 0 ? '⚡ Fastest!' : 'Correct!') : 'Wrong'}</div>
+          <div class="result-sub">${r.suspense ? '' : (ok ? '+' + pts + ' Points' : '')} Answer: ${esc(q.a)}</div>
+        </div>
+        <div class="opts" style="margin-top:14px">
+          ${opts.map((o, i) => `<button class="optbtn ${o === q.a ? 'correct' : (my && my.choice === o ? 'wrongpick' : '')}" disabled>
+            <span class="letter">${'ABCD'[i]}</span><span>${esc(o)}</span></button>`).join('')}
+        </div>`;
+      return;
+    }
   }
 
   const sig = 'O' + r.qIndex + r.code;
@@ -1291,6 +1391,7 @@ function renderOnline(r) {
       app.innerHTML = `${head}
         ${dblBanner(r)}
         <div class="qbox"><span class="cat-chip">${esc(q.c)}</span><div class="qtext" id="qtext"></div></div>
+        <div id="timerHolder">${timerHTML(r)}</div>
         <div class="status">🎉 You buzzed first — pick your answer!</div>
         <div class="opts">
           ${opts.map((o, i) => `<button class="optbtn" data-o="${esc(o)}"><span class="letter">${'ABCD'[i]}</span><span>${esc(o)}</span></button>`).join('')}
