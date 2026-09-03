@@ -39,4 +39,4 @@ Hard Rules:
 
 function extractJSON(text) {
   if (!text) return null;
-  let t = text.trim().replace(/^```(?:json)?/i, '').replace(/
+  let t = text.trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
