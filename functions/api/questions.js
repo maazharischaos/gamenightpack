@@ -1,7 +1,7 @@
-// Cloudflare Pages Function: generates quiz questions strictly via Gemini 3.6 Flash.
+// Cloudflare Pages Function: generates quiz questions strictly via Gemini 2.0 Flash.
 // Reachable at /api/questions
 
-const GEMINI_MODEL = 'gemini-3.6-flash';
+const GEMINI_MODEL = 'gemini-2.0-flash';
 
 function buildPrompt({ topic, categories, count, avoid }) {
   let subject = '';
@@ -68,7 +68,6 @@ function clean(list, count, seenKeys) {
 async function callGemini(key, prompt) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(key)}`;
   
-  // REST API expects system_instruction (snake_case) or embedded in prompt
   const payload = {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: {
@@ -119,11 +118,10 @@ export async function onRequest(context) {
     const parsed = await callGemini(geminiKey, prompt);
     const questions = clean(parsed, count, new Set(avoid.map(a => String(a).toLowerCase())));
     if (questions.length >= 1) {
-      return new Response(JSON.stringify({ questions, provider: 'gemini-3.6-flash', asked: count, got: questions.length }), { status: 200, headers: CORS });
+      return new Response(JSON.stringify({ questions, provider: GEMINI_MODEL, asked: count, got: questions.length }), { status: 200, headers: CORS });
     }
     return new Response(JSON.stringify({ error: 'No valid questions returned from AI' }), { status: 500, headers: CORS });
   } catch (e) {
-    // Return exact error message so you can see why Google rejected it
     return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: CORS });
   }
 }
