@@ -800,7 +800,6 @@ function renderPlayerSetupUI(r) {
         </div>
       ` : ''}
 
-      <!-- Detailed Rule Explanation Breakdown -->
       <div style="margin-top:18px; border-top:1px solid var(--glass-border); padding-top:14px;">
         <label style="color:var(--gold)">HOW TO PLAY</label>
         <ul style="list-style:none; padding:0; margin-top:8px; font-size:12px; line-height:1.65; color:var(--text-muted); text-align:left;">
@@ -814,7 +813,6 @@ function renderPlayerSetupUI(r) {
       </div>
     </div>
 
-    <!-- Ready Button Split into 2 Lines -->
     <div class="card center">
       <label>YOUR STATUS</label>
       <button class="btn ${isReady ? 'btn-teal' : 'btn-gold'}" id="btn-toggle-ready" style="font-size:1.1rem;padding:14px 16px;line-height:1.35">
@@ -1108,12 +1106,27 @@ async function joinFromLauncher(roomCode, pName, pId, isHostFlag) {
   subscribeRoom(roomCode);
 }
 
-/* LEADERBOARD WITH RESTART / PLAY AGAIN WORKFLOW */
+/* LEADERBOARD WITH DEDUPLICATION & RESTART WORKFLOW */
 function renderResults(r) {
   stopTicking();
-  const players = Object.entries(realPlayersObj(r));
+  const rawPlayers = Object.entries(realPlayersObj(r));
   const sc = scoresObj(r);
-  const ranked = players.map(([id, p]) => ({ id, nm: (p && typeof p === 'object' ? p.name : p) || 'Player', pts: sc[id] || 0 })).sort((a, b) => b.pts - a.pts);
+
+  const rawList = rawPlayers.map(([id, p]) => ({
+    id,
+    nm: (p && typeof p === 'object' ? p.name : p) || 'Player',
+    pts: sc[id] || 0
+  })).sort((a, b) => b.pts - a.pts);
+
+  // Deduplicate entries by case-insensitive name so Host is never shown twice
+  const seenNames = new Set();
+  const ranked = rawList.filter(item => {
+    const key = item.nm.trim().toLowerCase();
+    if (seenNames.has(key)) return false;
+    seenNames.add(key);
+    return true;
+  });
+
   const medal = p => p === 1 ? '🥇' : p === 2 ? '🥈' : p === 3 ? '🥉' : '#' + p;
   const w = ranked[0];
   const isHost = ME.role === 'mod' || (r.players && r.players[ME.id] && r.players[ME.id].isHost);
@@ -1125,11 +1138,14 @@ function renderResults(r) {
       <div class="sub">${w ? esc(w.nm) + ' Wins!' : 'Game Complete'}</div>
     </div>
     <div style="margin-top:14px">
-      ${ranked.map((x, i) => `<div class="rank-row">
-        <div class="rank-pos">${medal(i + 1)}</div>
-        <div class="rank-name">${esc(x.nm)}${x.id === ME.id ? '<span class="you-badge">YOU</span>' : ''}</div>
-        <div class="rank-pts">${x.pts}</div>
-      </div>`).join('')}
+      ${ranked.map((x, i) => {
+        const isMe = x.id === ME.id || (ME.name && x.nm.toLowerCase() === ME.name.toLowerCase());
+        return `<div class="rank-row">
+          <div class="rank-pos">${medal(i + 1)}</div>
+          <div class="rank-name">${esc(x.nm)}${isMe ? '<span class="you-badge">YOU</span>' : ''}</div>
+          <div class="rank-pts">${x.pts}</div>
+        </div>`;
+      }).join('')}
     </div>
     <div style="margin-top:auto; display:flex; flex-direction:column; gap:10px;">
       ${isHost ? `
@@ -1386,7 +1402,7 @@ function renderMod(r) {
         <div class="result-banner ${res.correct ? 'result-correct' : 'result-wrong'}">
           <div class="result-emoji">${res.correct ? '✅' : '❌'}</div>
           <div class="result-text">${esc(res.winnerName)} ${res.correct ? 'was Correct!' : 'was Wrong!'}</div>
-          <div class="result-sub">${res.pts >= 0 ? '+' + res.pts : res.pts} Points</div>
+          <div class="result-sub">${res.pts >= 0 ? '+' + res.pts : res.pts} Points | Correct Answer: ${esc(q.a)}</div>
         </div>
         <button class="btn btn-gold" id="next" style="margin-top:14px">Next Question ›</button>
       `;
@@ -1563,11 +1579,25 @@ function renderPlayer(r) {
     const bName = bData ? (typeof bData === 'object' ? bData.name : bData) : 'Player';
 
     if (res) {
+      const isWinner = res.winnerId === ME.id;
+      const bannerClass = res.correct ? 'result-correct' : 'result-wrong';
+      const emoji = res.correct ? '✅' : '❌';
+      let title = '';
+      let subText = '';
+
+      if (isWinner) {
+        title = res.correct ? 'You were Correct!' : 'You were Wrong!';
+        subText = `${res.pts >= 0 ? '+' + res.pts : res.pts} Points | Correct Answer: ${esc(q.a)}`;
+      } else {
+        title = res.correct ? `${esc(res.winnerName)} guessed right!` : `${esc(res.winnerName)} guessed wrong!`;
+        subText = `Correct Answer: ${esc(q.a)}`;
+      }
+
       app.innerHTML = `
-        <div class="result-banner ${res.correct ? 'result-correct' : 'result-wrong'}" style="margin:auto">
-          <div class="result-emoji">${res.correct ? '✅' : '❌'}</div>
-          <div class="result-text">${esc(res.winnerName)} ${res.correct ? 'was Correct!' : 'was Wrong!'}</div>
-          <div class="result-sub">${res.pts >= 0 ? '+' + res.pts : res.pts} Points</div>
+        <div class="result-banner ${bannerClass}" style="margin:auto">
+          <div class="result-emoji">${emoji}</div>
+          <div class="result-text">${title}</div>
+          <div class="result-sub">${subText}</div>
         </div>
       `;
       return;
