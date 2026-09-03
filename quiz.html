@@ -122,10 +122,12 @@
   .optbtn.correct .letter { background: var(--green); color: #fff; }
   .optbtn.wrongpick { border-color: var(--red); background: rgba(255, 42, 85, 0.2); }
   .optbtn.wrongpick .letter { background: var(--red); color: #fff; }
-  .loading { text-align: center; padding: 30px 16px; }
-  .spinner { width: 40px; height: 40px; border: 3px solid rgba(255, 200, 42, 0.2); border-top-color: var(--gold); border-radius: 50%; margin: 0 auto 16px; animation: spin 0.8s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .srcbadge { display: inline-block; font-size: 9px; font-weight: 800; padding: 3px 10px; border-radius: 20px; background: rgba(255, 200, 42, 0.15); border: 1px solid var(--gold-glow); color: var(--gold); letter-spacing: 1px; }
+
+  /* Animated Loading & Fun Overlay */
+  .loading-hero { text-align: center; padding: 40px 16px; margin: auto; }
+  .brain-pulse { font-size: 4.5rem; line-height: 1; filter: drop-shadow(0 0 25px var(--gold-glow)); animation: pulse 1.2s infinite alternate ease-in-out; margin-bottom: 16px; }
+  @keyframes pulse { 0% { transform: scale(0.92); filter: drop-shadow(0 0 10px var(--gold-glow)); } 100% { transform: scale(1.15); filter: drop-shadow(0 0 35px var(--gold)); } }
+  .fun-tip { font-size: 0.9rem; font-weight: 700; color: var(--gold); margin-top: 12px; letter-spacing: 0.5px; min-height: 24px; }
 </style>
 </head>
 <body>
@@ -147,10 +149,13 @@ const FIREBASE_CONFIG = {
   appId: "1:383266305677:web:596c70c7ddc304fd9994c4"
 };
 
+/* Strictly these 5 Quick Categories */
 const PRESET_CATEGORIES = [
-  "General Knowledge", "Pop Culture & Movies", "World History",
-  "Science & Nature", "Technology & Gaming", "Sports & Fitness",
-  "Food & Drinks", "Geography & Travel"
+  "Bollywood",
+  "World History",
+  "Mental Math",
+  "Science and Nature",
+  "World Capitals"
 ];
 
 function shuffle(arr) { const a = arr.slice(); for(let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
@@ -392,7 +397,11 @@ function subscribeRoom(code) {
   roomRef = db.ref('rooms/' + code);
   roomListener = roomRef.on('value', snap => {
     const r = snap.val();
-    if (!r) { if (ME.role === 'player') { toast('Room closed by host'); goHome(); } return; }
+    if (!r) { 
+      // If room node isn't created yet because host is on setup screen, show lobby wait
+      renderWaitingForHostScreen(code);
+      return; 
+    }
     const prev = lastRoom;
     if (prev && (prev.qIndex !== r.qIndex || (prev.phase === 'question' && r.phase !== 'question'))) {
       myLockedSig = null;
@@ -486,7 +495,7 @@ function screenHome() {
 }
 
 /* Setup Screen */
-let setupSel = { cats: ["General Knowledge"], count: 20, time: 15, mode: 'buzzer', online: false, suspense: false, dbl: true, neg: 0, topic: '' };
+let setupSel = { cats: ["Bollywood"], count: 20, time: 15, mode: 'buzzer', online: false, suspense: false, dbl: true, neg: 0, topic: '' };
 
 function screenHostSetup() {
   app.innerHTML = `
@@ -499,8 +508,8 @@ function screenHostSetup() {
       <input id="hname" placeholder="HOST NAME" maxlength="14" value="${esc(setupSel.name || '')}" autocomplete="off">
 
       <label style="margin-top:14px">Custom AI Topic <span style="color:var(--gold);font-weight:800">(ANY TOPIC)</span></label>
-      <input id="htopic" placeholder="E.G. MARVEL MOVIES, CARS, 90S MUSIC" maxlength="40" value="${esc(setupSel.topic || '')}" autocomplete="off">
-      <p class="hint">Type literally anything to generate a custom quiz!</p>
+      <input id="htopic" placeholder="E.G. CARS, MARVEL, 90S HIP HOP" maxlength="40" value="${esc(setupSel.topic || '')}" autocomplete="off">
+      <p class="hint">Type literally anything or choose a quick category below!</p>
 
       <label style="margin-top:18px">Quick Categories</label>
       <div class="chips" id="chips">
@@ -519,6 +528,13 @@ function screenHostSetup() {
         <button class="segbtn ${setupSel.mode === 'fff' ? 'on' : ''}" data-m="fff">⚡ Fastest Finger<small>Multiple choice speed</small></button>
       </div>
 
+      ${(!setupSel.online && setupSel.mode === 'buzzer') ? `
+        <label style="margin-top:18px">Negative Marking <span style="color:var(--text-muted);font-weight:700">(Wrong Answer Penalty)</span></label>
+        <div class="chips" id="negSeg">
+          ${[0, 2, 5, 10].map(v => `<button class="chip ${setupSel.neg === v ? 'on' : ''}" data-n="${v}">${v === 0 ? 'Off' : '−' + v + ' pts'}</button>`).join('')}
+        </div>
+      ` : ''}
+
       <label style="margin-top:18px">Questions Count</label>
       <div class="chips" id="counts">
         ${[10, 15, 20, 30].map(n => `<button class="chip ${setupSel.count === n ? 'on' : ''}" data-n="${n}">${n}</button>`).join('')}
@@ -529,7 +545,7 @@ function screenHostSetup() {
         ${[5, 10, 15, 20, 30].map(t => `<button class="chip ${setupSel.time === t ? 'on' : ''}" data-t="${t}">${t}s</button>`).join('')}
       </div>
 
-      <button class="btn btn-gold" id="create" style="margin-top:16px">Generate &amp; Create Room ›</button>
+      <button class="btn btn-gold" id="create" style="margin-top:16px">Generate &amp; Launch Quiz ›</button>
     </div>
     <div class="center"><button class="backlink" id="back">‹ Back</button></div>
   `;
@@ -541,15 +557,25 @@ function screenHostSetup() {
 
   document.querySelectorAll('#modeSeg .segbtn').forEach(b => b.onclick = () => { keepValues(); setupSel.mode = b.dataset.m; screenHostSetup(); });
   document.querySelectorAll('#styleSeg .segbtn').forEach(b => b.onclick = () => { keepValues(); setupSel.online = b.dataset.o === '1'; screenHostSetup(); });
+  
   document.querySelectorAll('#chips .chip').forEach(b => b.onclick = () => {
     keepValues();
     const c = b.dataset.c;
-    setupSel.cats = setupSel.cats.includes(c) ? setupSel.cats.filter(x => x !== c) : [...setupSel.cats, c];
+    // Single select quick categories
+    setupSel.cats = [c];
+    document.getElementById('htopic').value = '';
+    setupSel.topic = '';
     screenHostSetup();
   });
+
+  const negContainer = document.getElementById('negSeg');
+  if (negContainer) {
+    negContainer.querySelectorAll('.chip').forEach(b => b.onclick = () => { keepValues(); setupSel.neg = parseInt(b.dataset.n, 10); screenHostSetup(); });
+  }
+
   document.querySelectorAll('#counts .chip').forEach(b => b.onclick = () => { keepValues(); setupSel.count = parseInt(b.dataset.n, 10); screenHostSetup(); });
   document.querySelectorAll('#times .chip').forEach(b => b.onclick = () => { keepValues(); setupSel.time = parseInt(b.dataset.t, 10); screenHostSetup(); });
-  document.getElementById('back').onclick = goHome;
+  document.getElementById('back').onclick = returnToLauncher;
 
   document.getElementById('create').onclick = () => {
     keepValues();
@@ -558,12 +584,43 @@ function screenHostSetup() {
   };
 }
 
+const FUN_TRIVIA_TIPS = [
+  "🧠 Warming up AI brain cells...",
+  "⚡ Polishing the buzzers for maximum speed...",
+  "✨ Crafting spicy trivia questions...",
+  "🎯 Balancing difficulty levels for party night...",
+  "🔥 Fact-checking trivia in the matrix..."
+];
+
 function screenGenerating(msg) {
-  app.innerHTML = `<div class="loading" style="margin:auto">
-    <div class="spinner"></div>
-    <div class="qtext">${esc(msg)}</div>
-    <div class="mini" style="margin-top:8px">Fetching parallel chunks via Gemini 3.6...</div>
+  let tipIndex = 0;
+  app.innerHTML = `<div class="loading-hero">
+    <div class="brain-pulse">🧠</div>
+    <div class="qtext" style="font-size: 1.4rem;">${esc(msg)}</div>
+    <div class="fun-tip" id="loading-fun-tip">${FUN_TRIVIA_TIPS[0]}</div>
+    <div class="spinner" style="margin-top: 24px;"></div>
   </div>`;
+
+  const tipEl = document.getElementById('loading-fun-tip');
+  if (tipEl) {
+    setInterval(() => {
+      tipIndex = (tipIndex + 1) % FUN_TRIVIA_TIPS.length;
+      if (tipEl) tipEl.innerText = FUN_TRIVIA_TIPS[tipIndex];
+    }, 2000);
+  }
+}
+
+function renderWaitingForHostScreen(code) {
+  app.innerHTML = `
+    <div class="home-hero" style="margin: auto 0;">
+      <div class="brain-pulse">⚡</div>
+      <h1 style="font-size:1.8rem">HOST IS CHOOSING TOPIC</h1>
+      <div class="sub" style="margin-top:8px">ROOM #${code}</div>
+      <div class="pill-live" style="margin-top:16px"><span class="dot"></span>WAITING FOR HOST TO LAUNCH</div>
+      <div class="spinner" style="margin-top:20px"></div>
+    </div>
+    <div class="center"><button class="backlink" onclick="returnToLauncher()">Exit Room</button></div>
+  `;
 }
 
 /* Parallel AI Chunk Engine */
@@ -609,17 +666,21 @@ async function generateAllAIParallel(topic, cats, totalWanted) {
 
 async function createRoom() {
   unlockAudio();
-  let code = newCode();
-  for (let i = 0; i < 4; i++) { const s = await db.ref('rooms/' + code).get(); if (!s.exists()) break; code = newCode(); }
+  
+  // Use ME.code if launched from Super App, else generate code
+  let code = ME.code || newCode();
+  if (!ME.code) {
+    for (let i = 0; i < 4; i++) { const s = await db.ref('rooms/' + code).get(); if (!s.exists()) break; code = newCode(); }
+  }
 
   const total = setupSel.count || 20;
   const topicLabel = setupSel.topic || setupSel.cats.join(', ');
-  screenGenerating(`Generating ${total} questions on "${topicLabel}"…`);
+  screenGenerating(`Building ${total} Trivia Questions...`);
 
   const aiQ = await generateAllAIParallel(setupSel.topic, setupSel.cats, total);
 
   if (aiQ.length < 3) {
-    alert('AI question generation failed or returned too few questions. Please check your connection or topic and try again.');
+    alert('AI question generation failed or returned too few questions. Please check connection and try again.');
     screenHostSetup();
     return;
   }
@@ -631,6 +692,30 @@ async function createRoom() {
   }
 
   const myId = setupSel.online ? uid() : 'mod';
+  const initialPlayers = {};
+  const initialScores = {};
+
+  if (setupSel.online) { 
+    initialPlayers[myId] = setupSel.name; 
+    initialScores[myId] = 0; 
+  }
+
+  // Pull existing players from Super App lobby so they connect automatically
+  if (ME.code && db) {
+    try {
+      const masterSnap = await db.ref(`master_rooms/${ME.code}/players`).get();
+      if (masterSnap.exists()) {
+        const mPlayers = masterSnap.val() || {};
+        Object.entries(mPlayers).forEach(([pid, pData]) => {
+          if (pData && pData.name) {
+            initialPlayers[pid] = pData.name;
+            initialScores[pid] = 0;
+          }
+        });
+      }
+    } catch(e){}
+  }
+
   const room = {
     code, created: firebase.database.ServerValue.TIMESTAMP,
     hostName: setupSel.name, mode: setupSel.mode,
@@ -644,10 +729,9 @@ async function createRoom() {
     revealed: false, revealedAt: null,
     buzzedBy: null, buzzedAt: null, result: null,
     answers: null, showAnswer: false, options: null,
-    players: {}, scores: {}
+    players: initialPlayers, scores: initialScores
   };
 
-  if (setupSel.online) { room.players[myId] = setupSel.name; room.scores[myId] = 0; }
   await db.ref('rooms/' + code).set(room);
 
   ME = setupSel.online
@@ -709,15 +793,12 @@ async function joinFromLauncher(roomCode, pName, pId, isHostFlag) {
     });
   }
 
-  const snap = await db.ref('rooms/' + roomCode).get();
-  if (isHostFlag) { screenHostSetup(); return; }
-
-  if (snap.exists()) {
-    const up = {};
-    up['rooms/' + roomCode + '/players/' + ME.id] = pName;
-    up['rooms/' + roomCode + '/scores/' + ME.id] = 0;
-    await db.ref().update(up);
+  if (isHostFlag) { 
+    screenHostSetup(); 
+    return; 
   }
+
+  // Subscribe to room updates gracefully
   subscribeRoom(roomCode);
 }
 
@@ -879,7 +960,7 @@ function renderMod(r) {
       ${bName ? `<div class="buzzed"><div class="who">🔔 ${esc(bName)}</div>
         <div class="row" style="margin-top:10px">
           <button class="btn btn-teal" id="ok">Correct (+10)</button>
-          <button class="btn btn-cerise" id="no">Wrong</button>
+          <button class="btn btn-cerise" id="no">Wrong ${r.neg ? '(−' + r.neg + ')' : ''}</button>
         </div></div>` : '<div class="mini">Waiting for buzzes…</div>'}
       <button class="btn btn-gold" id="next" style="margin-top:14px">Next Question ›</button>`;
 
@@ -901,7 +982,16 @@ async function fffLock() {
 async function modJudge(correct) {
   const r = lastRoom, bid = r.buzzedBy;
   const up = {};
-  if (bid && correct) up['rooms/' + ME.code + '/scores/' + bid] = (scoresObj(r)[bid] || 0) + 10;
+  const gain = r.dbl ? 20 : 10;
+  const penalty = (r.neg || 0) * (r.dbl ? 2 : 1);
+
+  if (bid) {
+    if (correct) {
+      up['rooms/' + ME.code + '/scores/' + bid] = (scoresObj(r)[bid] || 0) + gain;
+    } else {
+      up['rooms/' + ME.code + '/scores/' + bid] = (scoresObj(r)[bid] || 0) - penalty;
+    }
+  }
   up['rooms/' + ME.code + '/buzzedBy'] = null;
   await db.ref().update(up);
 }
