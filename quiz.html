@@ -847,19 +847,14 @@ function screenGenerating(msg) {
   }
 }
 
-/* SINGLE REQUEST FETCH ENGINE */
+/* SINGLE REQUEST FETCH ENGINE (TIMEOUT FREE) */
 async function fetchFullQuizSingleCall(topic, cats, totalCount) {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 12000);
-
   try {
     const res = await fetch('/api/questions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      signal: controller.signal,
       body: JSON.stringify({ topic: topic || '', categories: cats || [], count: totalCount, avoid: [] })
     });
-    clearTimeout(timeoutId);
 
     const data = await res.json().catch(() => ({}));
     if (!res.ok || data.error) {
@@ -870,12 +865,7 @@ async function fetchFullQuizSingleCall(topic, cats, totalCount) {
 
     return Array.isArray(data.questions) ? data.questions : [];
   } catch (e) {
-    clearTimeout(timeoutId);
-    if (e.name === 'AbortError') {
-      toast('Request timed out. Retrying...');
-    } else {
-      toast(`Network error: ${e.message}`);
-    }
+    toast(`Network error: ${e.message}`);
     return [];
   }
 }

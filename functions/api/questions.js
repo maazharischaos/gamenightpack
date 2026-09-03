@@ -1,4 +1,4 @@
-// Cloudflare Pages Function: Generates all quiz questions in 1 single request.
+// Cloudflare Pages Function: generates quiz questions with active Gemini 3.x fallback models.
 // Reachable at /api/questions
 
 const GEMINI_MODELS = [
@@ -77,19 +77,19 @@ async function callSingleModel(model, key, prompt) {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: {
       temperature: 0.7,
-      maxOutputTokens: 4096, // High token limit prevents 20-question JSON truncation
+      maxOutputTokens: 4096,
       responseMimeType: "application/json"
     }
   };
 
+  // No fetch timeout abort signal so the worker waits as long as needed for Gemini to return
   const res = await fetch(url, {
     method: 'POST',
     headers: { 
       'Content-Type': 'application/json',
       'x-goog-api-key': key
     },
-    body: JSON.stringify(payload),
-    signal: AbortSignal.timeout(9000) // 9-second timeout per model
+    body: JSON.stringify(payload)
   });
 
   const raw = await res.text();
@@ -112,7 +112,7 @@ async function callGeminiWithFallback(key, prompt) {
       continue;
     }
   }
-  throw lastErr || new Error('All Gemini fallback models timed out or failed.');
+  throw lastErr || new Error('All Gemini fallback models failed.');
 }
 
 const CORS = {

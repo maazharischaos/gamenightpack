@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gamenight-v55';
+const CACHE_NAME = 'gamenight-v56';
 
 const ASSETS_TO_CACHE = [
   './',
@@ -38,6 +38,11 @@ self.addEventListener('activate', (event) => {
 
 // Serve network version first; fallback to offline cache if network fails
 self.addEventListener('fetch', (event) => {
+  // Ignore non-GET requests (POST requests to /api/questions cannot be cached by the browser)
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
   event.respondWith(
     fetch(event.request)
       .then((networkResponse) => {
