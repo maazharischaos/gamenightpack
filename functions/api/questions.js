@@ -1,4 +1,4 @@
-// Cloudflare Pages Function: generates quiz questions with active Gemini 3.x fallback models.
+// Cloudflare Pages Function: Generates all quiz questions in 1 single request.
 // Reachable at /api/questions
 
 const GEMINI_MODELS = [
@@ -39,7 +39,7 @@ Hard Rules:
 
 function extractJSON(text) {
   if (!text) return null;
-  let t = text.trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+  let t = text.trim().replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim();
   const s = t.indexOf('['), e = t.lastIndexOf(']');
   if (s === -1 || e === -1 || e <= s) return null;
   try { return JSON.parse(t.slice(s, e + 1)); } catch (_) { return null; }
@@ -76,8 +76,8 @@ async function callSingleModel(model, key, prompt) {
   const payload = {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: {
-      temperature: 0.8,
-      maxOutputTokens: 2048,
+      temperature: 0.7,
+      maxOutputTokens: 4096, // High token limit prevents 20-question JSON truncation
       responseMimeType: "application/json"
     }
   };
@@ -88,7 +88,8 @@ async function callSingleModel(model, key, prompt) {
       'Content-Type': 'application/json',
       'x-goog-api-key': key
     },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(9000) // 9-second timeout per model
   });
 
   const raw = await res.text();
@@ -111,7 +112,7 @@ async function callGeminiWithFallback(key, prompt) {
       continue;
     }
   }
-  throw lastErr || new Error('All Gemini fallback models failed.');
+  throw lastErr || new Error('All Gemini fallback models timed out or failed.');
 }
 
 const CORS = {
@@ -131,7 +132,7 @@ export async function onRequest(context) {
 
   let body = {};
   try { body = await context.request.json(); } catch (_) {}
-  const count = Math.min(10, Math.max(1, parseInt(body.count, 10) || 5));
+  const count = Math.min(30, Math.max(1, parseInt(body.count, 10) || 20));
   const avoid = Array.isArray(body.avoid) ? body.avoid : [];
   const prompt = buildPrompt({ topic: body.topic, categories: body.categories, count, avoid });
 

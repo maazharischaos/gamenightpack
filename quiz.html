@@ -847,23 +847,23 @@ function screenGenerating(msg) {
   }
 }
 
-async function callGenChunkWithTimeout(topic, cats, count, avoid) {
+/* SINGLE REQUEST FETCH ENGINE */
+async function fetchFullQuizSingleCall(topic, cats, totalCount) {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 8500);
+  const timeoutId = setTimeout(() => controller.abort(), 12000);
 
   try {
     const res = await fetch('/api/questions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       signal: controller.signal,
-      body: JSON.stringify({ topic: topic || '', categories: cats || [], count, avoid: avoid || [] })
+      body: JSON.stringify({ topic: topic || '', categories: cats || [], count: totalCount, avoid: [] })
     });
     clearTimeout(timeoutId);
 
     const data = await res.json().catch(() => ({}));
     if (!res.ok || data.error) {
       const msg = data.error || `HTTP ${res.status} Error`;
-      console.error('API Error:', msg);
       toast(`AI Error: ${msg}`);
       return [];
     }
@@ -874,39 +874,9 @@ async function callGenChunkWithTimeout(topic, cats, count, avoid) {
     if (e.name === 'AbortError') {
       toast('Request timed out. Retrying...');
     } else {
-      console.error('Fetch error:', e);
       toast(`Network error: ${e.message}`);
     }
     return [];
-  }
-}
-
-/* PROGRESSIVE SEQUENTIAL FETCHING (Strictly throttled to prevent hitting 5 RPM rate limits) */
-async function streamRemainingQuestionsSequentially(code, topic, cats, targetCount, initialQuestions) {
-  let currentQuestions = [...initialQuestions];
-  const CHUNK_SIZE = 5;
-
-  while (currentQuestions.length < targetCount) {
-    // 12-second delay ensures we stay strictly under Google's 5 Requests Per Minute limit (5 RPM)
-    await new Promise(res => setTimeout(res, 12000));
-
-    const avoid = currentQuestions.map(q => q.q);
-    const needed = Math.min(CHUNK_SIZE, targetCount - currentQuestions.length);
-
-    const newChunk = await callGenChunkWithTimeout(topic, cats, needed, avoid);
-
-    if (newChunk.length > 0) {
-      const seen = new Set(currentQuestions.map(q => q.q.toLowerCase()));
-      newChunk.forEach(q => {
-        if (q && q.q && q.a && !seen.has(q.q.toLowerCase())) {
-          seen.add(q.q.toLowerCase());
-          currentQuestions.push(q);
-        }
-      });
-
-      // Stream new questions into Firebase silently while game is live
-      await db.ref(`rooms/${code}/aiQ`).set(currentQuestions);
-    }
   }
 }
 
@@ -921,19 +891,11 @@ async function startQuestionGeneration(r) {
     topicLabel: topicLabel
   });
 
-  // Step 1: Initial 5-question burst for immediate game launch
-  let initialQuestions = [];
-  let attempts = 0;
+  // Fetch full batch of questions in 1 single request
+  let questions = await fetchFullQuizSingleCall(settings.topic, settings.cats, total);
 
-  while (initialQuestions.length === 0 && attempts < 2) {
-    attempts++;
-    initialQuestions = await callGenChunkWithTimeout(settings.topic, settings.cats, Math.min(5, total), []);
-    if (initialQuestions.length === 0 && attempts < 2) {
-      await new Promise(res => setTimeout(res, 2000));
-    }
-  }
-
-  if (initialQuestions.length === 0) {
+  if (questions.length === 0) {
+    toast('Failed to generate questions. Returning to setup.');
     await db.ref(`rooms/${r.code}/phase`).set('setup');
     return;
   }
@@ -941,7 +903,7 @@ async function startQuestionGeneration(r) {
   let tl = Math.min(30, Math.max(5, settings.time));
   const dblSet = {};
   if (settings.dbl) {
-    for (let i = 0; i < total; i++) { if (Math.random() < 0.25) dblSet[i] = true; }
+    for (let i = 0; i < questions.length; i++) { if (Math.random() < 0.25) dblSet[i] = true; }
   }
 
   const myId = settings.online ? uid() : 'mod';
@@ -954,7 +916,7 @@ async function startQuestionGeneration(r) {
     scores[myId] = 0;
   }
 
-  // Step 2: Instant launch with first batch of 5 questions
+  // Launch game immediately with the complete set of questions
   await db.ref('rooms/' + r.code).update({
     hostName: r.hostName || 'Host',
     mode: settings.mode,
@@ -968,9 +930,9 @@ async function startQuestionGeneration(r) {
     phaseAt: firebase.database.ServerValue.TIMESTAMP,
     seq: 0,
     timeLimit: tl,
-    targetCount: total,
+    targetCount: questions.length,
     src: 'ai',
-    aiQ: initialQuestions,
+    aiQ: questions,
     started: true,
     finished: false,
     qIndex: 0,
@@ -989,11 +951,6 @@ async function startQuestionGeneration(r) {
   ME = settings.online
     ? { role: 'player', name: r.hostName || 'Host', code: r.code, id: myId }
     : { role: 'mod', name: r.hostName || 'Host', code: r.code, id: 'mod' };
-
-  // Step 3: Stream remaining questions sequentially with 12s stagger delay
-  if (initialQuestions.length < total) {
-    streamRemainingQuestionsSequentially(r.code, settings.topic, settings.cats, total, initialQuestions);
-  }
 }
 
 async function joinGame() {
