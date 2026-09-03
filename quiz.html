@@ -55,8 +55,8 @@
   .qbox { background: var(--glass-card); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: clamp(14px, 3.5vw, 20px); margin-top: clamp(8px, 2vw, 12px); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4); }
   .qnum { font-size: clamp(9px, 2.7vw, 11px); color: var(--text-muted); font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
   .qtext { font-size: clamp(16px, 4.8vw, 22px); font-weight: 800; line-height: 1.3; margin-top: 8px; color: #fff; }
-  .buzzer { margin-top: auto; padding: clamp(12px, 3vw, 20px) 0 6px; display: flex; justify-content: center; }
-  .bz { touch-action: manipulation; width: min(100%, 34vh); aspect-ratio: 1/1; border-radius: 50%; border: 3px solid var(--gold); background: linear-gradient(135deg, rgba(255, 200, 42, 0.2), rgba(255, 200, 42, 0.05)); color: var(--gold); font-size: clamp(28px, 9vw, 44px); font-weight: 900; letter-spacing: 2px; box-shadow: 0 0 30px var(--gold-glow); cursor: pointer; transition: transform 0.1s ease; }
+  .buzzer { margin-top: auto; padding: clamp(10px, 2.5vw, 16px) 0 clamp(28px, 7vw, 40px); display: flex; justify-content: center; }
+  .bz { touch-action: manipulation; width: min(100%, 32vh); aspect-ratio: 1/1; border-radius: 50%; border: 3px solid var(--gold); background: linear-gradient(135deg, rgba(255, 200, 42, 0.2), rgba(255, 200, 42, 0.05)); color: var(--gold); font-size: clamp(28px, 9vw, 44px); font-weight: 900; letter-spacing: 2px; box-shadow: 0 0 30px var(--gold-glow); cursor: pointer; transition: transform 0.1s ease; }
   .bz:active { transform: scale(0.94); }
   .bz.locked { border-color: var(--text-muted); background: rgba(255, 255, 255, 0.05); color: var(--text-muted); box-shadow: none; cursor: default; }
   .bz.mine { border-color: var(--green); background: rgba(16, 185, 129, 0.2); color: var(--green); box-shadow: 0 0 30px var(--green-glow); }
@@ -124,10 +124,10 @@
   .optbtn.wrongpick .letter { background: var(--red); color: #fff; }
 
   /* Animated Loading & Fun Overlay */
-  .loading-hero { text-align: center; padding: 20px 16px; margin: auto 0; display: flex; flex-direction: column; align-items: center; flex: 1; justify-content: center; }
-  .brain-pulse { font-size: 4rem; line-height: 1; filter: drop-shadow(0 0 25px var(--gold-glow)); animation: pulse 1.2s infinite alternate ease-in-out; margin-bottom: 10px; }
+  .loading-hero { text-align: center; padding: 10px 16px; margin: 0; display: flex; flex-direction: column; align-items: center; flex: 1; justify-content: center; }
+  .brain-pulse { font-size: 3.5rem; line-height: 1; filter: drop-shadow(0 0 25px var(--gold-glow)); animation: pulse 1.2s infinite alternate ease-in-out; margin-bottom: 6px; }
   @keyframes pulse { 0% { transform: scale(0.92); filter: drop-shadow(0 0 10px var(--gold-glow)); } 100% { transform: scale(1.15); filter: drop-shadow(0 0 35px var(--gold)); } }
-  .fun-tip { font-size: 0.85rem; font-weight: 700; color: var(--gold); margin-top: 8px; letter-spacing: 0.5px; min-height: 24px; }
+  .fun-tip { font-size: 0.85rem; font-weight: 700; color: var(--gold); margin-top: 6px; letter-spacing: 0.5px; min-height: 20px; }
   .ready-badge { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 12px; }
   .ready-badge.is-ready { background: rgba(16, 185, 129, 0.2); color: var(--green); border: 1px solid var(--green); }
   .ready-badge.not-ready { background: rgba(255, 42, 85, 0.15); color: var(--red); border: 1px solid var(--red); }
@@ -196,9 +196,19 @@ function bindTap(el, fn) {
   el.addEventListener('pointerdown', fire, { passive: false });
   el.addEventListener('click', fire);
 }
-function playersObj(r) { return r.players || {}; }
-function scoresObj(r) { return r.scores || {}; }
-function answersObj(r) { return r.answers || {}; }
+
+function playersObj(r) { return (r && r.players) || {}; }
+function realPlayersObj(r) {
+  const pMap = playersObj(r);
+  const out = {};
+  Object.entries(pMap).forEach(([id, p]) => {
+    const isHost = (typeof p === 'object' && p.isHost) || id === 'mod';
+    if (!isHost) out[id] = p;
+  });
+  return out;
+}
+function scoresObj(r) { return (r && r.scores) || {}; }
+function answersObj(r) { return (r && r.answers) || {}; }
 function deckLen(r) { return r && r.targetCount ? r.targetCount : (r && r.aiQ ? r.aiQ.length : 20); }
 
 function currentQ(r) {
@@ -213,7 +223,7 @@ function optionsForRoom(r) {
   const q = currentQ(r);
   return q.valid && q.opts && q.opts.length >= 4 ? shuffle(q.opts.slice(0, 4)) : [];
 }
-function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function esc(s) { return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
 /* Sound System */
 let AC = null, soundReady = false;
@@ -396,7 +406,7 @@ async function onlineNext(r) {
   });
 }
 
-/* Subscribe */
+/* Subscribe & Audio Diff Sync */
 function subscribeRoom(code) {
   unsubscribeRoom();
   roomRef = db.ref('rooms/' + code);
@@ -411,6 +421,8 @@ function subscribeRoom(code) {
     if (prev && (prev.qIndex !== r.qIndex || (prev.phase === 'question' && r.phase !== 'question'))) {
       myLockedSig = null;
     }
+
+    handleRoomAudioDiff(prev, r);
     lastRoom = r;
 
     if (r.phase === 'generating') {
@@ -424,7 +436,6 @@ function subscribeRoom(code) {
       return;
     }
 
-    if (ME.role === 'player') playerTransitionSounds(prev, r);
     if (r.online && r.started && !r.finished) { startEngine(); startUITick(); } else if (!r.online) { stopEngine(); stopUITick(); }
     const st = timerStart(r);
     if (r.started && r.timeLimit && st) {
@@ -440,24 +451,28 @@ function subscribeRoom(code) {
 
 function unsubscribeRoom() { if (roomRef && roomListener) roomRef.off('value', roomListener); roomRef = null; roomListener = null; }
 
-function playerTransitionSounds(prev, r) {
+function handleRoomAudioDiff(prev, r) {
   if (!prev) return;
   if (!prev.dbl && r.dbl) sDouble();
+  if (!prev.buzzedBy && r.buzzedBy) sBuzz();
+
+  if (!prev.result && r.result) {
+    if (r.result.correct) sCorrect(); else sWrong();
+  }
+
   if (r.online) {
     if (prev.phase !== 'question' && r.phase === 'question') sGo();
     if (prev.phase !== 'reveal' && r.phase === 'reveal') {
       const my = answersObj(r)[ME.id], q = currentQ(r);
       if (my && my.choice === q.a) sCorrect(); else sWrong();
     }
-    return;
-  }
-  if (r.mode !== 'fff') {
-    if (!prev.result && r.result) { r.result.correct ? sCorrect() : sWrong(); }
-  } else {
+  } else if (r.mode === 'fff') {
     if (!prev.showAnswer && r.showAnswer) {
       const my = answersObj(r)[ME.id], q = currentQ(r);
       if (my && my.choice === q.a) sCorrect(); else sWrong();
     }
+  } else {
+    if (!prev.revealed && r.revealed) sGo();
   }
 }
 
@@ -603,6 +618,16 @@ function renderHostSetupUI(r) {
         <button class="segbtn ${settings.mode === 'fff' ? 'on' : ''}" data-m="fff">⚡ Fastest Finger<small>Multiple choice speed</small></button>
       </div>
 
+      <label style="margin-top:18px">Game Enhancements</label>
+      <div class="chips" id="enhancements">
+        <button class="chip ${settings.dbl ? 'on' : ''}" id="toggle-dbl">
+          ${settings.dbl ? '✓ ' : ''}x2 Double Rounds
+        </button>
+        <button class="chip ${settings.suspense ? 'on' : ''}" id="toggle-suspense">
+          ${settings.suspense ? '✓ ' : ''}Suspense Mode
+        </button>
+      </div>
+
       ${(!settings.online && settings.mode === 'buzzer') ? `
         <label style="margin-top:18px">Negative Marking <span style="color:var(--text-muted);font-weight:700">(Wrong Answer Penalty)</span></label>
         <div class="chips" id="negSeg">
@@ -640,6 +665,9 @@ function renderHostSetupUI(r) {
   document.querySelectorAll('#modeSeg .segbtn').forEach(b => b.onclick = () => updateSettings({ mode: b.dataset.m }));
   document.querySelectorAll('#styleSeg .segbtn').forEach(b => b.onclick = () => updateSettings({ online: b.dataset.o === '1' }));
   
+  document.getElementById('toggle-dbl').onclick = () => updateSettings({ dbl: !settings.dbl });
+  document.getElementById('toggle-suspense').onclick = () => updateSettings({ suspense: !settings.suspense });
+
   document.querySelectorAll('#chips .chip').forEach(b => b.onclick = () => {
     const c = b.dataset.c;
     let currentCats = [...(settings.cats || [])];
@@ -766,22 +794,22 @@ function screenGenerating(msg) {
       <div class="pill-live"><span class="dot"></span>GENERATING</div>
     </div>
 
-    <div style="text-align:center; margin-top: 10px;">
+    <div style="text-align:center; margin-top: 6px;">
       <div class="brain-pulse">🧠</div>
       <div class="qtext" style="font-size: 1.2rem;">Building Trivia Questions...</div>
       <div class="fun-tip" id="loading-fun-tip">${FUN_TRIVIA_TIPS[0]}</div>
     </div>
 
-    <div class="buzzer" style="margin-top: 24px; flex-direction: column; align-items: center;">
+    <div class="buzzer" style="margin-top: 16px; flex-direction: column; align-items: center;">
       <button class="bz" id="react-target" style="font-size: clamp(15px, 4.2vw, 20px); line-height: 1.2; padding: 10px;">
         TAP TO WARM UP!
       </button>
-      <div class="mini" id="react-score" style="margin-top: 14px; font-weight: 800; color: var(--cyan); font-size: 13px;">
+      <div class="mini" id="react-score" style="margin-top: 10px; font-weight: 800; color: var(--cyan); font-size: 13px;">
         ${reactionBestScore ? '⚡ Best Speed: ' + reactionBestScore + ' ms' : 'Tap the buzzer to test your speed!'}
       </div>
     </div>
 
-    <div class="spinner" style="margin-top: 24px;"></div>
+    <div class="spinner" style="margin-top: 16px;"></div>
   </div>`;
 
   const tipEl = document.getElementById('loading-fun-tip');
@@ -804,7 +832,7 @@ function screenGenerating(msg) {
       if (state === 'idle') {
         state = 'waiting';
         reactBtn.className = 'bz locked';
-        reactBtn.innerText = 'WAIT FOR GOLD...';
+        reactBtn.innerText = 'WAIT FOR GREEN...';
         const delay = 1000 + Math.random() * 2000;
         setTimeout(() => {
           if (state === 'waiting' && document.getElementById('react-target')) {
@@ -847,7 +875,6 @@ function screenGenerating(msg) {
   }
 }
 
-/* SINGLE REQUEST FETCH ENGINE (TIMEOUT FREE) */
 async function fetchFullQuizSingleCall(topic, cats, totalCount) {
   try {
     const res = await fetch('/api/questions', {
@@ -881,7 +908,6 @@ async function startQuestionGeneration(r) {
     topicLabel: topicLabel
   });
 
-  // Fetch full batch of questions in 1 single request
   let questions = await fetchFullQuizSingleCall(settings.topic, settings.cats, total);
 
   if (questions.length === 0) {
@@ -906,7 +932,6 @@ async function startQuestionGeneration(r) {
     scores[myId] = 0;
   }
 
-  // Launch game immediately with the complete set of questions
   await db.ref('rooms/' + r.code).update({
     hostName: r.hostName || 'Host',
     mode: settings.mode,
@@ -1011,7 +1036,7 @@ async function joinFromLauncher(roomCode, pName, pId, isHostFlag) {
 
 function renderResults(r) {
   stopTicking();
-  const players = Object.entries(playersObj(r));
+  const players = Object.entries(realPlayersObj(r));
   const sc = scoresObj(r);
   const ranked = players.map(([id, p]) => ({ id, nm: typeof p === 'object' ? p.name : p, pts: sc[id] || 0 })).sort((a, b) => b.pts - a.pts);
   const medal = p => p === 1 ? '🥇' : p === 2 ? '🥈' : p === 3 ? '🥉' : '#' + p;
@@ -1051,7 +1076,7 @@ function myScoreDisplay(r) {
 function renderOnline(r) {
   if (r.finished) { renderResults(r); return; }
   const isEngine = ME.id === r.engineId;
-  const players = Object.entries(playersObj(r));
+  const players = Object.entries(realPlayersObj(r));
 
   if (!r.started) {
     app.innerHTML = `
@@ -1114,7 +1139,7 @@ function renderOnline(r) {
     app.innerHTML = `${head}
       <div class="result-banner ${ok ? 'result-correct' : 'result-wrong'}">
         <div class="result-emoji">${ok ? '✅' : '❌'}</div>
-        <div class="result-text">${ok ? (myRank === 0 ? '⚡ Fastest!' : 'Correct!') : 'Wrong'}</div>
+        <div class="result-text">${ok ? (r.mode === 'fff' && myRank === 0 ? '⚡ Fastest!' : 'Correct!') : 'Wrong'}</div>
         <div class="result-sub">${r.suspense ? '' : (ok ? '+' + pts + ' Points' : '')} Answer: ${esc(q.a)}</div>
       </div>
       <div class="opts" style="margin-top:14px">
@@ -1174,7 +1199,7 @@ function renderOnline(r) {
 }
 
 async function onlineBuzz() {
-  unlockAudio(); sBuzz();
+  unlockAudio();
   if (navigator.vibrate) navigator.vibrate(60);
   try {
     const res = await db.ref('rooms/' + ME.code + '/buzzedBy').transaction(cur => {
@@ -1199,7 +1224,7 @@ async function pickAnswer(val) {
 
 function renderMod(r) {
   if (r.finished) { renderResults(r); return; }
-  const players = Object.entries(playersObj(r));
+  const players = Object.entries(realPlayersObj(r));
   const q = currentQ(r);
 
   if (!q.valid) {
@@ -1216,7 +1241,7 @@ function renderMod(r) {
       </div>
       <button class="btn btn-gold" id="start" ${players.length ? '' : 'disabled'} style="margin-top:auto">Start Game</button>`;
     const s = document.getElementById('start');
-    if (s) s.onclick = () => db.ref('rooms/' + ME.code).update({ started: true, qIndex: 0 });
+    if (s) s.onclick = () => db.ref('rooms/' + ME.code).update({ started: true, qIndex: 0, revealed: false });
     return;
   }
 
@@ -1231,25 +1256,73 @@ function renderMod(r) {
       ${r.showAnswer ? `<button class="btn btn-gold" id="next">Next Question ›</button>` : ''}`;
 
     const dbl = document.getElementById('dbl'); if (dbl) dbl.onclick = () => db.ref('rooms/' + ME.code).update({ dbl: !r.dbl });
-    const rev = document.getElementById('rev'); if (rev) rev.onclick = () => db.ref('rooms/' + ME.code).update({ revealed: true, options: optionsForRoom(r) });
+    const rev = document.getElementById('rev'); if (rev) rev.onclick = () => db.ref('rooms/' + ME.code).update({ revealed: true, options: optionsForRoom(r), revealedAt: firebase.database.ServerValue.TIMESTAMP });
     const lock = document.getElementById('lock'); if (lock) lock.onclick = fffLock;
     const next = document.getElementById('next'); if (next) next.onclick = () => modNav(1);
   } else {
+    /* HOSTED BUZZER STATE MACHINE */
+    const res = r.result;
     const bData = r.buzzedBy ? playersObj(r)[r.buzzedBy] : null;
     const bName = typeof bData === 'object' ? bData.name : bData;
+
+    let actionContent = '';
+
+    if (res) {
+      // Step 4: Outcome Banner Active
+      actionContent = `
+        <div class="result-banner ${res.correct ? 'result-correct' : 'result-wrong'}">
+          <div class="result-emoji">${res.correct ? '✅' : '❌'}</div>
+          <div class="result-text">${esc(res.winnerName)} ${res.correct ? 'was Correct!' : 'was Wrong!'}</div>
+          <div class="result-sub">${res.pts >= 0 ? '+' + res.pts : res.pts} Points</div>
+        </div>
+        <button class="btn btn-gold" id="next" style="margin-top:14px">Next Question ›</button>
+      `;
+    } else if (r.buzzedBy) {
+      // Step 3: Player Buzzed In
+      const gain = r.dbl ? 20 : 10;
+      const penalty = (r.neg || 0) * (r.dbl ? 2 : 1);
+      actionContent = `
+        <div class="buzzed">
+          <div class="who">🔔 ${esc(bName)} BUZZED!</div>
+          <div id="timerHolder">${timerHTML(r)}</div>
+          <div class="row" style="margin-top:10px">
+            <button class="btn btn-teal" id="ok">Correct (+${gain})</button>
+            <button class="btn btn-cerise" id="no">Wrong ${r.neg ? '(−' + penalty + ')' : ''}</button>
+          </div>
+        </div>
+      `;
+    } else if (r.revealed) {
+      // Step 2: Question Revealed / Active
+      actionContent = `
+        <div class="status" style="margin-top:14px">Question sent! Waiting for buzzes...</div>
+        <button class="btn btn-ghost" id="next" style="margin-top:14px">Skip Question ›</button>
+      `;
+    } else {
+      // Step 1: Question Ready (Host Reviewing)
+      actionContent = `
+        <button class="btn ${r.dbl ? 'btn-teal' : 'btn-ghost'}" id="dbl" style="margin-top:10px">${r.dbl ? '✖️2 DOUBLE POINTS ON' : '✖️2 Make Double Round'}</button>
+        <button class="btn btn-gold" id="reveal" style="margin-top:10px">🚀 Reveal / Send Question</button>
+      `;
+    }
+
     app.innerHTML = `
-      <div class="modbar"><div><div class="sub">Host Buzzer Control</div></div><div class="qprog">Q ${r.qIndex + 1}/${deckLen(r)}</div></div>
-      <div class="qbox"><span class="cat-chip">${esc(q.c)}</span><div class="qtext">${esc(q.q)}</div></div>
-      <div class="ans"><div class="ans-label">Correct Answer</div><div class="ans-text">${esc(q.a)}</div></div>
-      ${!r.revealed ? `<button class="btn ${r.dbl ? 'btn-teal' : 'btn-ghost'}" id="dbl" style="margin-top:10px">${r.dbl ? '✖️2 DOUBLE POINTS ON' : '✖️2 Make Double Round'}</button>` : ''}
-      ${bName ? `<div class="buzzed"><div class="who">🔔 ${esc(bName)}</div>
-        <div class="row" style="margin-top:10px">
-          <button class="btn btn-teal" id="ok">Correct (+${r.dbl ? 20 : 10})</button>
-          <button class="btn btn-cerise" id="no">Wrong ${r.neg ? '(−' + (r.neg * (r.dbl ? 2 : 1)) + ')' : ''}</button>
-        </div></div>` : '<div class="mini">Waiting for buzzes…</div>'}
-      <button class="btn btn-gold" id="next" style="margin-top:14px">Next Question ›</button>`;
+      <div class="modbar">
+        <div><div class="sub">Host Buzzer Control</div></div>
+        <div class="qprog">Q ${r.qIndex + 1}/${deckLen(r)}</div>
+      </div>
+      <div class="qbox">
+        <span class="cat-chip">${esc(q.c)}</span>
+        <div class="qtext">${esc(q.q)}</div>
+      </div>
+      <div class="ans">
+        <div class="ans-label">Correct Answer</div>
+        <div class="ans-text">${esc(q.a)}</div>
+      </div>
+      ${actionContent}
+    `;
 
     const dbl = document.getElementById('dbl'); if (dbl) dbl.onclick = () => db.ref('rooms/' + ME.code).update({ dbl: !r.dbl });
+    const reveal = document.getElementById('reveal'); if (reveal) reveal.onclick = () => db.ref('rooms/' + ME.code).update({ revealed: true, revealedAt: firebase.database.ServerValue.TIMESTAMP, buzzedBy: null, result: null });
     const ok = document.getElementById('ok'); if (ok) ok.onclick = () => modJudge(true);
     const no = document.getElementById('no'); if (no) no.onclick = () => modJudge(false);
     const next = document.getElementById('next'); if (next) next.onclick = () => modNav(1);
@@ -1270,18 +1343,22 @@ async function fffLock() {
 
 async function modJudge(correct) {
   const r = lastRoom, bid = r.buzzedBy;
-  const up = {};
+  if (!bid) return;
+  const bData = playersObj(r)[bid];
+  const bName = typeof bData === 'object' ? bData.name : (bData || 'Player');
+  
   const gain = r.dbl ? 20 : 10;
   const penalty = (r.neg || 0) * (r.dbl ? 2 : 1);
+  const pts = correct ? gain : -penalty;
 
-  if (bid) {
-    if (correct) {
-      up['rooms/' + ME.code + '/scores/' + bid] = (scoresObj(r)[bid] || 0) + gain;
-    } else {
-      up['rooms/' + ME.code + '/scores/' + bid] = (scoresObj(r)[bid] || 0) - penalty;
-    }
-  }
-  up['rooms/' + ME.code + '/buzzedBy'] = null;
+  const up = {};
+  up['rooms/' + ME.code + '/scores/' + bid] = (scoresObj(r)[bid] || 0) + pts;
+  up['rooms/' + ME.code + '/result'] = {
+    winnerId: bid,
+    winnerName: bName,
+    correct: correct,
+    pts: pts
+  };
   await db.ref().update(up);
 }
 
@@ -1292,7 +1369,16 @@ async function modNav(d) {
     return;
   }
   await db.ref('rooms/' + ME.code).update({
-    qIndex: Math.max(0, r.qIndex + d), revealed: false, buzzedBy: null, answers: null, showAnswer: false, options: null, dbl: false
+    qIndex: Math.max(0, r.qIndex + d),
+    revealed: false,
+    revealedAt: null,
+    buzzedBy: null,
+    buzzedAt: null,
+    result: null,
+    answers: null,
+    showAnswer: false,
+    options: null,
+    dbl: false
   });
 }
 
@@ -1360,12 +1446,50 @@ function renderPlayer(r) {
       </div>`;
     if (!my) document.querySelectorAll('.optbtn').forEach(b => bindTap(b, () => pickAnswer(b.dataset.o)));
   } else {
+    /* HOSTED BUZZER PLAYER STATE MACHINE */
+    const res = r.result;
     const buzzed = !!r.buzzedBy, mine = r.buzzedBy === ME.id;
+    const bData = buzzed ? playersObj(r)[r.buzzedBy] : null;
+    const bName = typeof bData === 'object' ? bData.name : bData;
+
+    if (res) {
+      // Step 4: Result Feedback View
+      app.innerHTML = `
+        <div class="result-banner ${res.correct ? 'result-correct' : 'result-wrong'}" style="margin:auto">
+          <div class="result-emoji">${res.correct ? '✅' : '❌'}</div>
+          <div class="result-text">${esc(res.winnerName)} ${res.correct ? 'was Correct!' : 'was Wrong!'}</div>
+          <div class="result-sub">${res.pts >= 0 ? '+' + res.pts : res.pts} Points</div>
+        </div>
+      `;
+      return;
+    }
+
+    if (!r.revealed) {
+      // Step 1: Waiting for host to reveal
+      app.innerHTML = `
+        <div class="getready" style="margin:auto">
+          <div class="big">👂</div>
+          <div class="qtext">Get ready…</div>
+          <div class="sub">Host is reviewing question</div>
+        </div>
+      `;
+      return;
+    }
+
+    // Step 2 & 3: Question Active / Buzzed
     app.innerHTML = `
       <div class="qbox"><span class="cat-chip">${esc(q.c)}</span><div class="qtext">${esc(q.q)}</div></div>
-      <div class="buzzer"><button class="bz ${mine ? 'mine' : (buzzed ? 'locked' : '')}" id="bz" ${buzzed ? 'disabled' : ''}>${mine ? 'YOU!' : (buzzed ? '🔒' : 'BUZZ')}</button></div>`;
+      <div id="timerHolder">${timerHTML(r)}</div>
+      <div class="status">${buzzed ? (mine ? '🎉 YOU BUZZED!' : '🔒 ' + esc(bName) + ' BUZZED!') : 'Hit the buzzer!'}</div>
+      <div class="buzzer">
+        <button class="bz ${mine ? 'mine' : (buzzed ? 'locked' : '')}" id="bz" ${buzzed ? 'disabled' : ''}>
+          ${mine ? 'YOU!' : (buzzed ? '🔒' : 'BUZZ')}
+        </button>
+      </div>
+    `;
+
     const b = document.getElementById('bz');
-    if (b && !buzzed) b.onclick = () => db.ref('rooms/' + ME.code + '/buzzedBy').set(ME.id);
+    if (b && !buzzed) bindTap(b, onlineBuzz);
   }
 }
 
