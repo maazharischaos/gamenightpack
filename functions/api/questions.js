@@ -14,7 +14,7 @@ function buildPrompt({ topic, categories, count, avoid }) {
   }
 
   const avoidLine = (avoid && avoid.length)
-    ? `\nDo NOT repeat or rephrase any of these questions:\n- ${avoid.slice(0, 30).join('\n- ')}\n`
+    ? `\nDo NOT repeat or rephrase any of these questions:\n- ${avoid.slice(0, 40).join('\n- ')}\n`
     : '';
 
   return `Write exactly ${count} DISTINCT multiple-choice trivia questions about ${subject}.${avoidLine}

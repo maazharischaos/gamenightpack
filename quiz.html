@@ -124,13 +124,17 @@
   .optbtn.wrongpick .letter { background: var(--red); color: #fff; }
 
   /* Animated Loading & Fun Overlay */
-  .loading-hero { text-align: center; padding: 40px 16px; margin: auto; }
-  .brain-pulse { font-size: 4.5rem; line-height: 1; filter: drop-shadow(0 0 25px var(--gold-glow)); animation: pulse 1.2s infinite alternate ease-in-out; margin-bottom: 16px; }
+  .loading-hero { text-align: center; padding: 30px 16px; margin: auto; }
+  .brain-pulse { font-size: 4.5rem; line-height: 1; filter: drop-shadow(0 0 25px var(--gold-glow)); animation: pulse 1.2s infinite alternate ease-in-out; margin-bottom: 12px; }
   @keyframes pulse { 0% { transform: scale(0.92); filter: drop-shadow(0 0 10px var(--gold-glow)); } 100% { transform: scale(1.15); filter: drop-shadow(0 0 35px var(--gold)); } }
-  .fun-tip { font-size: 0.9rem; font-weight: 700; color: var(--gold); margin-top: 12px; letter-spacing: 0.5px; min-height: 24px; }
+  .fun-tip { font-size: 0.9rem; font-weight: 700; color: var(--gold); margin-top: 10px; letter-spacing: 0.5px; min-height: 24px; }
   .ready-badge { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 12px; }
   .ready-badge.is-ready { background: rgba(16, 185, 129, 0.2); color: var(--green); border: 1px solid var(--green); }
   .ready-badge.not-ready { background: rgba(255, 42, 85, 0.15); color: var(--red); border: 1px solid var(--red); }
+
+  /* Mini Reaction Test Button */
+  .reaction-box { margin-top: 20px; background: rgba(255, 255, 255, 0.05); border: 1.5px solid var(--glass-border); border-radius: 16px; padding: 16px; }
+  .react-btn { background: var(--gold); color: #07090e; font-weight: 900; font-size: 1.1rem; border: none; border-radius: 12px; padding: 14px; width: 100%; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -161,6 +165,7 @@ const PRESET_CATEGORIES = [
   "World Capitals"
 ];
 
+function catColor(c) { return '#111111'; }
 function shuffle(arr) { const a = arr.slice(); for(let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
 /* Firebase Init */
@@ -199,7 +204,7 @@ function bindTap(el, fn) {
 function playersObj(r) { return r.players || {}; }
 function scoresObj(r) { return r.scores || {}; }
 function answersObj(r) { return r.answers || {}; }
-function deckLen(r) { return r && r.aiQ ? r.aiQ.length : 0; }
+function deckLen(r) { return r && r.targetCount ? r.targetCount : (r && r.aiQ ? r.aiQ.length : 20); }
 function currentQ(r) {
   if (r && r.aiQ && r.aiQ.length) {
     const q = r.aiQ[Math.min(r.qIndex, r.aiQ.length - 1)];
@@ -401,7 +406,6 @@ function subscribeRoom(code) {
   roomListener = roomRef.on('value', snap => {
     const r = snap.val();
     if (!r) { 
-      // Host hasn't saved initial setup yet
       if (ME.role === 'player') {
         renderWaitingForHostSetup();
       }
@@ -416,7 +420,6 @@ function subscribeRoom(code) {
 
     // Both Host & Player render generating screen simultaneously
     if (r.phase === 'generating') {
-      const label = r.topicLabel || "Trivia Questions";
       screenGenerating(`Building Trivia Questions...`);
       return;
     }
@@ -572,7 +575,7 @@ function renderHostSetupUI(r) {
       <div class="sub">Room #${r.code}</div>
     </div>
 
-    <!-- PLAYERS LOBBY CARD (NO HOST NAME INPUT) -->
+    <!-- PLAYERS LOBBY CARD -->
     <div class="card">
       <label>Connected Players (${players.length})</label>
       <div class="scores" style="margin-top:6px">
@@ -592,7 +595,7 @@ function renderHostSetupUI(r) {
       <input id="htopic" placeholder="E.G. CARS, MARVEL, 90S MUSIC" maxlength="40" value="${esc(settings.topic || '')}" autocomplete="off">
       <p class="hint">Type literally anything or select quick categories below!</p>
 
-      <label style="margin-top:18px">Quick Categories <span style="color:var(--gold);font-weight:800">(SELECT MULTIPLE)</span></label>
+      <label style="margin-top:18px">Quick Categories</label>
       <div class="chips" id="chips">
         ${PRESET_CATEGORIES.map(c => `
           <button class="chip ${(settings.cats || []).includes(c) ? 'on' : ''}" data-c="${esc(c)}">
@@ -768,13 +771,27 @@ const FUN_TRIVIA_TIPS = [
   "🔥 Fact-checking trivia in the matrix..."
 ];
 
+let reactionStartTime = 0;
+let reactionBestScore = null;
+
 function screenGenerating(msg) {
   let tipIndex = 0;
   app.innerHTML = `<div class="loading-hero">
     <div class="brain-pulse">🧠</div>
-    <div class="qtext" style="font-size: 1.4rem;">${esc(msg)}</div>
+    <div class="qtext" style="font-size: 1.3rem;">Building Trivia Questions...</div>
     <div class="fun-tip" id="loading-fun-tip">${FUN_TRIVIA_TIPS[0]}</div>
-    <div class="spinner" style="margin-top: 24px;"></div>
+    
+    <!-- INTERACTIVE REACTION TEST MINI-GAME -->
+    <div class="reaction-box">
+      <label>Warm-up Mini Game</label>
+      <p class="hint" style="margin-bottom:10px">Test your tap speed while questions generate!</p>
+      <button class="react-btn" id="react-target">⚡ TAP WHEN GOLD!</button>
+      <div class="mini" id="react-score" style="margin-top:8px;font-weight:800;color:var(--cyan)">
+        ${reactionBestScore ? 'Your speed: ' + reactionBestScore + 'ms' : 'Tap to test reaction time'}
+      </div>
+    </div>
+
+    <div class="spinner" style="margin-top: 20px;"></div>
   </div>`;
 
   const tipEl = document.getElementById('loading-fun-tip');
@@ -784,67 +801,122 @@ function screenGenerating(msg) {
       if (tipEl) tipEl.innerText = FUN_TRIVIA_TIPS[tipIndex];
     }, 2000);
   }
+
+  // Interactive Reaction Speed Mini-Game logic
+  const reactBtn = document.getElementById('react-target');
+  const scoreEl = document.getElementById('react-score');
+  let state = 'idle'; // idle, waiting, ready
+
+  if (reactBtn) {
+    reactBtn.onclick = () => {
+      if (state === 'idle') {
+        state = 'waiting';
+        reactBtn.style.background = '#333';
+        reactBtn.style.color = '#fff';
+        reactBtn.innerText = 'WAIT FOR GOLD...';
+        const delay = 1000 + Math.random() * 2000;
+        setTimeout(() => {
+          if (state === 'waiting') {
+            state = 'ready';
+            reactionStartTime = Date.now();
+            reactBtn.style.background = 'var(--gold)';
+            reactBtn.style.color = '#07090e';
+            reactBtn.innerText = '⚡ TAP NOW!';
+          }
+        }, delay);
+      } else if (state === 'waiting') {
+        state = 'idle';
+        reactBtn.style.background = 'var(--red)';
+        reactBtn.innerText = 'TOO EARLY! Tap to Retry';
+      } else if (state === 'ready') {
+        const ms = Date.now() - reactionStartTime;
+        reactionBestScore = reactionBestScore ? Math.min(reactionBestScore, ms) : ms;
+        state = 'idle';
+        sCorrect();
+        reactBtn.style.background = 'var(--green)';
+        reactBtn.innerText = `${ms} ms! TAP TO RETRY`;
+        if (scoreEl) scoreEl.innerText = `⚡ Best Speed: ${reactionBestScore} ms`;
+      }
+    };
+  }
 }
 
-/* Parallel AI Chunk Engine with Equal Subject Split */
-async function callGenChunk(topic, cats, count, avoid) {
+/* Parallel AI Chunk Engine with AbortController 4s Timeout */
+async function callGenChunkWithTimeout(topic, cats, count, avoid) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 4000);
+
   try {
     const res = await fetch('/api/questions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
       body: JSON.stringify({ topic: topic || '', categories: cats || [], count, avoid: avoid || [] })
     });
+    clearTimeout(timeoutId);
     if (!res.ok) return [];
     const data = await res.json();
     return Array.isArray(data.questions) ? data.questions : [];
   } catch (e) {
-    console.error('Chunk fetch failed:', e);
+    clearTimeout(timeoutId);
     return [];
   }
 }
 
-async function generateAllAIParallel(topic, cats, totalWanted) {
+async function fetchAIBatch(topic, cats, totalWanted, existingQuestions) {
   let subjects = [];
-  if (topic && topic.trim().length > 0) {
-    subjects.push(topic.trim());
-  }
+  if (topic && topic.trim().length > 0) subjects.push(topic.trim());
   if (Array.isArray(cats) && cats.length > 0) {
-    cats.forEach(c => {
-      if (c && !subjects.includes(c)) subjects.push(c);
-    });
+    cats.forEach(c => { if (c && !subjects.includes(c)) subjects.push(c); });
   }
-  if (subjects.length === 0) {
-    subjects = ["General Knowledge"];
-  }
+  if (subjects.length === 0) subjects = ["General Knowledge"];
 
-  // Equal division per subject
-  const perSubject = Math.floor(totalWanted / subjects.length);
-  let remainder = totalWanted % subjects.length;
-
+  const perSubject = Math.max(1, Math.floor(totalWanted / subjects.length));
   const tasks = [];
   const CHUNK_SIZE = 5;
+  const avoidList = existingQuestions.map(q => q.q);
 
-  subjects.forEach((subj, idx) => {
-    let qty = perSubject + (idx === 0 ? remainder : 0);
-    const numChunks = Math.ceil(qty / CHUNK_SIZE);
+  subjects.forEach(subj => {
+    const numChunks = Math.ceil(perSubject / CHUNK_SIZE);
     for (let i = 0; i < numChunks; i++) {
-      const chunkQty = Math.min(CHUNK_SIZE, qty - (i * CHUNK_SIZE));
-      tasks.push(callGenChunk(subj, [], chunkQty, []));
+      const chunkQty = Math.min(CHUNK_SIZE, perSubject - (i * CHUNK_SIZE));
+      tasks.push(callGenChunkWithTimeout(subj, [], chunkQty, avoidList));
     }
   });
 
-  const results = await Promise.all(tasks);
-  const combined = [];
-  const seen = new Set();
+  const results = await Promise.allSettled(tasks);
+  const fetched = [];
+  const seen = new Set(existingQuestions.map(q => q.q.toLowerCase()));
 
-  results.flat().forEach(q => {
-    if (q && q.q && q.a && !seen.has(q.q.toLowerCase())) {
-      seen.add(q.q.toLowerCase());
-      combined.push(q);
+  results.forEach(res => {
+    if (res.status === 'fulfilled' && Array.isArray(res.value)) {
+      res.value.forEach(q => {
+        if (q && q.q && q.a && !seen.has(q.q.toLowerCase())) {
+          seen.add(q.q.toLowerCase());
+          fetched.push(q);
+        }
+      });
     }
   });
 
-  return combined;
+  return fetched;
+}
+
+/* Background Streaming Engine for Remaining Questions */
+async function streamRemainingQuestionsInBackground(code, topic, cats, targetCount, initialQuestions) {
+  let currentQuestions = [...initialQuestions];
+
+  while (currentQuestions.length < targetCount) {
+    const missingCount = targetCount - currentQuestions.length;
+    const newBatch = await fetchAIBatch(topic, cats, missingCount, currentQuestions);
+
+    if (newBatch.length === 0) break; // Network stopped returning, keep current deck
+
+    currentQuestions = currentQuestions.concat(newBatch);
+
+    // Silently stream new questions into Firebase room array
+    await db.ref(`rooms/${code}/aiQ`).set(currentQuestions);
+  }
 }
 
 async function startQuestionGeneration(r) {
@@ -853,16 +925,25 @@ async function startQuestionGeneration(r) {
   const total = settings.count || 20;
   const topicLabel = settings.topic || (settings.cats ? settings.cats.join(', ') : 'General Knowledge');
 
-  // Broadcast 'generating' phase to ALL players in Firebase
+  // Broadcast 'generating' phase to ALL players
   await db.ref(`rooms/${r.code}`).update({
     phase: 'generating',
     topicLabel: topicLabel
   });
 
-  const aiQ = await generateAllAIParallel(settings.topic, settings.cats, total);
+  // Step 1: Initial Fast Micro-Batch (First 5-10 questions in ~1.5s)
+  const initialBatchNeeded = Math.min(10, total);
+  let initialQuestions = await fetchAIBatch(settings.topic, settings.cats, initialBatchNeeded, []);
 
-  if (aiQ.length < 3) {
-    alert('AI question generation returned too few questions. Please check connection and try again.');
+  // Step 2: Emergency Immediate Top-up if initial batch returned < 5
+  if (initialQuestions.length < 5) {
+    const topUp = await fetchAIBatch(settings.topic, settings.cats, 5, initialQuestions);
+    initialQuestions = initialQuestions.concat(topUp);
+  }
+
+  // Fallback safety guard
+  if (initialQuestions.length === 0) {
+    alert('Network request timed out. Please tap Launch again.');
     await db.ref(`rooms/${r.code}/phase`).set('setup');
     return;
   }
@@ -870,7 +951,7 @@ async function startQuestionGeneration(r) {
   let tl = Math.min(30, Math.max(5, settings.time));
   const dblSet = {};
   if (settings.dbl) {
-    for (let i = 0; i < aiQ.length; i++) { if (Math.random() < 0.25) dblSet[i] = true; }
+    for (let i = 0; i < total; i++) { if (Math.random() < 0.25) dblSet[i] = true; }
   }
 
   const myId = settings.online ? uid() : 'mod';
@@ -878,7 +959,13 @@ async function startQuestionGeneration(r) {
   const scores = {};
   Object.keys(players).forEach(pid => { scores[pid] = 0; });
 
-  // Update room with questions and start game
+  // Add Host to active player list if Online mode
+  if (settings.online && !players[myId]) {
+    players[myId] = { name: r.hostName || 'Host', ready: true, isHost: true };
+    scores[myId] = 0;
+  }
+
+  // Step 3: Launch Game Immediately with promised target count (e.g. 20)
   await db.ref('rooms/' + r.code).update({
     hostName: r.hostName || 'Host',
     mode: settings.mode,
@@ -892,8 +979,9 @@ async function startQuestionGeneration(r) {
     phaseAt: firebase.database.ServerValue.TIMESTAMP,
     seq: 0,
     timeLimit: tl,
+    targetCount: total,
     src: 'ai',
-    aiQ,
+    aiQ: initialQuestions,
     started: true,
     finished: false,
     qIndex: 0,
@@ -905,8 +993,18 @@ async function startQuestionGeneration(r) {
     answers: null,
     showAnswer: false,
     options: null,
+    players,
     scores
   });
+
+  ME = settings.online
+    ? { role: 'player', name: r.hostName || 'Host', code: r.code, id: myId }
+    : { role: 'mod', name: r.hostName || 'Host', code: r.code, id: 'mod' };
+
+  // Step 4: Stream remaining questions silently in the background
+  if (initialQuestions.length < total) {
+    streamRemainingQuestionsInBackground(r.code, settings.topic, settings.cats, total, initialQuestions);
+  }
 }
 
 async function joinGame() {
@@ -920,7 +1018,7 @@ async function joinGame() {
     const snap = await db.ref('rooms/' + code).get();
     if (!snap.exists()) { toast('Room not found'); return; }
     const existing = Object.values(snap.val().players || {});
-    if (existing.some(n => String(n.name).trim().toLowerCase() === name.toLowerCase())) {
+    if (existing.some(n => String(typeof n === 'object' ? n.name : n).trim().toLowerCase() === name.toLowerCase())) {
       toast('Name already taken'); return;
     }
     const id = uid();
@@ -1005,6 +1103,17 @@ function renderResults(r) {
   document.getElementById('btn-launcher').onclick = returnToLauncher;
 }
 
+function dblBanner(r) {
+  return r.dbl ? `<div class="result-banner" style="background:var(--gold);border-color:var(--gold);padding:12px;margin-top:10px;color:#07090e">
+    <div style="font-size:20px;font-weight:900">✖️2 DOUBLE POINTS ROUND</div>
+    <div class="result-sub" style="color:#333">Every point counts double!</div></div>` : '';
+}
+
+function myScoreDisplay(r) {
+  const s = scoresObj(r)[ME.id] || 0;
+  return r.suspense ? '🙈' : s;
+}
+
 function renderOnline(r) {
   if (r.finished) { renderResults(r); return; }
   const isEngine = ME.id === r.engineId;
@@ -1019,7 +1128,7 @@ function renderOnline(r) {
       <div class="qbox center">
         <div class="ans-label">Room Code</div>
         <div style="font-size:46px;font-weight:900;color:var(--gold);margin:6px 0">${r.code}</div>
-        <div class="mini">${deckLen(r)} AI Questions loaded</div>
+        <div class="mini">${deckLen(r)} AI Questions promised</div>
       </div>
       <div class="scores">
         <div class="ans-label">Players Connected (${players.length})</div>
@@ -1037,12 +1146,13 @@ function renderOnline(r) {
   const q = currentQ(r);
   const head = `<div class="modbar">
     <div><div class="sub">${esc(ME.name)}</div><div style="font-weight:900">#${r.code}</div></div>
-    <div class="center"><div class="ans-label">Score</div><div style="font-size:22px;font-weight:900;color:var(--gold)">${scoresObj(r)[ME.id] || 0}</div></div>
+    <div class="center"><div class="ans-label">${r.suspense ? 'Hidden' : 'Score'}</div><div style="font-size:22px;font-weight:900;color:var(--gold)">${myScoreDisplay(r)}</div></div>
   </div>`;
 
   if (r.phase === 'countdown') {
     const left = Math.max(0, Math.ceil(COUNTDOWN_S - ((serverNow() - (r.phaseAt || 0)) / 1000)));
     app.innerHTML = `${head}
+      ${dblBanner(r)}
       <div class="getready" style="margin-top:auto;margin-bottom:auto">
         <div class="big">${left > 0 ? left : 'GO!'}</div>
         <div class="qtext">Question ${r.qIndex + 1} of ${deckLen(r)}</div>
@@ -1057,11 +1167,15 @@ function renderOnline(r) {
 
   if (r.phase === 'reveal' || r.showAnswer) {
     const ok = my && my.choice === q.a;
+    const correct = Object.entries(ans).filter(([id, a]) => a.choice === q.a).sort((a, b) => a[1].at - b[1].at);
+    const myRank = correct.findIndex(([id]) => id === ME.id);
+    const pts = ok ? pointsFor(r, myRank) : 0;
+
     app.innerHTML = `${head}
       <div class="result-banner ${ok ? 'result-correct' : 'result-wrong'}">
         <div class="result-emoji">${ok ? '✅' : '❌'}</div>
-        <div class="result-text">${ok ? 'Correct!' : 'Wrong'}</div>
-        <div class="result-sub">Answer: ${esc(q.a)}</div>
+        <div class="result-text">${ok ? (myRank === 0 ? '⚡ Fastest!' : 'Correct!') : 'Wrong'}</div>
+        <div class="result-sub">${r.suspense ? '' : (ok ? '+' + pts + ' Points' : '')} Answer: ${esc(q.a)}</div>
       </div>
       <div class="opts" style="margin-top:14px">
         ${opts.map((o, i) => `<button class="optbtn ${o === q.a ? 'correct' : (my && my.choice === o ? 'wrongpick' : '')}" disabled>
@@ -1070,26 +1184,77 @@ function renderOnline(r) {
     return;
   }
 
+  // QUESTION SCREEN
+  const sig = 'O' + r.qIndex + r.code;
+  const needType = typedSig !== sig;
+
+  if (r.mode === 'buzzer') {
+    const buzzed = !!r.buzzedBy, mine = r.buzzedBy === ME.id;
+    const bData = buzzed ? playersObj(r)[r.buzzedBy] : '';
+    const bName = typeof bData === 'object' ? bData.name : bData;
+
+    if (buzzed && mine && !my) {
+      app.innerHTML = `${head}
+        ${dblBanner(r)}
+        <div class="qbox"><span class="cat-chip">${esc(q.c)}</span><div class="qtext" id="qtext"></div></div>
+        <div class="status">🎉 You buzzed first — pick your answer!</div>
+        <div class="opts">
+          ${opts.map((o, i) => `<button class="optbtn" data-o="${esc(o)}"><span class="letter">${'ABCD'[i]}</span><span>${esc(o)}</span></button>`).join('')}
+        </div>`;
+      const el0 = document.getElementById('qtext');
+      if (needType) { typedSig = sig; typeText(el0, q.q); } else el0.textContent = q.q;
+      document.querySelectorAll('.optbtn').forEach(b => bindTap(b, () => pickAnswer(b.dataset.o)));
+      return;
+    }
+
+    app.innerHTML = `${head}
+      ${dblBanner(r)}
+      <div class="qbox"><span class="cat-chip">${esc(q.c)}</span><div class="qtext" id="qtext"></div></div>
+      <div id="timerHolder">${timerHTML(r)}</div>
+      <div class="status">${buzzed ? (mine ? '✅ Answer locked' : '🔒 ' + esc(bName) + ' buzzed first') : 'Hit the buzzer!'}</div>
+      <div class="buzzer"><button class="bz ${mine ? 'mine' : (buzzed ? 'locked' : '')}" id="bz" ${buzzed ? 'disabled' : ''}>${mine ? 'YOU!' : (buzzed ? '🔒' : 'BUZZ')}</button></div>`;
+    const el1 = document.getElementById('qtext');
+    if (needType) { typedSig = sig; typeText(el1, q.q); } else el1.textContent = q.q;
+    const bzEl = document.getElementById('bz');
+    if (bzEl && !buzzed) bindTap(bzEl, onlineBuzz);
+    return;
+  }
+
+  // FFF MODE
   app.innerHTML = `${head}
-    <div class="qbox">
-      <span class="cat-chip">${esc(q.c)}</span>
-      <div class="qnum" style="margin-top:8px">Q ${r.qIndex + 1} of ${deckLen(r)}</div>
-      <div class="qtext">${esc(q.q)}</div>
-    </div>
+    ${dblBanner(r)}
+    <div class="qbox"><span class="cat-chip">${esc(q.c)}</span><div class="qtext" id="qtext"></div></div>
     <div id="timerHolder">${timerHTML(r)}</div>
     <div class="opts">
       ${opts.map((o, i) => `<button class="optbtn ${my && my.choice === o ? 'picked' : ''}" data-o="${esc(o)}" ${my ? 'disabled' : ''}>
         <span class="letter">${'ABCD'[i]}</span><span>${esc(o)}</span></button>`).join('')}
     </div>`;
 
+  const el = document.getElementById('qtext');
+  if (needType) { typedSig = sig; typeText(el, q.q); } else el.textContent = q.q;
   if (!my) document.querySelectorAll('.optbtn').forEach(b => bindTap(b, () => pickAnswer(b.dataset.o)));
+}
+
+async function onlineBuzz() {
+  unlockAudio(); sBuzz();
+  if (navigator.vibrate) navigator.vibrate(60);
+  try {
+    const res = await db.ref('rooms/' + ME.code + '/buzzedBy').transaction(cur => {
+      if (cur === null || cur === undefined) return ME.id;
+      return;
+    });
+    if (res.committed && res.snapshot.val() === ME.id) {
+      await db.ref('rooms/' + ME.code + '/buzzedAt').set(firebase.database.ServerValue.TIMESTAMP);
+    }
+  } catch(e) {}
 }
 
 async function pickAnswer(val) {
   unlockAudio();
   if (!ME.code || !ME.id || !lastRoom) return;
+  const tapAt = serverNow();
   try {
-    await db.ref('rooms/' + ME.code + '/answers/' + ME.id).set({ choice: val, at: serverNow() });
+    await db.ref('rooms/' + ME.code + '/answers/' + ME.id).set({ choice: val, at: tapAt });
     sTick();
   } catch(e) {}
 }
@@ -1118,10 +1283,12 @@ function renderMod(r) {
       <div class="modbar"><div><div class="sub">Host Control</div></div><div class="qprog">Q ${r.qIndex + 1}/${deckLen(r)}</div></div>
       <div class="qbox"><span class="cat-chip">${esc(q.c)}</span><div class="qtext">${esc(q.q)}</div></div>
       <div class="ans"><div class="ans-label">Correct Answer</div><div class="ans-text">${esc(q.a)}</div></div>
+      ${!r.revealed ? `<button class="btn ${r.dbl ? 'btn-teal' : 'btn-ghost'}" id="dbl" style="margin-top:10px">${r.dbl ? '✖️2 DOUBLE POINTS ON' : '✖️2 Make Double Round'}</button>` : ''}
       ${!r.revealed ? `<button class="btn btn-gold" id="rev">Reveal Options</button>` : ''}
       ${r.revealed && !r.showAnswer ? `<button class="btn btn-teal" id="lock">Show Answer &amp; Points</button>` : ''}
       ${r.showAnswer ? `<button class="btn btn-gold" id="next">Next Question ›</button>` : ''}`;
 
+    const dbl = document.getElementById('dbl'); if (dbl) dbl.onclick = () => db.ref('rooms/' + ME.code).update({ dbl: !r.dbl });
     const rev = document.getElementById('rev'); if (rev) rev.onclick = () => db.ref('rooms/' + ME.code).update({ revealed: true, options: optionsForRoom(r) });
     const lock = document.getElementById('lock'); if (lock) lock.onclick = fffLock;
     const next = document.getElementById('next'); if (next) next.onclick = () => modNav(1);
@@ -1132,13 +1299,15 @@ function renderMod(r) {
       <div class="modbar"><div><div class="sub">Host Buzzer Control</div></div><div class="qprog">Q ${r.qIndex + 1}/${deckLen(r)}</div></div>
       <div class="qbox"><span class="cat-chip">${esc(q.c)}</span><div class="qtext">${esc(q.q)}</div></div>
       <div class="ans"><div class="ans-label">Correct Answer</div><div class="ans-text">${esc(q.a)}</div></div>
+      ${!r.revealed ? `<button class="btn ${r.dbl ? 'btn-teal' : 'btn-ghost'}" id="dbl" style="margin-top:10px">${r.dbl ? '✖️2 DOUBLE POINTS ON' : '✖️2 Make Double Round'}</button>` : ''}
       ${bName ? `<div class="buzzed"><div class="who">🔔 ${esc(bName)}</div>
         <div class="row" style="margin-top:10px">
-          <button class="btn btn-teal" id="ok">Correct (+10)</button>
-          <button class="btn btn-cerise" id="no">Wrong ${r.neg ? '(−' + r.neg + ')' : ''}</button>
+          <button class="btn btn-teal" id="ok">Correct (+${r.dbl ? 20 : 10})</button>
+          <button class="btn btn-cerise" id="no">Wrong ${r.neg ? '(−' + (r.neg * (r.dbl ? 2 : 1)) + ')' : ''}</button>
         </div></div>` : '<div class="mini">Waiting for buzzes…</div>'}
       <button class="btn btn-gold" id="next" style="margin-top:14px">Next Question ›</button>`;
 
+    const dbl = document.getElementById('dbl'); if (dbl) dbl.onclick = () => db.ref('rooms/' + ME.code).update({ dbl: !r.dbl });
     const ok = document.getElementById('ok'); if (ok) ok.onclick = () => modJudge(true);
     const no = document.getElementById('no'); if (no) no.onclick = () => modJudge(false);
     const next = document.getElementById('next'); if (next) next.onclick = () => modNav(1);
@@ -1147,9 +1316,12 @@ function renderMod(r) {
 
 async function fffLock() {
   const r = lastRoom, q = currentQ(r), ans = answersObj(r);
-  const correct = Object.entries(ans).filter(([id, a]) => a.choice === q.a);
+  const correct = Object.entries(ans).filter(([id, a]) => a.choice === q.a).sort((a, b) => a[1].at - b[1].at);
   const up = {};
-  correct.forEach(([id]) => { up['rooms/' + ME.code + '/scores/' + id] = (scoresObj(r)[id] || 0) + 10; });
+  correct.forEach(([id], i) => {
+    const pts = fffPointsFor(i) * (r.dbl ? 2 : 1);
+    up['rooms/' + ME.code + '/scores/' + id] = (scoresObj(r)[id] || 0) + pts;
+  });
   up['rooms/' + ME.code + '/showAnswer'] = true;
   await db.ref().update(up);
 }
@@ -1178,8 +1350,29 @@ async function modNav(d) {
     return;
   }
   await db.ref('rooms/' + ME.code).update({
-    qIndex: Math.max(0, r.qIndex + d), revealed: false, buzzedBy: null, answers: null, showAnswer: false, options: null
+    qIndex: Math.max(0, r.qIndex + d), revealed: false, buzzedBy: null, answers: null, showAnswer: false, options: null, dbl: false
   });
+}
+
+let typedSig = null, typeTimer = null;
+let typingDone = true;
+function typeText(el, text, onDone) {
+  if (!el) return;
+  if (typeTimer) { clearInterval(typeTimer); typeTimer = null; }
+  typingDone = false;
+  el.textContent = '';
+  const cur = document.createElement('span'); cur.className = 'typecursor'; el.appendChild(cur);
+  let i = 0;
+  typeTimer = setInterval(() => {
+    if (i >= text.length) {
+      clearInterval(typeTimer); typeTimer = null;
+      if (cur.parentNode) cur.remove();
+      typingDone = true;
+      if (typeof onDone === 'function') onDone();
+      return;
+    }
+    cur.insertAdjacentText('beforebegin', text[i]); i++;
+  }, 16);
 }
 
 function renderPlayer(r) {
@@ -1197,10 +1390,14 @@ function renderPlayer(r) {
   if (r.mode === 'fff') {
     if (r.showAnswer) {
       const ok = my && my.choice === q.a;
+      const correctSorted = Object.entries(ans).filter(([id, a]) => a.choice === q.a).sort((a, b) => a[1].at - b[1].at);
+      const myRank = correctSorted.findIndex(([id]) => id === ME.id);
+      const pts = ok ? fffPointsFor(myRank) * (r.dbl ? 2 : 1) : 0;
+
       app.innerHTML = `<div class="result-banner ${ok ? 'result-correct' : 'result-wrong'}" style="margin:auto">
         <div class="result-emoji">${ok ? '✅' : '❌'}</div>
-        <div class="result-text">${ok ? 'Correct!' : 'Wrong'}</div>
-        <div class="result-sub">Answer: ${esc(q.a)}</div>
+        <div class="result-text">${ok ? (myRank === 0 ? '⚡ Fastest!' : '#' + (myRank + 1) + ' Fastest!') : 'Wrong'}</div>
+        <div class="result-sub">${r.suspense ? '' : (ok ? '+' + pts + ' Points' : '')} Answer: ${esc(q.a)}</div>
       </div>`;
       return;
     }
