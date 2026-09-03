@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>AK AI Quiz Night</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800;900&display=swap');
@@ -28,8 +28,8 @@
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-family); user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
-  body { background-color: var(--bg-midnight); background-image: radial-gradient(circle at 50% -10%, rgba(255, 200, 42, 0.15) 0%, transparent 60%), radial-gradient(circle at 50% 110%, rgba(168, 85, 247, 0.12) 0%, transparent 60%); color: var(--text-main); min-height: 100vh; min-height: 100dvh; display: flex; justify-content: center; align-items: center; overflow-x: hidden; }
-  .wrap { width: 100%; max-width: 420px; min-height: 100dvh; height: 100dvh; display: flex; flex-direction: column; padding: clamp(12px, 3vw, 20px); overflow-y: auto; background: rgba(7, 9, 19, 0.7); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 1px var(--glass-border); }
+  body { background-color: var(--bg-midnight); background-image: radial-gradient(circle at 50% -10%, rgba(255, 200, 42, 0.15) 0%, transparent 60%), radial-gradient(circle at 50% 110%, rgba(168, 85, 247, 0.12) 0%, transparent 60%); color: var(--text-main); min-height: 100vh; min-height: 100dvh; display: flex; justify-content: center; align-items: stretch; overflow-x: hidden; }
+  .wrap { width: 100%; max-width: 520px; min-height: 100dvh; height: 100dvh; display: flex; flex-direction: column; padding: max(12px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)); overflow-y: auto; background: rgba(7, 9, 19, 0.85); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 1px var(--glass-border); flex: 1; }
   h1 { font-size: clamp(22px, 7vw, 30px); margin: 0; line-height: 1; font-weight: 900; background: linear-gradient(180deg, #ffffff 40%, #cbd5e1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
   .z { color: var(--gold); background: rgba(255, 200, 42, 0.15); border: 1px solid var(--gold-glow); padding: 2px 8px; border-radius: 8px; -webkit-text-fill-color: var(--gold); }
   .sub { color: var(--text-muted); font-size: clamp(10px, 2.9vw, 12px); margin-top: 6px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 800; }
@@ -56,7 +56,7 @@
   .qnum { font-size: clamp(9px, 2.7vw, 11px); color: var(--text-muted); font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
   .qtext { font-size: clamp(16px, 4.8vw, 22px); font-weight: 800; line-height: 1.3; margin-top: 8px; color: #fff; }
   .buzzer { margin-top: auto; padding: clamp(12px, 3vw, 20px) 0 6px; display: flex; justify-content: center; }
-  .bz { touch-action: manipulation; width: min(100%, 32vh); aspect-ratio: 1/1; border-radius: 50%; border: 3px solid var(--gold); background: linear-gradient(135deg, rgba(255, 200, 42, 0.2), rgba(255, 200, 42, 0.05)); color: var(--gold); font-size: clamp(28px, 9vw, 44px); font-weight: 900; letter-spacing: 2px; box-shadow: 0 0 30px var(--gold-glow); cursor: pointer; transition: transform 0.1s ease; }
+  .bz { touch-action: manipulation; width: min(100%, 34vh); aspect-ratio: 1/1; border-radius: 50%; border: 3px solid var(--gold); background: linear-gradient(135deg, rgba(255, 200, 42, 0.2), rgba(255, 200, 42, 0.05)); color: var(--gold); font-size: clamp(28px, 9vw, 44px); font-weight: 900; letter-spacing: 2px; box-shadow: 0 0 30px var(--gold-glow); cursor: pointer; transition: transform 0.1s ease; }
   .bz:active { transform: scale(0.94); }
   .bz.locked { border-color: var(--text-muted); background: rgba(255, 255, 255, 0.05); color: var(--text-muted); box-shadow: none; cursor: default; }
   .bz.mine { border-color: var(--green); background: rgba(16, 185, 129, 0.2); color: var(--green); box-shadow: 0 0 30px var(--green-glow); }
@@ -124,7 +124,7 @@
   .optbtn.wrongpick .letter { background: var(--red); color: #fff; }
 
   /* Animated Loading & Fun Overlay */
-  .loading-hero { text-align: center; padding: 20px 16px; margin: auto 0; display: flex; flex-direction: column; align-items: center; }
+  .loading-hero { text-align: center; padding: 20px 16px; margin: auto 0; display: flex; flex-direction: column; align-items: center; flex: 1; justify-content: center; }
   .brain-pulse { font-size: 4rem; line-height: 1; filter: drop-shadow(0 0 25px var(--gold-glow)); animation: pulse 1.2s infinite alternate ease-in-out; margin-bottom: 10px; }
   @keyframes pulse { 0% { transform: scale(0.92); filter: drop-shadow(0 0 10px var(--gold-glow)); } 100% { transform: scale(1.15); filter: drop-shadow(0 0 35px var(--gold)); } }
   .fun-tip { font-size: 0.85rem; font-weight: 700; color: var(--gold); margin-top: 8px; letter-spacing: 0.5px; min-height: 24px; }
@@ -184,7 +184,7 @@ try {
 const app = document.getElementById('app');
 let ME = { role: null, name: null, code: null, id: null };
 let roomRef = null, roomListener = null, lastRoom = null;
-function toast(m) { const t = document.getElementById('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 1800); }
+function toast(m) { const t = document.getElementById('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2200); }
 function uid() { return Math.random().toString(36).slice(2, 9); }
 function newCode() { return Math.floor(1000 + Math.random() * 9000).toString(); }
 let myLockedSig = null;
@@ -864,7 +864,7 @@ function screenGenerating(msg) {
   }
 }
 
-/* Parallel AI Chunk Engine with 8.5s Timeout Safeguard */
+/* Parallel AI Chunk Engine with Detailed Error Reporting */
 async function callGenChunkWithTimeout(topic, cats, count, avoid) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 8500);
@@ -877,11 +877,28 @@ async function callGenChunkWithTimeout(topic, cats, count, avoid) {
       body: JSON.stringify({ topic: topic || '', categories: cats || [], count, avoid: avoid || [] })
     });
     clearTimeout(timeoutId);
-    if (!res.ok) return [];
+    
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error(`API HTTP Error ${res.status}:`, errText);
+      toast(`AI Error (${res.status}): Check GEMINI_API_KEY in Cloudflare`);
+      return [];
+    }
+
     const data = await res.json();
+    if (data.error) {
+      toast(`AI Error: ${data.error}`);
+      return [];
+    }
     return Array.isArray(data.questions) ? data.questions : [];
   } catch (e) {
     clearTimeout(timeoutId);
+    if (e.name === 'AbortError') {
+      toast('Request timed out. Retrying...');
+    } else {
+      console.error('Fetch error:', e);
+      toast(`Connection error: ${e.message}`);
+    }
     return [];
   }
 }
@@ -959,21 +976,21 @@ async function startQuestionGeneration(r) {
     topicLabel: topicLabel
   });
 
-  // Step 1: Initial Batch Request with Retry Loop - DO NOT LAUNCH UNTIL WE HAVE QUESTIONS
+  // Step 1: Initial Batch Request with Retry Loop
   let initialQuestions = [];
   let attempts = 0;
 
-  while (initialQuestions.length === 0 && attempts < 4) {
+  while (initialQuestions.length === 0 && attempts < 3) {
     attempts++;
     initialQuestions = await fetchAIBatch(settings.topic, settings.cats, Math.min(5, total), []);
-    if (initialQuestions.length === 0) {
+    if (initialQuestions.length === 0 && attempts < 3) {
       await new Promise(res => setTimeout(res, 1500));
     }
   }
 
-  // Fallback: If network still returned 0 questions after 4 attempts, return to setup UI
+  // Fallback: If network still returned 0 questions, return Host to setup UI WITH EXPLICIT TOAST
   if (initialQuestions.length === 0) {
-    toast('AI service delayed. Please tap Launch again.');
+    toast('⚠️ AI service unavailable. Check Cloudflare GEMINI_API_KEY.');
     await db.ref(`rooms/${r.code}/phase`).set('setup');
     return;
   }
@@ -995,7 +1012,7 @@ async function startQuestionGeneration(r) {
     scores[myId] = 0;
   }
 
-  // Step 2: ONLY NOW transition to countdown and active gameplay
+  // Step 2: Transition to countdown and active gameplay
   await db.ref('rooms/' + r.code).update({
     hostName: r.hostName || 'Host',
     mode: settings.mode,
