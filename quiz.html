@@ -55,7 +55,9 @@
   .qbox { background: var(--glass-card); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: clamp(14px, 3.5vw, 20px); margin-top: clamp(8px, 2vw, 12px); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4); }
   .qnum { font-size: clamp(9px, 2.7vw, 11px); color: var(--text-muted); font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
   .qtext { font-size: clamp(16px, 4.8vw, 22px); font-weight: 800; line-height: 1.3; margin-top: 8px; color: #fff; }
-  .buzzer { margin-top: auto; padding: clamp(10px, 2.5vw, 16px) 0 clamp(28px, 7vw, 40px); display: flex; justify-content: center; }
+  
+  /* Lift Buzzer Container to Prevent Clipping */
+  .buzzer { margin-top: auto; padding: clamp(12px, 3vw, 20px) 0 clamp(48px, 12vh, 70px); display: flex; justify-content: center; }
   .bz { touch-action: manipulation; width: min(100%, 32vh); aspect-ratio: 1/1; border-radius: 50%; border: 3px solid var(--gold); background: linear-gradient(135deg, rgba(255, 200, 42, 0.2), rgba(255, 200, 42, 0.05)); color: var(--gold); font-size: clamp(28px, 9vw, 44px); font-weight: 900; letter-spacing: 2px; box-shadow: 0 0 30px var(--gold-glow); cursor: pointer; transition: transform 0.1s ease; }
   .bz:active { transform: scale(0.94); }
   .bz.locked { border-color: var(--text-muted); background: rgba(255, 255, 255, 0.05); color: var(--text-muted); box-shadow: none; cursor: default; }
@@ -123,9 +125,9 @@
   .optbtn.wrongpick { border-color: var(--red); background: rgba(255, 42, 85, 0.2); }
   .optbtn.wrongpick .letter { background: var(--red); color: #fff; }
 
-  /* Adjusted Loading Screen Spacing & Layout */
+  /* Loading Screen Layout */
   .loading-hero { text-align: center; padding: 10px 16px; margin: 0; display: flex; flex-direction: column; align-items: center; flex: 1; justify-content: space-between; min-height: 100%; }
-  .brain-pulse { font-size: 5rem; line-height: 1; filter: drop-shadow(0 0 25px var(--gold-glow)); animation: pulse 1.2s infinite alternate ease-in-out; margin-bottom: 12px; }
+  .brain-pulse { font-size: 5.5rem; line-height: 1; filter: drop-shadow(0 0 25px var(--gold-glow)); animation: pulse 1.2s infinite alternate ease-in-out; margin-bottom: 12px; }
   @keyframes pulse { 0% { transform: scale(0.92); filter: drop-shadow(0 0 10px var(--gold-glow)); } 100% { transform: scale(1.15); filter: drop-shadow(0 0 35px var(--gold)); } }
   .fun-tip { font-size: 1rem; font-weight: 700; color: var(--gold); margin-top: 10px; letter-spacing: 0.5px; min-height: 24px; }
   .ready-badge { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 12px; }
@@ -199,13 +201,18 @@ function bindTap(el, fn) {
 
 function playersObj(r) { return (r && r.players) || {}; }
 
+/* Real Players Filter (Includes Host in Online Mode, Excludes Dedicated Host in Hosted Mode) */
 function realPlayersObj(r) {
   const pMap = playersObj(r);
   const out = {};
+  const isOnline = !!(r && r.online);
   Object.entries(pMap).forEach(([id, p]) => {
     if (!p) return;
-    const isHost = (typeof p === 'object' && p.isHost) || id === 'mod';
-    if (!isHost) out[id] = p;
+    const isDedicatedMod = id === 'mod' && !isOnline;
+    const isHostInHostedMode = (typeof p === 'object' && p.isHost) && !isOnline;
+    if (!isDedicatedMod && !isHostInHostedMode) {
+      out[id] = p;
+    }
   });
   return out;
 }
@@ -377,12 +384,22 @@ async function onlineStartQuestion(r) {
   });
 }
 
+/* Online Mode End Question with Negative Marking Support */
 async function onlineEndQuestion(r) {
   const q = currentQ(r), ans = answersObj(r);
   const up = {};
   if (r.mode === 'buzzer') {
     const bid = r.buzzedBy; const a = bid ? ans[bid] : null;
-    if (a && a.choice === q.a) up['rooms/' + ME.code + '/scores/' + bid] = (scoresObj(r)[bid] || 0) + (r.dbl ? 20 : 10);
+    const gain = r.dbl ? 20 : 10;
+    const penalty = (r.neg || 0) * (r.dbl ? 2 : 1);
+
+    if (bid) {
+      if (a && a.choice === q.a) {
+        up['rooms/' + ME.code + '/scores/' + bid] = (scoresObj(r)[bid] || 0) + gain;
+      } else if (penalty > 0) {
+        up['rooms/' + ME.code + '/scores/' + bid] = (scoresObj(r)[bid] || 0) - penalty;
+      }
+    }
   } else {
     const correct = Object.entries(ans).filter(([id, a]) => a.choice === q.a).sort((a, b) => a[1].at - b[1].at);
     correct.forEach(([id], i) => {
@@ -565,7 +582,7 @@ async function initHostRoomInFirebase() {
   subscribeRoom(code);
 }
 
-/* RENDER HOST SETUP SCREEN (FIXED FOCUS UN-SELECTING BUG) */
+/* RENDER HOST SETUP SCREEN (PRESERVES FOCUS & CURSOR) */
 function renderHostSetupUI(r) {
   const activeEl = document.activeElement;
   const isTopicFocused = activeEl && activeEl.id === 'htopic';
@@ -668,7 +685,6 @@ function renderHostSetupUI(r) {
     <div class="center"><button class="backlink" onclick="returnToLauncher()">‹ Exit Room</button></div>
   `;
 
-  // Preserve focus & cursor position on input re-render
   if (isTopicFocused) {
     const input = document.getElementById('htopic');
     if (input) {
@@ -717,7 +733,7 @@ function renderHostSetupUI(r) {
   }
 }
 
-/* RENDER PLAYER SETUP SCREEN (WITH RULES & EXPLANATIONS) */
+/* RENDER PLAYER SETUP SCREEN (UPDATED RULE EXPLANATIONS) */
 function renderPlayerSetupUI(r) {
   const settings = r.settings || defaultSetupSettings;
   const myData = (r.players || {})[ME.id] || {};
@@ -725,6 +741,10 @@ function renderPlayerSetupUI(r) {
 
   const catsList = settings.cats && settings.cats.length ? settings.cats.join(', ') : '';
   const topicLabel = settings.topic ? settings.topic : (catsList || 'General Knowledge');
+
+  const playstyleRuleText = settings.online 
+    ? 'Host is playing the game (no advantage)' 
+    : 'Host is not playing the game (manages controls)';
 
   app.innerHTML = `
     <div class="home-hero" style="padding:14px 0 2px">
@@ -788,13 +808,13 @@ function renderPlayerSetupUI(r) {
           <li style="margin-bottom:6px"><strong style="color:#fff">⚡ Negative marking:</strong> Wrong answer will be (-${settings.neg || 0} pts).</li>
           <li style="margin-bottom:6px"><strong style="color:#fff">🎯 Round:</strong> ${settings.count || 20} questions total.</li>
           <li style="margin-bottom:6px"><strong style="color:#fff">💡 Topic:</strong> ${esc(topicLabel)}.</li>
-          <li style="margin-bottom:6px"><strong style="color:#fff">🎤 Playstyle:</strong> Host is not playing the game (manages controls).</li>
+          <li style="margin-bottom:6px"><strong style="color:#fff">🎤 Playstyle:</strong> ${playstyleRuleText}.</li>
           <li style="margin-bottom:6px"><strong style="color:#fff">⏱️ Timer:</strong> You get ${settings.time || 15}s to answer after buzzing.</li>
         </ul>
       </div>
     </div>
 
-    <!-- Ready Button on Two Distinct Lines -->
+    <!-- Ready Button Split into 2 Lines -->
     <div class="card center">
       <label>YOUR STATUS</label>
       <button class="btn ${isReady ? 'btn-teal' : 'btn-gold'}" id="btn-toggle-ready" style="font-size:1.1rem;padding:14px 16px;line-height:1.35">
@@ -838,7 +858,6 @@ const FUN_TRIVIA_TIPS = [
 let reactionStartTime = 0;
 let reactionBestScore = null;
 
-/* ADJUSTED LOADING SCREEN POSITIONING & SIZES */
 function screenGenerating(msg) {
   let tipIndex = 0;
   app.innerHTML = `<div class="loading-hero">
@@ -950,7 +969,6 @@ async function fetchFullQuizSingleCall(topic, cats, totalCount) {
   }
 }
 
-/* ROBUST START QUESTION GENERATION & STATE TRANSITION */
 async function startQuestionGeneration(r) {
   unlockAudio();
   const settings = r.settings || defaultSetupSettings;
@@ -1090,6 +1108,7 @@ async function joinFromLauncher(roomCode, pName, pId, isHostFlag) {
   subscribeRoom(roomCode);
 }
 
+/* LEADERBOARD WITH RESTART / PLAY AGAIN WORKFLOW */
 function renderResults(r) {
   stopTicking();
   const players = Object.entries(realPlayersObj(r));
@@ -1097,6 +1116,7 @@ function renderResults(r) {
   const ranked = players.map(([id, p]) => ({ id, nm: (p && typeof p === 'object' ? p.name : p) || 'Player', pts: sc[id] || 0 })).sort((a, b) => b.pts - a.pts);
   const medal = p => p === 1 ? '🥇' : p === 2 ? '🥈' : p === 3 ? '🥉' : '#' + p;
   const w = ranked[0];
+  const isHost = ME.role === 'mod' || (r.players && r.players[ME.id] && r.players[ME.id].isHost);
 
   app.innerHTML = `
     <div class="rank-hero">
@@ -1111,11 +1131,49 @@ function renderResults(r) {
         <div class="rank-pts">${x.pts}</div>
       </div>`).join('')}
     </div>
-    <div style="margin-top:auto">
-      <button class="btn btn-gold" id="btn-launcher">🎮 Return to Launcher</button>
+    <div style="margin-top:auto; display:flex; flex-direction:column; gap:10px;">
+      ${isHost ? `
+        <button class="btn btn-gold" id="btn-play-again">🔄 Play Again</button>
+      ` : `
+        <div class="mini">Waiting for host to restart game setup…</div>
+      `}
+      <button class="btn btn-ghost" id="btn-launcher">🎮 Exit to Launcher</button>
     </div>
   `;
+
+  if (isHost) {
+    document.getElementById('btn-play-again').onclick = () => restartGameSetup(r);
+  }
   document.getElementById('btn-launcher').onclick = returnToLauncher;
+}
+
+async function restartGameSetup(r) {
+  if (!r || !r.code) return;
+  const currentPlayers = r.players || {};
+  const resetPlayers = {};
+  
+  Object.entries(currentPlayers).forEach(([pid, p]) => {
+    resetPlayers[pid] = {
+      ...(typeof p === 'object' ? p : { name: p }),
+      ready: p && p.isHost ? true : false
+    };
+  });
+
+  await db.ref('rooms/' + r.code).update({
+    phase: 'setup',
+    started: false,
+    finished: false,
+    qIndex: 0,
+    aiQ: null,
+    buzzedBy: null,
+    buzzedAt: null,
+    result: null,
+    answers: null,
+    showAnswer: false,
+    options: null,
+    players: resetPlayers,
+    scores: {}
+  });
 }
 
 function dblBanner(r) {
@@ -1231,7 +1289,7 @@ function renderOnline(r) {
       ${dblBanner(r)}
       <div class="qbox"><span class="cat-chip">${esc(q.c)}</span><div class="qtext" id="qtext"></div></div>
       <div id="timerHolder">${timerHTML(r)}</div>
-      <div class="status">${buzzed ? (mine ? '✅ Answer locked' : '🔒 ' + esc(bName) + ' buzzed first') : 'Hit the buzzer!'}</div>
+      <div class="status">${buzzed ? (mine ? '🎉 YOU BUZZED FIRST!' : '🔒 ' + esc(bName) + ' BUZZED FIRST!') : 'Hit the buzzer!'}</div>
       <div class="buzzer"><button class="bz ${mine ? 'mine' : (buzzed ? 'locked' : '')}" id="bz" ${buzzed ? 'disabled' : ''}>${mine ? 'YOU!' : (buzzed ? '🔒' : 'BUZZ')}</button></div>`;
     const el1 = document.getElementById('qtext');
     if (needType) { typedSig = sig; typeText(el1, q.q); } else el1.textContent = q.q;
@@ -1529,7 +1587,7 @@ function renderPlayer(r) {
     app.innerHTML = `
       <div class="qbox"><span class="cat-chip">${esc(q.c)}</span><div class="qtext">${esc(q.q)}</div></div>
       <div id="timerHolder">${timerHTML(r)}</div>
-      <div class="status">${buzzed ? (mine ? '🎉 YOU BUZZED!' : '🔒 ' + esc(bName) + ' BUZZED!') : 'Hit the buzzer!'}</div>
+      <div class="status">${buzzed ? (mine ? '🎉 YOU BUZZED FIRST!' : '🔒 ' + esc(bName) + ' BUZZED FIRST!') : 'Hit the buzzer!'}</div>
       <div class="buzzer">
         <button class="bz ${mine ? 'mine' : (buzzed ? 'locked' : '')}" id="bz" ${buzzed ? 'disabled' : ''}>
           ${mine ? 'YOU!' : (buzzed ? '🔒' : 'BUZZ')}
