@@ -59,7 +59,6 @@
   .setup-box { background: rgba(11, 14, 20, 0.55); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: clamp(10px, 2.2vw, 14px); display: flex; flex-direction: column; justify-content: center; }
   .chips-scroll { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0; scrollbar-width: none; -ms-overflow-style: none; }
   .chips-scroll::-webkit-scrollbar { display: none; }
-  .player-status-strip { display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 10px 12px; margin-bottom: 8px; font-size: 12px; font-weight: 800; }
   .player-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 
   .qbox { background: var(--glass-card); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: clamp(14px, 3.5vw, 20px); margin-top: clamp(8px, 2vw, 12px); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4); }
@@ -230,7 +229,7 @@ function playersObj(r) { return (r && r.players) || {}; }
 function realPlayersObj(r) {
   const pMap = playersObj(r);
   const out = {};
-  const isOnline = !!(r && r.online || (r && r.settings && r.settings.online));
+  const isOnline = !!(r && (r.online || (r.settings && r.settings.online)));
   Object.entries(pMap).forEach(([id, p]) => {
     if (!p) return;
     const isDedicatedMod = id === 'mod' && !isOnline;
@@ -387,7 +386,10 @@ async function engineTick() {
   const r = lastRoom;
   if (!r || !r.online || !r.started || r.finished || !r.phaseAt) return;
   const el = (serverNow() - r.phaseAt) / 1000;
-  const activeHumanPlayers = Object.keys(realPlayersObj(r)).length;
+  
+  const activeHumanPlayers = realPlayersObj(r);
+  const activeCount = Object.keys(activeHumanPlayers).length;
+  const validAnswers = Object.keys(answersObj(r)).filter(id => activeHumanPlayers[id]).length;
 
   if (r.phase === 'countdown') {
     if (el >= COUNTDOWN_S && await claim(r)) await onlineStartQuestion(r);
@@ -403,8 +405,9 @@ async function engineTick() {
         await onlineEndQuestion(r);
       }
     } else {
-      const got = Object.keys(answersObj(r)).length;
-      if ((el >= r.timeLimit || (activeHumanPlayers > 0 && got >= activeHumanPlayers)) && await claim(r)) await onlineEndQuestion(r);
+      if ((el >= r.timeLimit || (activeCount > 0 && validAnswers >= activeCount)) && await claim(r)) {
+        await onlineEndQuestion(r);
+      }
     }
     return;
   }
@@ -643,7 +646,6 @@ function renderHostSetupUI(r) {
   const playersMap = r.players || {};
   const playersArr = Object.entries(playersMap);
   
-  // In Online mode, count host as active player; in Hosted mode, count non-host players
   const targetPlayers = settings.online 
     ? playersArr 
     : playersArr.filter(([pid, p]) => p && !p.isHost && pid !== 'mod');
@@ -1104,15 +1106,22 @@ async function startQuestionGeneration(r) {
     for (let i = 0; i < questions.length; i++) { if (Math.random() < 0.25) dblSet[i] = true; }
   }
 
-  const myId = settings.online ? uid() : 'mod';
   const players = r.players || {};
-  const scores = {};
-  Object.keys(players).forEach(pid => { scores[pid] = 0; });
+  
+  // Find host's existing ID or fallback cleanly
+  const existingHostEntry = Object.entries(players).find(([pid, p]) => p && p.isHost);
+  const myId = settings.online 
+    ? (existingHostEntry ? existingHostEntry[0] : (ME.id || uid())) 
+    : 'mod';
 
-  if (settings.online && !players[myId]) {
-    players[myId] = { name: r.hostName || 'Host', ready: true, isHost: true };
-    scores[myId] = 0;
+  const scores = {};
+
+  if (settings.online) {
+    delete players['mod'];
+    players[myId] = { name: r.hostName || ME.name || 'Host', ready: true, isHost: true };
   }
+
+  Object.keys(players).forEach(pid => { scores[pid] = 0; });
 
   const activePhase = settings.online ? 'countdown' : 'question';
 
@@ -1148,8 +1157,8 @@ async function startQuestionGeneration(r) {
   });
 
   ME = settings.online
-    ? { role: 'player', name: r.hostName || 'Host', code: r.code, id: myId }
-    : { role: 'mod', name: r.hostName || 'Host', code: r.code, id: 'mod' };
+    ? { role: 'player', name: r.hostName || ME.name || 'Host', code: r.code, id: myId }
+    : { role: 'mod', name: r.hostName || ME.name || 'Host', code: r.code, id: 'mod' };
 }
 
 async function joinGame() {
