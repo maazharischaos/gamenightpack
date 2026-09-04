@@ -101,7 +101,8 @@
   .timer-label { font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); }
   .rank-hero { text-align: center; padding: 12px 0 4px; }
   .rank-hero .trophy { font-size: clamp(36px, 10vw, 56px); filter: drop-shadow(0 0 20px var(--gold-glow)); }
-  .rank-row { display: flex; align-items: center; gap: 12px; background: var(--glass-card); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: clamp(10px, 2.5vw, 14px) 16px; margin-bottom: 8px; }
+  .rank-row { display: flex; align-items: center; gap: 12px; background: var(--glass-card); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: clamp(10px, 2.5vw, 14px) 16px; margin-bottom: 8px; animation: slideIn 0.4s ease-out forwards; }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
   .rank-pos { font-size: clamp(15px, 4.8vw, 20px); font-weight: 900; min-width: 32px; text-align: center; color: var(--text-muted); }
   .rank-name { flex: 1; font-weight: 800; font-size: clamp(14px, 4vw, 17px); color: #fff; }
   .rank-pts { background: rgba(255, 200, 42, 0.15); color: var(--gold); border: 1px solid var(--gold-glow); border-radius: 20px; padding: 4px 14px; font-weight: 900; font-size: clamp(12px, 3.6vw, 15px); }
@@ -140,6 +141,10 @@
   .ready-badge { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 12px; }
   .ready-badge.is-ready { background: rgba(16, 185, 129, 0.2); color: var(--green); border: 1px solid var(--green); }
   .ready-badge.not-ready { background: rgba(255, 42, 85, 0.15); color: var(--red); border: 1px solid var(--red); }
+
+  /* Dynamic Particle Confetti */
+  .confetti-piece { position: fixed; top: -12px; width: 8px; height: 14px; z-index: 99; pointer-events: none; border-radius: 2px; animation: confettiFall 2.4s ease-out forwards; }
+  @keyframes confettiFall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(105vh) rotate(720deg); opacity: 0; } }
 </style>
 </head>
 <body>
@@ -171,6 +176,13 @@ const PRESET_CATEGORIES = [
 
 function catColor(c) { return '#111111'; }
 function shuffle(arr) { const a = arr.slice(); for(let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+function getFFFTitle(rank) {
+  if (rank === 0) return '⚡ Fastest!';
+  if (rank === 1) return '🥈 2nd Fastest!';
+  if (rank === 2) return '🥉 3rd Fastest!';
+  return `#${rank + 1} Fastest!`;
+}
 
 /* Wake Lock System */
 let wakeLock = null;
@@ -225,7 +237,7 @@ function bindTap(el, fn) {
 
 function playersObj(r) { return (r && r.players) || {}; }
 
-/* Real Players Filter: Dedicated 'mod' and non-playing host in Hosted mode are excluded */
+/* Real Players Filter */
 function realPlayersObj(r) {
   const pMap = playersObj(r);
   const out = {};
@@ -289,6 +301,40 @@ function sWrong() { tone(200, 0, 0.26, 0.32, 'sawtooth'); tone(150, 0.20, 0.38, 
 function sTick() { tone(1200, 0, 0.05, 0.18, 'sine'); }
 function sDouble() { tone(523, 0, 0.12, 0.3, 'square'); tone(659, 0.12, 0.12, 0.3, 'square'); tone(784, 0.24, 0.12, 0.3, 'square'); tone(1047, 0.36, 0.34, 0.34, 'square'); }
 function sGo() { tone(660, 0, 0.10, 0.3, 'sine'); tone(990, 0.12, 0.22, 0.32, 'sine'); }
+
+function sCheer() {
+  const ac = ensureAC(); if (!ac) return;
+  if (ac.state === 'suspended') ac.resume();
+  const notes = [523.25, 659.25, 783.99, 1046.50];
+  notes.forEach((f, i) => { tone(f, i * 0.12, 0.3, 0.35, 'triangle'); });
+  try {
+    const bufferSize = ac.sampleRate * 1.5;
+    const buffer = ac.createBuffer(1, bufferSize, ac.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) { data[i] = Math.random() * 2 - 1; }
+    const noise = ac.createBufferSource(); noise.buffer = buffer;
+    const filter = ac.createBiquadFilter(); filter.type = 'bandpass'; filter.frequency.value = 1200;
+    const gain = ac.createGain();
+    const t = ac.currentTime + 0.25;
+    gain.gain.setValueAtTime(0.001, t); gain.gain.exponentialRampToValueAtTime(0.2, t + 0.3); gain.gain.exponentialRampToValueAtTime(0.001, t + 1.4);
+    noise.connect(filter); filter.connect(gain); gain.connect(ac.destination);
+    noise.start(t); noise.stop(t + 1.4);
+  } catch(e){}
+}
+
+function spawnConfetti() {
+  const colors = ['#ffc82a', '#00f0ff', '#10b981', '#ff2a55', '#a855f7'];
+  for (let i = 0; i < 40; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.left = Math.random() * 100 + '%';
+    el.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    el.style.animationDelay = (Math.random() * 0.6) + 's';
+    el.style.transform = `rotate(${Math.random() * 360}deg)`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2600);
+  }
+}
 
 /* Timer */
 let tickInterval = null, lastBeepSecond = null, playedTimeUp = false;
@@ -1227,9 +1273,12 @@ async function joinFromLauncher(roomCode, pName, pId, isHostFlag) {
   subscribeRoom(roomCode);
 }
 
-/* LEADERBOARD WITH DEDUPLICATION & RESTART WORKFLOW */
+/* LEADERBOARD WITH DEDUPLICATION, ANIMATIONS & CHEER SFX */
 function renderResults(r) {
   stopTicking();
+  sCheer();
+  spawnConfetti();
+
   const rawPlayers = Object.entries(realPlayersObj(r));
   const sc = scoresObj(r);
 
@@ -1263,7 +1312,7 @@ function renderResults(r) {
     <div style="margin-top:14px">
       ${ranked.map((x, i) => {
         const isMe = x.id === ME.id || (ME.name && x.nm.toLowerCase() === ME.name.toLowerCase());
-        return `<div class="rank-row">
+        return `<div class="rank-row" style="animation-delay:${i * 0.08}s;">
           <div class="rank-pos">${medal(i + 1)}</div>
           <div class="rank-name">${esc(x.nm)}${isMe ? '<span class="you-badge">YOU</span>' : ''}</div>
           <div class="rank-pts">${x.pts}</div>
@@ -1430,12 +1479,13 @@ function renderOnline(r) {
       const correct = Object.entries(ans).filter(([id, a]) => a.choice === q.a).sort((a, b) => a[1].at - b[1].at);
       const myRank = correct.findIndex(([id]) => id === ME.id);
       const pts = ok ? pointsFor(r, myRank) : 0;
+      const rankTitle = ok ? getFFFTitle(myRank) : 'Wrong';
 
       app.innerHTML = `${head}
         <div class="result-banner ${ok ? 'result-correct' : 'result-wrong'}">
           <div class="result-emoji">${ok ? '✅' : '❌'}</div>
-          <div class="result-text">${ok ? (myRank === 0 ? '⚡ Fastest!' : 'Correct!') : 'Wrong'}</div>
-          <div class="result-sub">${r.suspense ? '' : (ok ? '+' + pts + ' Points' : '')} Answer: ${esc(q.a)}</div>
+          <div class="result-text">${rankTitle}</div>
+          <div class="result-sub">${r.suspense ? '' : (ok ? '+' + pts + ' Points | ' : '')}Answer: ${esc(q.a)}</div>
         </div>
         <div class="opts" style="margin-top:10px">
           ${opts.map((o, i) => `<button class="optbtn ${o === q.a ? 'correct' : (my && my.choice === o ? 'wrongpick' : '')}" disabled>
@@ -1453,7 +1503,20 @@ function renderOnline(r) {
     const bData = buzzed ? playersObj(r)[r.buzzedBy] : '';
     const bName = bData ? (typeof bData === 'object' ? bData.name : bData) : 'Player';
 
-    if (buzzed && mine && !my) {
+    if (buzzed && mine) {
+      if (my) {
+        // Intermediate State: Answer locked, waiting for engine reveal phase
+        app.innerHTML = `${head}
+          ${dblBanner(r)}
+          <div class="qbox"><span class="cat-chip">${esc(q.c)}</span><div class="qtext" id="qtext">${esc(q.q)}</div></div>
+          <div class="status" style="margin-top:16px; font-weight:900; color:var(--green)">✅ Answer Locked! Waiting for reveal...</div>
+          <div class="opts">
+            ${opts.map((o, i) => `<button class="optbtn ${my.choice === o ? 'picked' : ''}" disabled>
+              <span class="letter">${'ABCD'[i]}</span><span>${esc(o)}</span></button>`).join('')}
+          </div>`;
+        return;
+      }
+
       app.innerHTML = `${head}
         ${dblBanner(r)}
         <div class="qbox"><span class="cat-chip">${esc(q.c)}</span><div class="qtext" id="qtext"></div></div>
@@ -1726,11 +1789,12 @@ function renderPlayer(r) {
       const correctSorted = Object.entries(ans).filter(([id, a]) => a.choice === q.a).sort((a, b) => a[1].at - b[1].at);
       const myRank = correctSorted.findIndex(([id]) => id === ME.id);
       const pts = ok ? fffPointsFor(myRank) * (r.dbl ? 2 : 1) : 0;
+      const rankTitle = ok ? getFFFTitle(myRank) : 'Wrong';
 
       app.innerHTML = `<div class="result-banner ${ok ? 'result-correct' : 'result-wrong'}" style="margin:auto">
         <div class="result-emoji">${ok ? '✅' : '❌'}</div>
-        <div class="result-text">${ok ? (myRank === 0 ? '⚡ Fastest!' : '#' + (myRank + 1) + ' Fastest!') : 'Wrong'}</div>
-        <div class="result-sub">${r.suspense ? '' : (ok ? '+' + pts + ' Points' : '')} Answer: ${esc(q.a)}</div>
+        <div class="result-text">${rankTitle}</div>
+        <div class="result-sub">${r.suspense ? '' : (ok ? '+' + pts + ' Points | ' : '')}Answer: ${esc(q.a)}</div>
       </div>`;
       return;
     }
