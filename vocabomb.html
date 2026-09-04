@@ -66,7 +66,7 @@
       align-items: center;
       justify-content: center;
       min-height: 100dvh;
-      padding: 16px;
+      padding: 12px;
       overflow-x: hidden;
     }
 
@@ -132,12 +132,12 @@
       backdrop-filter: blur(24px);
       -webkit-backdrop-filter: blur(24px);
       border: 1px solid var(--border-color);
-      border-radius: 28px;
-      padding: 28px 20px;
+      border-radius: 24px;
+      padding: 20px 16px;
       width: 100%;
       box-shadow: 0 25px 50px rgba(0, 0, 0, 0.85);
       text-align: center;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
       transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
     }
 
@@ -188,7 +188,7 @@
     }
 
     h1 {
-      font-size: 2.8rem;
+      font-size: 2.4rem;
       font-weight: 900;
       letter-spacing: -0.5px;
       color: #fff;
@@ -197,16 +197,16 @@
     }
 
     .bomb-icon {
-      font-size: 4.5rem;
-      margin: 10px 0;
+      font-size: 3.8rem;
+      margin: 6px 0;
       animation: pulse 1.5s infinite alternate;
     }
 
     .subtitle {
       color: var(--text-muted);
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       font-weight: 800;
-      margin-bottom: 20px;
+      margin-bottom: 12px;
       text-transform: uppercase;
       letter-spacing: 1.5px;
     }
@@ -214,33 +214,33 @@
     .hero-rule-box {
       background: rgba(11, 14, 20, 0.6);
       border: 1px solid var(--border-color);
-      border-radius: 18px;
-      padding: 16px;
-      margin-bottom: 24px;
-      font-size: 0.95rem;
+      border-radius: 16px;
+      padding: 12px;
+      margin-bottom: 16px;
+      font-size: 0.88rem;
       font-weight: 700;
       color: var(--text);
-      line-height: 1.5;
+      line-height: 1.4;
     }
 
     .tab-group {
       display: flex;
       background: rgba(11, 14, 20, 0.6);
-      border-radius: 16px;
+      border-radius: 14px;
       padding: 4px;
-      margin-bottom: 20px;
+      margin-bottom: 14px;
       border: 1px solid var(--border-color);
     }
 
     .tab-btn {
       flex: 1;
-      padding: 12px;
+      padding: 10px;
       border: none;
       background: transparent;
       color: var(--text-muted);
       font-weight: 800;
-      font-size: 0.9rem;
-      border-radius: 12px;
+      font-size: 0.85rem;
+      border-radius: 10px;
       cursor: pointer;
       transition: all 0.2s ease;
     }
@@ -251,47 +251,48 @@
       box-shadow: 0 4px 14px var(--red-glow);
     }
 
+    /* COMPACT SINGLE-SCREEN HOST CONFIGURATION PANEL */
     .config-group {
       text-align: left;
       background: rgba(11, 14, 20, 0.6);
       border: 1px solid var(--border-color);
-      border-radius: 18px;
-      padding: 18px;
-      margin-bottom: 16px;
+      border-radius: 14px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
     }
 
     .config-title {
-      font-size: 0.85rem;
+      font-size: 0.72rem;
       font-weight: 800;
       color: var(--gold);
       text-transform: uppercase;
       letter-spacing: 1px;
-      margin-bottom: 14px;
+      margin-bottom: 6px;
     }
 
     .briefing-disclaimer-header {
       background: rgba(255, 42, 85, 0.18);
-      border: 2px solid var(--red);
-      box-shadow: 0 0 20px var(--red-glow);
+      border: 1.5px solid var(--red);
+      box-shadow: 0 0 15px var(--red-glow);
       color: #fff;
-      font-size: 0.95rem;
+      font-size: 0.85rem;
       font-weight: 900;
-      padding: 12px;
-      border-radius: 16px;
+      padding: 10px;
+      border-radius: 14px;
       text-align: center;
-      margin-bottom: 16px;
+      margin-bottom: 10px;
       letter-spacing: 0.5px;
       animation: pulse 1.5s infinite alternate;
     }
 
     .toggle-row {
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: space-between;
-      margin-bottom: 16px;
-      font-size: 0.95rem;
+      margin-bottom: 8px;
+      font-size: 0.82rem;
       font-weight: 700;
-      gap: 12px;
+      gap: 8px;
     }
 
     .toggle-row:last-child {
@@ -304,42 +305,42 @@
     }
 
     .toggle-desc {
-      font-size: 0.78rem;
+      font-size: 0.7rem;
       font-weight: 600;
       color: var(--text-muted);
-      margin-top: 4px;
-      line-height: 1.35;
+      margin-top: 1px;
+      line-height: 1.25;
     }
 
     .toggle-row input[type="checkbox"], .toggle-row input[type="radio"] {
       accent-color: var(--red);
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
       cursor: pointer;
-      margin-top: 2px;
+      margin-top: 0;
       flex-shrink: 0;
     }
 
     .surge-rounds-selector {
       display: flex;
       gap: 12px;
-      margin-top: 8px;
-      margin-bottom: 16px;
-      padding-left: 28px;
+      margin-top: 4px;
+      margin-bottom: 8px;
+      padding-left: 20px;
     }
 
     .surge-rounds-selector label {
-      font-size: 0.85rem;
+      font-size: 0.78rem;
       font-weight: 800;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
     }
 
     .slider-container {
-      margin-top: 6px;
-      margin-bottom: 14px;
+      margin-top: 4px;
+      margin-bottom: 6px;
     }
 
     .slider-container input[type="range"] {
@@ -349,15 +350,15 @@
 
     input[type="text"] {
       width: 100%;
-      padding: 18px;
-      border-radius: 16px;
+      padding: 14px;
+      border-radius: 14px;
       border: 2px solid var(--border-color);
       background: rgba(11, 14, 20, 0.8);
       color: #fff;
-      font-size: 1.25rem;
+      font-size: 1.15rem;
       font-weight: 800;
       text-align: center;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       text-transform: uppercase;
       outline: none;
       letter-spacing: 2px;
@@ -371,34 +372,34 @@
 
     .btn {
       width: 100%;
-      padding: 18px;
-      border-radius: 16px;
+      padding: 14px;
+      border-radius: 14px;
       border: none;
       background: var(--red);
       color: #fff;
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: 800;
       letter-spacing: 1px;
       cursor: pointer;
-      box-shadow: 0 10px 25px var(--red-glow), inset 0 2px 0 rgba(255, 255, 255, 0.2);
+      box-shadow: 0 8px 20px var(--red-glow), inset 0 2px 0 rgba(255, 255, 255, 0.2);
       transition: all 0.15s ease;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .btn-green {
       background: var(--green);
-      box-shadow: 0 10px 25px var(--green-glow);
+      box-shadow: 0 8px 20px var(--green-glow);
     }
 
     .btn-cyan {
       background: var(--cyan);
-      box-shadow: 0 10px 25px var(--cyan-glow);
+      box-shadow: 0 8px 20px var(--cyan-glow);
     }
 
     .btn-gold {
       background: var(--gold);
       color: #000;
-      box-shadow: 0 10px 25px var(--gold-glow);
+      box-shadow: 0 8px 20px var(--gold-glow);
     }
 
     .btn-secondary {
@@ -424,13 +425,13 @@
 
     .status-badge {
       display: inline-block;
-      padding: 10px 24px;
+      padding: 8px 20px;
       border-radius: 30px;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       font-weight: 800;
       letter-spacing: 1.5px;
       text-transform: uppercase;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
     }
 
     .active-turn {
@@ -450,9 +451,9 @@
     .modifier-tag-list {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
       align-items: center;
-      margin-bottom: 18px;
+      margin-bottom: 14px;
       width: 100%;
     }
 
@@ -460,13 +461,13 @@
       background: rgba(255, 42, 85, 0.25);
       border: 2px solid var(--red);
       color: #fff;
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: 900;
-      padding: 8px 18px;
-      border-radius: 12px;
+      padding: 6px 14px;
+      border-radius: 10px;
       text-transform: uppercase;
       letter-spacing: 1.5px;
-      box-shadow: 0 0 20px var(--red-glow);
+      box-shadow: 0 0 15px var(--red-glow);
       width: 100%;
       animation: pulse 1.5s infinite alternate;
     }
@@ -475,13 +476,13 @@
       background: rgba(255, 184, 0, 0.2);
       border: 2px solid var(--gold);
       color: var(--gold);
-      font-size: 1rem;
+      font-size: 0.9rem;
       font-weight: 900;
-      padding: 6px 16px;
-      border-radius: 12px;
+      padding: 5px 12px;
+      border-radius: 10px;
       text-transform: uppercase;
       letter-spacing: 1px;
-      box-shadow: 0 0 15px var(--gold-glow);
+      box-shadow: 0 0 12px var(--gold-glow);
       width: 100%;
     }
 
@@ -498,11 +499,11 @@
 
     .letter-stage {
       position: relative;
-      margin: 10px 0 16px 0;
+      margin: 6px 0 12px 0;
     }
 
     .letter-label {
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       font-weight: 800;
       letter-spacing: 2px;
       color: var(--text-muted);
@@ -510,12 +511,12 @@
     }
 
     .letter-display {
-      font-size: clamp(3rem, 14vw, 5.5rem);
+      font-size: clamp(2.8rem, 12vw, 4.8rem);
       font-weight: 900;
       color: var(--gold);
       line-height: 1;
-      margin-top: 4px;
-      text-shadow: 0 0 40px var(--gold-glow);
+      margin-top: 2px;
+      text-shadow: 0 0 35px var(--gold-glow);
       display: inline-block;
       transition: transform 0.2s ease, text-shadow 0.2s ease;
     }
@@ -526,11 +527,11 @@
 
     .fuse-track {
       width: 100%;
-      height: 12px;
+      height: 10px;
       background: rgba(255, 255, 255, 0.08);
       border-radius: 20px;
       overflow: hidden;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
@@ -559,12 +560,12 @@
     .history-card {
       background: rgba(11, 14, 20, 0.6);
       border: 1px solid var(--border-color);
-      border-radius: 18px;
-      padding: 16px;
-      max-height: 120px;
+      border-radius: 16px;
+      padding: 12px;
+      max-height: 100px;
       overflow-y: auto;
       text-align: left;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: var(--text-muted);
     }
 
@@ -572,11 +573,11 @@
       display: inline-block;
       background: rgba(255, 255, 255, 0.06);
       border: 1px solid var(--border-color);
-      padding: 8px 16px;
+      padding: 6px 12px;
       border-radius: 30px;
-      font-size: 0.9rem;
+      font-size: 0.82rem;
       font-weight: 700;
-      margin: 4px;
+      margin: 3px;
     }
 
     .player-pill.ready {
@@ -603,16 +604,16 @@
     .toast-msg {
       color: var(--red);
       font-weight: 800;
-      font-size: 0.85rem;
-      min-height: 20px;
-      margin-bottom: 12px;
-      line-height: 1.3;
+      font-size: 0.82rem;
+      min-height: 18px;
+      margin-bottom: 10px;
+      line-height: 1.25;
     }
 
     .dict-status {
       font-size: 0.75rem;
       color: #10b981;
-      margin-bottom: 15px;
+      margin-bottom: 12px;
       font-weight: 700;
     }
 
@@ -621,20 +622,20 @@
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(7, 9, 14, 0.98);
-      border-radius: 28px;
+      border-radius: 24px;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       z-index: 200;
-      padding: 20px;
+      padding: 16px;
       text-align: center;
     }
 
     .countdown-num {
-      font-size: clamp(4rem, 18vw, 7rem);
+      font-size: clamp(3.8rem, 16vw, 6.5rem);
       font-weight: 900;
       color: var(--gold);
-      text-shadow: 0 0 60px var(--gold-glow);
+      text-shadow: 0 0 50px var(--gold-glow);
       animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
@@ -643,36 +644,36 @@
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(7, 9, 14, 0.98);
-      border-radius: 28px;
+      border-radius: 24px;
       border: 2px solid var(--cyan);
-      box-shadow: 0 0 50px var(--cyan-glow);
+      box-shadow: 0 0 40px var(--cyan-glow);
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 24px;
+      padding: 20px;
       text-align: center;
       z-index: 300;
       animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
     .attack-title {
-      font-size: 2.2rem;
+      font-size: 2rem;
       font-weight: 900;
       color: var(--cyan);
-      text-shadow: 0 0 25px var(--cyan-glow);
-      margin-bottom: 8px;
+      text-shadow: 0 0 20px var(--cyan-glow);
+      margin-bottom: 6px;
     }
 
     .attack-desc {
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: 800;
       color: #fff;
-      line-height: 1.4;
-      margin-bottom: 16px;
+      line-height: 1.35;
+      margin-bottom: 14px;
     }
 
     .attack-timer-notice {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       font-weight: 800;
       color: var(--gold);
       text-transform: uppercase;
@@ -696,7 +697,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: space-between;
-      padding: 20px 20px calc(20px + env(safe-area-inset-bottom)) 20px;
+      padding: 16px 16px calc(16px + env(safe-area-inset-bottom)) 16px;
       text-align: center;
       z-index: 10000;
       animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -711,29 +712,29 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding-bottom: 16px;
+      padding-bottom: 12px;
       -webkit-overflow-scrolling: touch;
       box-sizing: border-box;
     }
 
     .boom-title {
-      font-size: 3.2rem;
+      font-size: 2.8rem;
       font-weight: 900;
       color: var(--red);
       letter-spacing: 2px;
-      text-shadow: 0 0 35px var(--red-glow);
+      text-shadow: 0 0 30px var(--red-glow);
       margin-bottom: 2px;
-      margin-top: 10px;
+      margin-top: 6px;
     }
 
     .boom-desc {
-      font-size: 1.15rem;
+      font-size: 1.05rem;
       font-weight: 800;
       color: #fff;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
 
-    /* VERTICALLY CENTERED SLEEK KNOCKOUT INTERMISSION OVERLAY */
+    /* VERTICALLY CENTERED SLEEK KNOCKOUT INTERMISSION MODAL */
     .inline-countdown-box {
       position: fixed;
       inset: 0;
@@ -745,36 +746,36 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 24px;
+      padding: 20px;
       text-align: center;
       animation: popIn 0.3s ease;
     }
 
     .inline-countdown-title {
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: 900;
       color: var(--gold);
-      letter-spacing: 3px;
+      letter-spacing: 2.5px;
       text-transform: uppercase;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       text-shadow: 0 0 20px var(--gold-glow);
     }
 
     .leaderboard-section {
       width: 100%;
       max-width: 100%;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       text-align: left;
       box-sizing: border-box;
     }
 
     .section-header-title {
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       font-weight: 900;
       color: var(--gold);
       letter-spacing: 1.5px;
       text-transform: uppercase;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       display: flex;
       align-items: center;
       gap: 6px;
@@ -783,8 +784,8 @@
     .rank-card-mvp {
       background: linear-gradient(135deg, rgba(255, 184, 0, 0.25), rgba(217, 119, 6, 0.15));
       border: 2px solid var(--gold);
-      border-radius: 16px;
-      padding: 14px 16px;
+      border-radius: 14px;
+      padding: 12px 14px;
       margin-bottom: 8px;
       display: flex;
       align-items: center;
@@ -808,7 +809,7 @@
     }
 
     .rank-card-mvp .rank-name {
-      font-size: 1.25rem;
+      font-size: 1.15rem;
       font-weight: 900;
       color: #fff;
       letter-spacing: 0.5px;
@@ -817,11 +818,11 @@
     }
 
     .rank-card-mvp .rank-badge {
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: 900;
       color: var(--gold);
       background: rgba(0, 0, 0, 0.4);
-      padding: 4px 12px;
+      padding: 4px 10px;
       border-radius: 20px;
       flex-shrink: 0;
     }
@@ -836,12 +837,12 @@
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--border-color);
       border-radius: 12px;
-      padding: 10px 14px;
+      padding: 8px 12px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 10px;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       font-weight: 700;
       min-width: 0;
     }
@@ -882,22 +883,22 @@
       background: rgba(11, 14, 20, 0.6);
       border: 1px solid var(--border-color);
       border-radius: 12px;
-      padding: 10px;
+      padding: 8px 10px;
       text-align: left;
       min-width: 0;
     }
 
     .award-card-title {
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       font-weight: 800;
       color: var(--gold);
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      margin-bottom: 4px;
+      margin-bottom: 2px;
     }
 
     .award-card-val {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       font-weight: 800;
       color: #fff;
       line-height: 1.2;
@@ -906,7 +907,7 @@
     }
 
     .award-card-sub {
-      font-size: 0.72rem;
+      font-size: 0.68rem;
       color: var(--text-muted);
       margin-top: 2px;
       word-break: break-word;
@@ -914,25 +915,25 @@
     }
 
     .rule-detail-item {
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       text-align: left;
-      font-size: 0.82rem;
+      font-size: 0.78rem;
       color: var(--text-muted);
       background: rgba(255, 255, 255, 0.03);
-      padding: 10px 12px;
-      border-radius: 12px;
+      padding: 8px 10px;
+      border-radius: 10px;
       border-left: 3px solid var(--gold);
     }
 
     .rule-detail-item b {
       color: #fff;
       display: block;
-      font-size: 0.88rem;
+      font-size: 0.82rem;
       margin-bottom: 2px;
     }
 
     .powerup-box {
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       width: 100%;
     }
 
@@ -940,10 +941,10 @@
       background: rgba(255, 255, 255, 0.03);
       border: 2px dashed rgba(255, 255, 255, 0.15);
       color: var(--text-muted);
-      font-size: 0.82rem;
+      font-size: 0.78rem;
       font-weight: 800;
-      padding: 14px;
-      border-radius: 14px;
+      padding: 10px;
+      border-radius: 12px;
       text-transform: uppercase;
       letter-spacing: 1px;
     }
@@ -951,10 +952,10 @@
     .powerup-btn {
       background: linear-gradient(135deg, var(--gold), #d97706);
       color: #000;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 900;
-      padding: 14px;
-      border-radius: 14px;
+      padding: 12px;
+      border-radius: 12px;
       border: none;
       width: 100%;
       cursor: pointer;
@@ -972,57 +973,57 @@
       background: rgba(255, 184, 0, 0.15);
       border: 1px solid var(--gold);
       color: var(--gold);
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       font-weight: 900;
-      padding: 6px 16px;
+      padding: 4px 14px;
       border-radius: 20px;
       letter-spacing: 1.5px;
       text-transform: uppercase;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       display: inline-block;
     }
 
     /* FLUID COMPACT BUTTON ROW STYLING WITH NO SIDE-CLIPPING */
     .compact-btn-row {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       width: 100%;
       max-width: 420px;
-      padding-top: 12px;
+      padding-top: 10px;
       flex-shrink: 0;
       box-sizing: border-box;
     }
 
     .compact-btn-row .btn {
       flex: 1;
-      padding: 16px 8px;
-      font-size: 0.88rem;
+      padding: 14px 6px;
+      font-size: 0.82rem;
       font-weight: 900;
       margin-bottom: 0;
-      border-radius: 16px;
+      border-radius: 14px;
       letter-spacing: 0px;
       white-space: nowrap;
     }
 
     @media (max-width: 360px) {
       .game-box {
-        padding: 18px 12px;
-        border-radius: 20px;
+        padding: 14px 10px;
+        border-radius: 18px;
       }
       h1 {
-        font-size: 2.2rem;
+        font-size: 2rem;
       }
       .btn {
-        padding: 14px;
-        font-size: 0.95rem;
+        padding: 12px;
+        font-size: 0.88rem;
       }
       input[type="text"] {
-        padding: 12px;
-        font-size: 1.1rem;
+        padding: 10px;
+        font-size: 1rem;
       }
       .compact-btn-row .btn {
-        font-size: 0.78rem;
-        padding: 14px 4px;
+        font-size: 0.75rem;
+        padding: 12px 2px;
       }
     }
 
@@ -1110,8 +1111,8 @@
 
     <!-- 3. HOST CONFIG & PLAYER BRIEFING SCREEN -->
     <div id="room-screen" class="game-box" style="display: none; position: relative;">
-      <div class="subtitle">ROOM CODE</div>
-      <h2 id="display-room-code" style="color:var(--gold); font-size: 2.8rem; font-weight: 900; letter-spacing: 4px; margin-bottom: 16px;"></h2>
+      <div class="subtitle" style="margin-bottom: 4px;">ROOM CODE</div>
+      <h2 id="display-room-code" style="color:var(--gold); font-size: 2.2rem; font-weight: 900; letter-spacing: 4px; margin-bottom: 10px;"></h2>
       
       <div id="host-config-panel" style="display:none;">
         
@@ -1120,8 +1121,8 @@
           
           <label class="toggle-row">
             <div class="toggle-info">
-              <span>🏆 Knockout Mode (Battle Royale)</span>
-              <span class="toggle-desc">Players explode one by one across survival rounds until 1 winner remains.</span>
+              <span>🏆 Knockout Mode</span>
+              <span class="toggle-desc">Explode one by one across survival rounds.</span>
             </div>
             <input type="radio" name="cfgFormat" value="KNOCKOUT" checked />
           </label>
@@ -1129,7 +1130,7 @@
           <label class="toggle-row">
             <div class="toggle-info">
               <span>📊 Point Surge Mode</span>
-              <span class="toggle-desc">3 turns per player per round! Scores revealed at final round!</span>
+              <span class="toggle-desc">3 turns per round! Scores revealed at final round.</span>
             </div>
             <input type="radio" name="cfgFormat" value="SURGE" />
           </label>
@@ -1142,7 +1143,7 @@
           <label class="toggle-row">
             <div class="toggle-info">
               <span>⚡ Classic Single Blitz</span>
-              <span class="toggle-desc">A single explosion ends the entire match immediately.</span>
+              <span class="toggle-desc">A single explosion ends match instantly.</span>
             </div>
             <input type="radio" name="cfgFormat" value="CLASSIC" />
           </label>
@@ -1154,27 +1155,27 @@
           <label class="toggle-row">
             <div class="toggle-info">
               <span>Random Letter Blitz</span>
-              <span class="toggle-desc">A completely random required letter is assigned every turn.</span>
+              <span class="toggle-desc">Random letter every turn.</span>
             </div>
             <input type="radio" name="cfgMode" value="RANDOM" checked />
           </label>
 
           <label class="toggle-row">
             <div class="toggle-info">
-              <span>Word Chain (Last Letter Rule)</span>
-              <span class="toggle-desc">Next word must start with the LAST letter of the previous word.</span>
+              <span>Word Chain Rule</span>
+              <span class="toggle-desc">Start with LAST letter of previous word.</span>
             </div>
             <input type="radio" name="cfgMode" value="CHAIN" />
           </label>
         </div>
 
         <div class="config-group">
-          <div class="config-title">3. GAME MODIFIERS (OPTIONAL)</div>
+          <div class="config-title">3. GAME MODIFIERS</div>
           
           <label class="toggle-row">
             <div class="toggle-info">
               <span>⚡ Power-Up Chaos</span>
-              <span class="toggle-desc">5-word streaks unlock standard power-ups; 8+ letter words unlock Super Power-Ups!</span>
+              <span class="toggle-desc">Streaks unlock standard & super power-ups.</span>
             </div>
             <input type="checkbox" id="cfg-powerups" checked />
           </label>
@@ -1182,32 +1183,32 @@
           <label class="toggle-row">
             <div class="toggle-info">
               <span>Hardcore Word Length</span>
-              <span class="toggle-desc">Increases minimum allowed word length. Short fallback words are rejected.</span>
+              <span class="toggle-desc">Increases minimum allowed word length.</span>
             </div>
             <input type="checkbox" id="cfg-hardcore" />
           </label>
           <div class="slider-container" id="hardcore-slider-box" style="display:none;">
-            <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">Minimum Word Length: <b id="min-length-val" style="color:#fff;">4</b> Letters</div>
+            <div style="font-size:0.72rem; color:var(--text-muted); margin-bottom:2px;">Minimum Length: <b id="min-length-val" style="color:#fff;">4</b> Letters</div>
             <input type="range" id="cfg-min-len" min="3" max="6" value="4" />
           </div>
 
           <label class="toggle-row">
             <div class="toggle-info">
               <span>The Bottleneck Trap</span>
-              <span class="toggle-desc">Ending words on hard letters (Q, Z, K, J, W, Y) shrinks next player's timer.</span>
+              <span class="toggle-desc">Hard ending letters shrink next timer.</span>
             </div>
             <input type="checkbox" id="cfg-bottleneck" />
           </label>
 
-          <div class="slider-container" style="margin-top:10px;">
-            <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">Per-Turn Timer Cap: <b id="timer-val" style="color:#fff;">8s</b></div>
+          <div class="slider-container">
+            <div style="font-size:0.72rem; color:var(--text-muted); margin-bottom:2px;">Per-Turn Timer: <b id="timer-val" style="color:#fff;">8s</b></div>
             <input type="range" id="cfg-turn-timer" min="3" max="15" value="8" />
           </div>
 
           <label class="toggle-row">
             <div class="toggle-info">
               <span>Letter Blockade</span>
-              <span class="toggle-desc">Bans a common letter (E, A, S, T) from being used during the entire match.</span>
+              <span class="toggle-desc">Bans a common letter (E, A, S, T).</span>
             </div>
             <input type="checkbox" id="cfg-blockade" />
           </label>
@@ -1215,13 +1216,13 @@
           <label class="toggle-row">
             <div class="toggle-info">
               <span>Hot Potato Acceleration</span>
-              <span class="toggle-desc">Turn timers automatically speed up late in the round.</span>
+              <span class="toggle-desc">Timers speed up late in the round.</span>
             </div>
             <input type="checkbox" id="cfg-acceleration" />
           </label>
         </div>
 
-        <button class="btn btn-green" id="btn-save-rules">LOCK IN RULES & ADVANCE</button>
+        <button class="btn btn-green" id="btn-save-rules" style="padding: 14px; font-size: 0.95rem; margin-top: 4px; margin-bottom: 0;">LOCK IN RULES & ADVANCE</button>
       </div>
 
       <div id="player-rules-briefing" style="display:none;">
@@ -1231,17 +1232,17 @@
 
         <div id="briefing-list">Waiting for Host to configure game...</div>
 
-        <button class="btn btn-green" id="btn-ready" style="margin-top: 12px;">I'M READY TO PLAY!</button>
+        <button class="btn btn-green" id="btn-ready" style="margin-top: 10px;">I'M READY TO PLAY!</button>
 
-        <div id="host-start-container" style="display:none; margin-top:14px;">
+        <div id="host-start-container" style="display:none; margin-top:10px;">
           <button class="btn btn-gold" id="btn-plant-bomb">💣 PLANT THE BOMB & START!</button>
         </div>
       </div>
 
-      <div id="players-list" style="margin-top: 20px; margin-bottom: 24px;"></div>
+      <div id="players-list" style="margin-top: 14px; margin-bottom: 16px;"></div>
 
       <div id="countdown-screen">
-        <div id="countdown-label-text" style="font-size: 1.2rem; font-weight: 800; color: #fff; margin-bottom: 10px;">PLANTING BOMB IN</div>
+        <div id="countdown-label-text" style="font-size: 1.1rem; font-weight: 800; color: #fff; margin-bottom: 8px;">PLANTING BOMB IN</div>
         <div id="countdown-val" class="countdown-num">3</div>
       </div>
     </div>
@@ -1257,10 +1258,10 @@
         </div>
 
         <div id="intermission-screen">
-          <div style="font-size: 0.85rem; font-weight: 900; color: var(--gold); letter-spacing: 2px; text-transform: uppercase;">ROUND RECAP</div>
-          <div id="intermission-round-num" style="font-size: 1.8rem; font-weight: 900; color: #fff; margin: 4px 0 8px 0;">ROUND 1 COMPLETE</div>
-          <div id="intermission-highlights" style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;"></div>
-          <div style="font-size: 0.85rem; font-weight: 800; color: var(--gold); margin-bottom: 4px;">NEXT ROUND STARTING IN</div>
+          <div style="font-size: 0.8rem; font-weight: 900; color: var(--gold); letter-spacing: 2px; text-transform: uppercase;">ROUND RECAP</div>
+          <div id="intermission-round-num" style="font-size: 1.6rem; font-weight: 900; color: #fff; margin: 4px 0 6px 0;">ROUND 1 COMPLETE</div>
+          <div id="intermission-highlights" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px; line-height: 1.35;"></div>
+          <div style="font-size: 0.8rem; font-weight: 800; color: var(--gold); margin-bottom: 2px;">NEXT ROUND STARTING IN</div>
           <div id="surge-intermission-num" class="countdown-num">3</div>
         </div>
 
@@ -1544,48 +1545,6 @@ window.addEventListener('load', () => {
 
         // KEEP DISPLAY AWAKE CONTINUOUSLY WHILE IN ROOM SESSION
         requestScreenWakeLock();
-
-        // Sync incoming players instantly from master room into VocaBomb (WITH DEDUPLICATION FIX)
-        db.ref(`master_rooms/${currentRoom}/players`).on('child_added', pSnap => {
-          const pid = pSnap.key;
-          const p = pSnap.val() || {};
-          if (pid && p.name) {
-            roomRef.child('players').once('value').then(snap => {
-              const existingPlayers = snap.val() || {};
-              const updates = {};
-              
-              // Purge any stale ghost entry sharing the exact same name under an older PID
-              Object.entries(existingPlayers).forEach(([exPid, exP]) => {
-                if (exP && exP.name === p.name && exPid !== pid) {
-                  updates[exPid] = null;
-                }
-              });
-              
-              if (pid !== myPlayerId) {
-                updates[pid] = {
-                  name: p.name,
-                  isDisconnected: false,
-                  isEliminated: false
-                };
-              }
-              
-              if (Object.keys(updates).length > 0) {
-                roomRef.child('players').update(updates);
-              }
-            });
-          }
-        });
-
-        // Listen for master_rooms status to auto-return players when host disbands or leaves
-        db.ref(`master_rooms/${currentRoom}/status`).on('value', mSnap => {
-          const status = mSnap.val();
-          if (status === 'LOBBY' || status === 'DISBANDED' || !status) {
-            const isHostPlayer = autoHost || (roomData && roomData.host === myPlayerId);
-            if (!isHostPlayer) {
-              returnToLauncher();
-            }
-          }
-        });
 
         roomRef.on('value', (sSnap) => {
           roomData = sSnap.val();
@@ -2649,14 +2608,12 @@ if ('serviceWorker' in navigator) {
                 } else {
                   clearInterval(inlineTimer);
                   if (isHost) {
-                    const survivingIds = getNormalizedPlayerOrder().filter(pid => pid !== roomData.loserId);
+                    const survivingIds = getNormalizedPlayerOrder();
                     const currentOrder = Array.isArray(roomData.playerOrder) ? roomData.playerOrder : Object.values(roomData.playerOrder || {});
                     const loserIndex = currentOrder.indexOf(roomData.loserId);
                     
                     const safeIndex = (loserIndex >= 0 && survivingIds.length > 0) ? (loserIndex % survivingIds.length) : 0;
                     const nextPlayerId = survivingIds[safeIndex] || survivingIds[0];
-
-                    roomRef.child('players/' + roomData.loserId + '/isEliminated').set(true);
 
                     let totalFuseSeconds = survivingIds.length >= 3 
                       ? (65 + Math.floor(Math.random() * 20) + Math.floor(Math.random() * 21))
@@ -3031,7 +2988,7 @@ if ('serviceWorker' in navigator) {
       const timeExpired = remainingTurnTime <= 0 || (!isSurge && nowServer >= roomData.globalFuseEndTime);
       const secretFuseExpired = isSurge && !roomData.hasRoundFuseFired && roomData.roundSecretFuseEndTime && nowServer >= roomData.roundSecretFuseEndTime;
 
-      // ATOMIC TRANSACTION & STATE TRANSITION
+      // ATOMIC TRANSACTION & STATE TRANSITION WITH 1-SURVIVOR CHECK
       if ((timeExpired || secretFuseExpired) && !warningActive && !roomData.isSurgeIntermission) {
         if (isHost || (roomData.activePlayerId === myPlayerId && nowServer > roomData.turnEndTime + 1000)) {
           if (isSurge) {
@@ -3044,46 +3001,39 @@ if ('serviceWorker' in navigator) {
             }
             advanceSurgeTurn(roomData.activePlayerId, null);
           } else {
-            roomRef.child('gameState').transaction((currState) => {
-              if (currState === 'PLAYING') {
-                return 'BOOM';
-              }
-              return currState;
-            }, (error, committed) => {
-              if (committed) {
-                const loserId = roomData.activePlayerId;
-                const loserName = roomData.players[loserId]?.name || 'Player';
-                
-                const rankings = roomData.eliminationRankings ? Object.values(roomData.eliminationRankings) : [];
-                rankings.push({ pid: loserId, name: loserName });
+            const loserId = roomData.activePlayerId;
+            const loserName = roomData.players[loserId]?.name || 'Player';
+            const isKnockout = roomData.config?.format === 'KNOCKOUT';
+            
+            // CALCULATE SURVIVING PLAYERS AFTER THIS ELIMINATION
+            const survivingIds = getNormalizedPlayerOrder().filter(pid => pid !== loserId);
 
-                const isKnockout = roomData.config?.format === 'KNOCKOUT';
-                const activePlayers = getNormalizedPlayerOrder().filter(pid => pid !== loserId);
+            const rankings = roomData.eliminationRankings ? Object.values(roomData.eliminationRankings) : [];
+            rankings.push({ pid: loserId, name: loserName });
 
-                if (!isKnockout || activePlayers.length === 1) {
-                  let winnerName = 'Winner';
-                  if (activePlayers.length === 1) {
-                    winnerName = roomData.players[activePlayers[0]]?.name || 'Winner';
-                    rankings.push({ pid: activePlayers[0], name: winnerName });
-                  }
+            // IF NOT KNOCKOUT (CLASSIC BLITZ) OR ONLY 1 SURVIVOR REMAINS -> GAME OVER
+            const isGameOver = !isKnockout || survivingIds.length <= 1;
 
-                  roomRef.update({
-                    loserId: loserId,
-                    loserName: loserName,
-                    eliminationRankings: rankings,
-                    isGameOver: true,
-                    winnerName: winnerName
-                  });
-                } else {
-                  roomRef.update({
-                    loserId: loserId,
-                    loserName: loserName,
-                    eliminationRankings: rankings,
-                    isGameOver: false
-                  });
-                }
-              }
-            });
+            let winnerName = 'Winner';
+            if (survivingIds.length === 1) {
+              winnerName = roomData.players[survivingIds[0]]?.name || 'Winner';
+              rankings.push({ pid: survivingIds[0], name: winnerName });
+            } else if (survivingIds.length === 0) {
+              winnerName = loserName;
+            }
+
+            const updates = {
+              gameState: 'BOOM',
+              loserId: loserId,
+              loserName: loserName,
+              eliminationRankings: rankings,
+              isGameOver: isGameOver,
+              winnerName: winnerName
+            };
+
+            updates[`players/${loserId}/isEliminated`] = true;
+
+            roomRef.update(updates);
           }
         }
       }
