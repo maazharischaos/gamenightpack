@@ -283,11 +283,13 @@
       text-transform: uppercase;
     }
 
+    /* HARDENED GAMEPLAY VIEW CSS PREVENTS SUBMIT BAR OVERFLOW */
     #screen-game { 
       display: flex; 
       flex-direction: column; 
       flex: 1 1 auto;
-      height: 0;
+      height: 100%;
+      max-height: 100dvh;
       min-height: 0;
       overflow: hidden; 
       padding: 0; 
@@ -535,7 +537,7 @@
       <div id="game-submit-bar" class="sticky-submit-bar"></div>
     </div>
 
-    <!-- SUMMARY SCREEN -->
+    <!-- SUMMARY SCREEN WITH UNIFIED SINGLE STANDINGS HEADER -->
     <div id="screen-summary" class="screen">
       <div style="text-align: center; margin-bottom: 8px;">
         <h2 class="brand-title" style="font-size: 1.6rem;">MATCH RESULTS</h2>
@@ -543,11 +545,8 @@
       </div>
 
       <div class="glass-card" style="flex: 1; overflow-y: auto;">
-        <div class="input-label">ROUND STANDINGS</div>
+        <div id="summary-section-title" class="input-label">ROUND STANDINGS</div>
         <div id="podium-list" class="podium-list"></div>
-
-        <div class="input-label" style="margin-top: 8px;">TOURNAMENT CUMULATIVE SCORE</div>
-        <div id="tournament-list" class="podium-list"></div>
 
         <div id="awards-container" style="margin-top: 8px;"></div>
       </div>
@@ -921,7 +920,7 @@
           }
         });
 
-        // Direct write guarantees exact PID entry
+        // Direct targeted write prevents player duplication
         if (this.db && roomCode) {
           myPlayerRef.update({
             name: GameState.playerName || 'PLAYER',
@@ -976,9 +975,10 @@
           UIController.updateLeaderboardPill(playersObj);
           this.checkBlitzConditions(playersObj);
 
+          // ACTIVE ONLINE PLAYER FILTER PREVENTS ROUND FREEZING
           if (GameState.isHost && fsm.currentState === GAME_STATES.PLAYING) {
             const players = Object.values(playersObj);
-            const activePlayers = players.filter(p => !p.isEliminated);
+            const activePlayers = players.filter(p => !p.isEliminated && p.online !== false);
             const allSubmitted = activePlayers.length > 0 && activePlayers.every(p => p.submittedAt);
             if (allSubmitted && GameState.roomRef) {
               GameState.roomRef.child('meta').update({ status: 'summary' });
@@ -1422,7 +1422,7 @@
         } else {
           submitBar.innerHTML = `
             <button id="btn-submit-match" class="btn btn-primary" style="margin-top: 0;">
-              <span>SUBMIT MATCH (<span id="submit-solved-count">${GameState.playerState.solvedCount}</span>/12)</span>
+              <span>SUBMIT ANSWERS (<span id="submit-solved-count">${GameState.playerState.solvedCount}</span>/12)</span>
             </button>
           `;
           document.getElementById('btn-submit-match').addEventListener('click', () => StateCalculations.submitMatch());
@@ -1487,27 +1487,40 @@
         const players = Object.keys(playersObj).map(k => ({ id: k, ...playersObj[k] }));
         const isTournamentEnd = GameState.isTournamentOver || false;
 
-        players.sort((a, b) => {
-          if ((b.solvedCount || 0) !== (a.solvedCount || 0)) return (b.solvedCount || 0) - (a.solvedCount || 0);
-          if ((b.score || 0) !== (a.score || 0)) return (b.score || 0) - (a.score || 0);
-          return (a.submittedAt || Infinity) - (b.submittedAt || Infinity);
-        });
-
         const subtitle = document.getElementById('summary-subtitle');
         if (subtitle) {
-          subtitle.textContent = isTournamentEnd ? "TOURNAMENT STANDINGS & AWARDS" : "ROUND STANDINGS";
+          subtitle.textContent = isTournamentEnd ? "FINAL TOURNAMENT STANDINGS" : "ROUND COMPLETED";
         }
 
+        const sectionTitle = document.getElementById('summary-section-title');
         const roundList = document.getElementById('podium-list');
-        const roundLabel = document.querySelector('#screen-summary .input-label:nth-of-type(1)');
-        
-        if (isTournamentEnd) {
-          if (roundList) roundList.style.display = 'none';
-          if (roundLabel) roundLabel.style.display = 'none';
-        } else {
-          if (roundList) {
-            roundList.style.display = 'flex';
-            roundList.innerHTML = '';
+
+        if (roundList) {
+          roundList.innerHTML = '';
+
+          if (isTournamentEnd) {
+            if (sectionTitle) sectionTitle.textContent = "FINAL STANDINGS";
+            
+            players.sort((a, b) => ((b.cumulativeScore || 0) + (b.score || 0)) - ((a.cumulativeScore || 0) + (a.score || 0)));
+
+            players.forEach((p, idx) => {
+              const item = document.createElement('div');
+              item.className = `podium-item ${idx === 0 ? 'mvp' : ''}`;
+              item.innerHTML = `
+                <div><span style="font-weight:900;">#${idx + 1}</span> <b>${p.name || 'PLAYER'}</b> ${idx === 0 ? '👑 CHAMPION' : ''}</div>
+                <div style="font-weight:900; color:var(--amber-warm);">${(p.cumulativeScore || 0) + (p.score || 0)} TOTAL PTS</div>
+              `;
+              roundList.appendChild(item);
+            });
+          } else {
+            if (sectionTitle) sectionTitle.textContent = "ROUND STANDINGS";
+
+            players.sort((a, b) => {
+              if ((b.solvedCount || 0) !== (a.solvedCount || 0)) return (b.solvedCount || 0) - (a.solvedCount || 0);
+              if ((b.score || 0) !== (a.score || 0)) return (b.score || 0) - (a.score || 0);
+              return (a.submittedAt || Infinity) - (b.submittedAt || Infinity);
+            });
+
             players.forEach((p, idx) => {
               const item = document.createElement('div');
               item.className = `podium-item ${idx === 0 ? 'mvp' : ''}`;
@@ -1518,31 +1531,6 @@
               roundList.appendChild(item);
             });
           }
-          if (roundLabel) roundLabel.style.display = 'block';
-        }
-
-        const tourneyList = document.getElementById('tournament-list');
-        const tourneyLabel = document.querySelector('#screen-summary .input-label:nth-of-type(2)');
-
-        if (isTournamentEnd) {
-          if (tourneyList) {
-            tourneyList.style.display = 'flex';
-            tourneyList.innerHTML = '';
-            const tourneySorted = [...players].sort((a, b) => ((b.cumulativeScore || 0) + (b.score || 0)) - ((a.cumulativeScore || 0) + (a.score || 0)));
-            tourneySorted.forEach((p, idx) => {
-              const item = document.createElement('div');
-              item.className = `podium-item ${idx === 0 ? 'mvp' : ''}`;
-              item.innerHTML = `
-                <div><span style="font-weight:900;">#${idx + 1}</span> <b>${p.name || 'PLAYER'}</b> ${idx === 0 ? '👑 CHAMPION' : ''}</div>
-                <div style="font-weight:900; color:var(--amber-warm);">${(p.cumulativeScore || 0) + (p.score || 0)} TOTAL PTS</div>
-              `;
-              tourneyList.appendChild(item);
-            });
-          }
-          if (tourneyLabel) tourneyLabel.style.display = 'block';
-        } else {
-          if (tourneyList) tourneyList.style.display = 'none';
-          if (tourneyLabel) tourneyLabel.style.display = 'none';
         }
 
         const awardsContainer = document.getElementById('awards-container');
@@ -1553,7 +1541,7 @@
           const speedWinner = validSolvers.sort((a, b) => (a.submittedAt || Infinity) - (b.submittedAt || Infinity))[0];
           const accuracyWinner = [...players].sort((a, b) => (a.wrongAttempts || 0) - (b.wrongAttempts || 0))[0];
 
-          let awardsHTML = `<div class="glass-card" style="border-color:var(--cyan-neon);">
+          let awardsHTML = `<div class="glass-card" style="border-color:var(--cyan-neon); margin-top:8px;">
             <div class="input-label" style="color:var(--cyan-neon); margin-bottom:6px;">🏆 TOURNAMENT HALL OF FAME</div>`;
 
           if (speedWinner && speedWinner.name) {
@@ -1751,7 +1739,6 @@ window.addEventListener('DOMContentLoaded', () => {
   const autoPid  = urlParams.get('pid');
   const autoHost = urlParams.get('isHost') === 'true';
 
-  // Lock PID identity before initial database writes
   if (autoPid) {
     GameState.playerId = autoPid;
     sessionStorage.setItem('scramble_panic_pid', autoPid);
