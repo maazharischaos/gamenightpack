@@ -39,8 +39,8 @@
       --green-glow: rgba(16, 185, 129, 0.35);
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
-      --radius-lg: 20px;
-      --radius-md: 14px;
+      --radius-lg: 16px;
+      --radius-md: 10px;
       --font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
@@ -101,8 +101,8 @@
     }
 
     .toast {
-      padding: 12px 16px; border-radius: var(--radius-md);
-      font-size: 0.85rem; font-weight: 800; color: #fff;
+      padding: 10px 14px; border-radius: var(--radius-md);
+      font-size: 0.8rem; font-weight: 800; color: #fff;
       background: rgba(18, 24, 38, 0.92);
       border: 1px solid var(--glass-border);
       backdrop-filter: blur(16px);
@@ -120,12 +120,12 @@
     .toast-info { border-color: var(--cyan-neon); box-shadow: 0 0 20px var(--cyan-glow); }
 
     #combo-banner {
-      position: absolute; top: 60px; left: 50%;
+      position: absolute; top: 50px; left: 50%;
       transform: translateX(-50%) scale(0.5);
-      z-index: 80; font-size: 1.1rem; font-weight: 900;
+      z-index: 80; font-size: 1rem; font-weight: 900;
       color: var(--amber-warm); text-shadow: 0 0 15px var(--amber-glow);
       background: rgba(18, 24, 38, 0.95);
-      padding: 6px 18px; border-radius: 20px;
+      padding: 4px 14px; border-radius: 20px;
       border: 1.5px solid var(--amber-warm);
       box-shadow: 0 0 20px var(--amber-glow);
       opacity: 0; pointer-events: none;
@@ -147,7 +147,7 @@
     #countdown-overlay.active { opacity: 1; pointer-events: auto; }
 
     .countdown-val {
-      font-size: 5rem; font-weight: 900; color: var(--amber-warm);
+      font-size: 4.5rem; font-weight: 900; color: var(--amber-warm);
       text-shadow: 0 0 30px var(--amber-glow);
       animation: popNum 0.75s cubic-bezier(0.16, 1, 0.3, 1) infinite;
     }
@@ -164,8 +164,8 @@
     }
 
     @keyframes goldenGlowPulse {
-      0%, 100% { border-color: var(--gold-neon); box-shadow: 0 0 12px var(--gold-glow); }
-      50% { border-color: #ffffff; box-shadow: 0 0 24px var(--gold-glow); }
+      0%, 100% { border-color: var(--gold-neon); box-shadow: 0 0 10px var(--gold-glow); }
+      50% { border-color: #ffffff; box-shadow: 0 0 20px var(--gold-glow); }
     }
 
     .low-timer-active { animation: lowTimerPulse 0.8s infinite ease-in-out; border: 1px solid rgba(255, 42, 85, 0.4); }
@@ -173,7 +173,7 @@
     .screen {
       position: absolute; top: 0; left: 0;
       width: 100%; height: 100%; display: flex; flex-direction: column;
-      padding: 20px 16px; opacity: 0; pointer-events: none;
+      padding: 12px 14px; opacity: 0; pointer-events: none;
       transform: translateY(12px);
       transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       z-index: 1; overflow-y: auto;
@@ -182,7 +182,7 @@
     .screen.active { opacity: 1; pointer-events: auto; transform: translateY(0); z-index: 2; }
 
     .brand-title {
-      font-size: 2.2rem; font-weight: 900; letter-spacing: -0.5px;
+      font-size: 1.8rem; font-weight: 900; letter-spacing: -0.5px;
       text-align: center; text-transform: uppercase;
       background: linear-gradient(180deg, #ffffff 30%, #cbd5e1 100%);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
@@ -190,94 +190,86 @@
     }
 
     .brand-subtitle {
-      font-size: 0.72rem; color: var(--amber-warm); text-transform: uppercase;
+      font-size: 0.68rem; color: var(--amber-warm); text-transform: uppercase;
       letter-spacing: 2px; font-weight: 800; text-align: center;
-      margin-top: 6px; text-shadow: 0 0 12px var(--amber-glow);
+      margin-top: 4px; text-shadow: 0 0 12px var(--amber-glow);
     }
 
     .glass-card {
       background: var(--glass-card); border: 1px solid var(--glass-border);
       border-radius: var(--radius-lg);
-      padding: 14px; margin-bottom: 10px;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+      padding: 10px 12px; margin-bottom: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
       display: flex; flex-direction: column;
-      min-height: 0; flex: 1;
     }
 
-    #screen-room, #screen-summary {
+    #screen-room {
       display: flex; flex-direction: column;
       justify-content: space-between;
       height: 100%; max-height: 100dvh;
-      padding: max(12px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+      padding: max(10px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
       overflow: hidden;
     }
 
-    .player-list, .podium-list {
-      flex: 1; min-height: 0; overflow-y: auto;
-    }
-
-    #summary-host-controls, #summary-client-wait {
-      flex-shrink: 0; margin-top: auto; padding-top: 8px;
-    }
-
-    .input-group { margin-bottom: 12px; display: flex; flex-direction: column; gap: 6px; }
-    .input-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); font-weight: 800; }
+    .input-group { margin-bottom: 8px; display: flex; flex-direction: column; gap: 4px; }
+    .input-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-muted); font-weight: 800; }
 
     .custom-input {
       width: 100%; background: rgba(11, 14, 20, 0.6);
       border: 1.5px solid var(--glass-border); border-radius: var(--radius-md);
-      padding: 14px 16px; color: #fff;
-      font-size: 1rem; font-weight: 800; outline: none;
+      padding: 10px 12px; color: #fff;
+      font-size: 0.9rem; font-weight: 800; outline: none;
       transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); text-transform: uppercase; letter-spacing: 1px;
     }
 
-    .custom-input:focus { border-color: var(--amber-warm); box-shadow: 0 0 20px var(--amber-glow); background: rgba(11, 14, 20, 0.85); }
+    .custom-input:focus { border-color: var(--amber-warm); box-shadow: 0 0 15px var(--amber-glow); background: rgba(11, 14, 20, 0.85); }
 
     .btn {
-      width: 100%; padding: 15px; border-radius: var(--radius-md);
-      border: none; font-size: 0.92rem;
+      width: 100%; padding: 12px; border-radius: var(--radius-md);
+      border: none; font-size: 0.85rem;
       font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
       cursor: pointer; display: flex; justify-content: center;
       align-items: center; gap: 6px;
       transition: transform 0.12s ease;
-      margin-top: 8px;
+      margin-top: 6px;
     }
 
     .btn:active:not(:disabled) { transform: scale(0.97); }
 
-    .btn-primary { background: linear-gradient(135deg, #ffc82a 0%, #e6a800 100%); color: #07090e; box-shadow: 0 8px 20px var(--amber-glow); }
-    .btn-amber { background: linear-gradient(135deg, var(--amber-warm), #e6a800); color: #07090e; box-shadow: 0 8px 20px var(--amber-glow); }
+    .btn-primary { background: linear-gradient(135deg, #ffc82a 0%, #e6a800 100%); color: #07090e; box-shadow: 0 6px 16px var(--amber-glow); }
+    .btn-amber { background: linear-gradient(135deg, var(--amber-warm), #e6a800); color: #07090e; box-shadow: 0 6px 16px var(--amber-glow); }
     .btn-secondary { background: rgba(255, 255, 255, 0.05); color: #fff; border: 1px solid var(--glass-border); }
 
-    .btn-mode { padding: 10px; font-size: 0.75rem; flex: 1; margin: 0; }
-    .btn-mode.active { background: var(--amber-warm); color: #07090e; font-weight: 900; box-shadow: 0 0 14px var(--amber-glow); }
+    .btn-mode { padding: 6px 8px; font-size: 0.7rem; flex: 1; margin: 0; }
+    .btn-mode.active { background: var(--amber-warm); color: #07090e; font-weight: 900; box-shadow: 0 0 10px var(--amber-glow); }
 
     .btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
 
     .status-badge {
-      display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px;
-      border-radius: 20px; font-size: 0.72rem; font-weight: 800;
+      display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px;
+      border-radius: 20px; font-size: 0.68rem; font-weight: 800;
       background: rgba(255, 255, 255, 0.04); border: 1px solid var(--glass-border);
     }
 
-    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-muted); }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); }
     .status-dot.online { background: var(--green-success); box-shadow: 0 0 8px var(--green-glow); }
 
     .room-code-display {
       background: rgba(255, 200, 42, 0.08); border: 1.5px solid var(--amber-warm);
-      border-radius: var(--radius-md); padding: 14px; text-align: center; margin: 12px 0;
+      border-radius: var(--radius-md); padding: 8px 12px; text-align: center; margin: 6px 0;
     }
 
-    .room-code-val { font-size: 2.5rem; font-weight: 900; letter-spacing: 6px; color: var(--amber-warm); text-shadow: 0 0 20px var(--amber-glow); }
+    .room-code-val { font-size: 2rem; font-weight: 900; letter-spacing: 4px; color: var(--amber-warm); text-shadow: 0 0 15px var(--amber-glow); }
 
     .player-list { 
       display: flex; 
       flex-wrap: wrap; 
       gap: 4px; 
-      max-height: 80px; 
+      max-height: 60px; 
       overflow-y: auto; 
       margin-top: 4px; 
     }
+    
     .player-pill {
       display: inline-flex; 
       align-items: center; 
@@ -289,23 +281,13 @@
       font-size: 0.7rem; 
       font-weight: 800; 
       text-transform: uppercase;
-      width: auto;
     }
 
-    .award-card-styled {
-      background: rgba(0, 240, 255, 0.06);
-      border: 1px solid var(--cyan-neon);
-      box-shadow: 0 0 15px var(--cyan-glow);
-      border-radius: var(--radius-md);
-      padding: 12px; margin-top: 10px;
-    }
-
-    /* GAMEPLAY SCREEN STRUCTURAL FLEX LAYOUT FIX */
     #screen-game { 
       display: flex; 
       flex-direction: column; 
       flex: 1 1 auto;
-      height: 0; /* CRITICAL: allows flex item to collapse below content size */
+      height: 0;
       min-height: 0;
       overflow: hidden; 
       padding: 0; 
@@ -315,16 +297,16 @@
     .game-header {
       flex-shrink: 0; background: rgba(7, 9, 14, 0.95); backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      padding: 12px 16px; border-bottom: 1px solid var(--glass-border); z-index: 10;
+      padding: 8px 14px; border-bottom: 1px solid var(--glass-border); z-index: 10;
     }
 
-    .timer-bar-wrapper { width: 100%; height: 6px; background: rgba(255, 255, 255, 0.08); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+    .timer-bar-wrapper { width: 100%; height: 5px; background: rgba(255, 255, 255, 0.08); border-radius: 4px; overflow: hidden; margin-top: 6px; }
     .timer-bar-fill { height: 100%; width: 100%; background: linear-gradient(90deg, var(--cyan-neon), var(--amber-warm)); transition: width 0.2s linear; }
 
     .leader-pill {
       display: flex; justify-content: space-between; align-items: center;
       background: rgba(255, 200, 42, 0.1); border: 1px solid var(--amber-warm);
-      padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 800; color: var(--amber-warm);
+      padding: 4px 10px; border-radius: 16px; font-size: 0.75rem; font-weight: 800; color: var(--amber-warm);
     }
 
     .cards-scroll-area { 
@@ -332,14 +314,14 @@
       min-height: 0;
       overflow-y: auto; 
       -webkit-overflow-scrolling: touch;
-      padding: 14px 14px 20px 14px; 
+      padding: 10px 12px 16px 12px; 
     }
 
-    .cards-grid { display: flex; flex-direction: column; gap: 10px; }
+    .cards-grid { display: flex; flex-direction: column; gap: 8px; }
 
     .word-card {
       background: var(--glass-card); border: 1px solid var(--glass-border);
-      border-radius: var(--radius-md); padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;
+      border-radius: var(--radius-md); padding: 10px 12px; display: flex; flex-direction: column; gap: 6px;
       transition: all 0.2s ease; position: relative;
     }
 
@@ -349,19 +331,28 @@
     }
 
     .word-card-header { display: flex; justify-content: space-between; align-items: center; }
-    .scrambled-text { font-size: 1.3rem; font-weight: 900; letter-spacing: 3px; color: var(--amber-warm); text-shadow: 0 0 12px var(--amber-glow); }
-    .point-badge { font-size: 0.7rem; font-weight: 800; padding: 3px 10px; border-radius: 12px; background: rgba(255, 255, 255, 0.06); color: var(--text-muted); }
+    .scrambled-text { font-size: 1.15rem; font-weight: 900; letter-spacing: 2.5px; color: var(--amber-warm); text-shadow: 0 0 10px var(--amber-glow); }
+    .point-badge { font-size: 0.65rem; font-weight: 800; padding: 2px 8px; border-radius: 10px; background: rgba(255, 255, 255, 0.06); color: var(--text-muted); }
 
-    .word-card.solved { border-color: var(--cyan-neon); box-shadow: 0 0 16px var(--cyan-glow); background: rgba(0, 240, 255, 0.06); }
-    .word-card.solved .word-input { color: var(--cyan-neon); border-color: var(--cyan-neon); pointer-events: none; }
+    /* GREEN CHECKMARK BADGE FIX */
+    .solved-checkmark {
+      color: var(--green-success) !important;
+      font-weight: 900;
+      font-size: 1.1rem;
+      margin-right: 2px;
+      text-shadow: 0 0 8px var(--green-glow);
+    }
 
-    .word-card .custom-input { padding: 10px 14px; font-size: 0.95rem; }
+    .word-card.solved { border-color: var(--green-success); box-shadow: 0 0 12px var(--green-glow); background: rgba(16, 185, 129, 0.06); }
+    .word-card.solved .word-input { color: var(--green-success); border-color: var(--green-success); pointer-events: none; }
+
+    .word-card .custom-input { padding: 8px 12px; font-size: 0.88rem; }
 
     .sticky-submit-bar {
       flex-shrink: 0; 
       width: 100%;
-      padding: 10px 16px;
-      padding-bottom: max(12px, env(safe-area-inset-bottom));
+      padding: 8px 14px;
+      padding-bottom: max(10px, env(safe-area-inset-bottom));
       background: rgba(7, 9, 14, 0.98); 
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
@@ -369,14 +360,14 @@
       z-index: 20;
     }
 
-    .podium-list { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
+    .podium-list { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
     .podium-item {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 12px 16px; border-radius: var(--radius-md); font-size: 0.88rem;
+      padding: 10px 14px; border-radius: var(--radius-md); font-size: 0.82rem;
       background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border);
       font-weight: 700;
     }
-    .podium-item.mvp { background: rgba(255, 200, 42, 0.12); border-color: var(--amber-warm); box-shadow: 0 0 20px var(--amber-glow); }
+    .podium-item.mvp { background: rgba(255, 200, 42, 0.12); border-color: var(--amber-warm); box-shadow: 0 0 15px var(--amber-glow); }
   </style>
 </head>
 <body>
@@ -386,7 +377,7 @@
     <div id="combo-banner">2x COMBO!</div>
 
     <div id="top-bar-overlay">
-      <div id="sync-status-indicator" class="status-badge" style="display:none; font-size: 0.7rem; padding: 4px 10px;">
+      <div id="sync-status-indicator" class="status-badge" style="display:none; font-size: 0.68rem; padding: 3px 8px;">
         <div id="sync-dot" class="status-dot pending"></div>
         <span id="sync-text">SYNCING...</span>
       </div>
@@ -394,38 +385,26 @@
 
     <video id="wake-lock-video" muted playsinline loop style="display:none; position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;"></video>
 
-    <div id="reconnecting-overlay" class="modal-overlay" style="display: none; z-index: 2000;">
-      <div class="modal-card" style="max-width: 300px;">
-        <div class="btn-spinner" style="width: 28px; height: 28px; border-width: 3px; margin: 0 auto 12px auto; border-top-color: var(--cyan-neon);"></div>
-        <h3 style="font-size: 1.1rem; font-weight: 900; color: var(--cyan-neon); margin-bottom: 4px;">RECONNECTING...</h3>
-        <p style="font-size: 0.78rem; color: var(--text-muted);">Syncing live arena state...</p>
-      </div>
-    </div>
-
     <div id="countdown-overlay">
       <div id="countdown-val" class="countdown-val">3</div>
-      <div style="font-weight: 800; letter-spacing: 2px; color: var(--cyan-neon); margin-top: 8px; font-size: 0.85rem;">PREPARE TO SCRAMBLE!</div>
+      <div style="font-weight: 800; letter-spacing: 2px; color: var(--cyan-neon); margin-top: 6px; font-size: 0.8rem;">PREPARE TO SCRAMBLE!</div>
     </div>
 
     <!-- WELCOME SCREEN -->
     <div id="screen-welcome" class="screen active">
-      <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px;">
-        <div style="font-size: 3.2rem; filter: drop-shadow(0 0 20px var(--cyan-glow));">🔠💥</div>
+      <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 6px;">
+        <div style="font-size: 2.8rem; filter: drop-shadow(0 0 20px var(--cyan-glow));">🔠💥</div>
         <h1 class="brand-title">SCRAMBLE<br/>PANIC</h1>
         <div class="brand-subtitle">Real-Time Word Anarchy</div>
       </div>
 
-      <div class="glass-card" style="text-align: center; margin-bottom: 12px;">
-        <div id="dict-status-badge" class="status-badge" style="margin-bottom: 6px;">
+      <div class="glass-card" style="text-align: center; margin-bottom: 8px;">
+        <div id="dict-status-badge" class="status-badge" style="margin-bottom: 4px;">
           <div id="dict-status-dot" class="status-dot"></div>
           <span id="dict-status-text">Loading Lexicon Engine...</span>
         </div>
-        <p style="font-size: 0.75rem; color: var(--text-muted);">270,000+ Words Loaded & Scrambled Offline</p>
+        <p style="font-size: 0.7rem; color: var(--text-muted);">270,000+ Words Loaded Offline</p>
       </div>
-
-      <button id="btn-pwa-install" class="btn btn-amber" style="display: none; margin-bottom: 6px;">
-        📥 INSTALL APP
-      </button>
 
       <button id="btn-start-app" class="btn btn-primary" disabled>
         INITIALIZING...
@@ -434,9 +413,9 @@
 
     <!-- LOBBY SCREEN -->
     <div id="screen-lobby" class="screen">
-      <div style="text-align: center; margin-bottom: 18px;">
-        <h2 style="font-size: 1.6rem; font-weight: 900;">ENTER THE ARENA</h2>
-        <p style="font-size: 0.8rem; color: var(--text-muted);">Set your handle and choose a room</p>
+      <div style="text-align: center; margin-bottom: 12px;">
+        <h2 style="font-size: 1.4rem; font-weight: 900;">ENTER THE ARENA</h2>
+        <p style="font-size: 0.75rem; color: var(--text-muted);">Set your handle and choose a room</p>
       </div>
 
       <div class="glass-card">
@@ -446,61 +425,89 @@
         </div>
       </div>
 
-      <div class="glass-card" style="display: flex; flex-direction: column; gap: 10px;">
+      <div class="glass-card" style="display: flex; flex-direction: column; gap: 8px;">
         <button id="btn-create-room" class="btn btn-primary">CREATE NEW ROOM</button>
-        <div style="text-align: center; font-size: 0.72rem; color: var(--text-muted); font-weight: 800;">OR JOIN EXISTING</div>
-        <div style="display: flex; gap: 8px;">
-          <input type="text" id="input-room-code" class="custom-input" placeholder="4-DIGIT CODE" maxlength="4" style="text-align: center; letter-spacing: 4px;" inputmode="numeric" pattern="[0-9]*" />
-          <button id="btn-join-room" class="btn btn-amber" style="width: 110px; margin-top: 0;">JOIN</button>
+        <div style="text-align: center; font-size: 0.68rem; color: var(--text-muted); font-weight: 800;">OR JOIN EXISTING</div>
+        <div style="display: flex; gap: 6px;">
+          <input type="text" id="input-room-code" class="custom-input" placeholder="4-DIGIT CODE" maxlength="4" style="text-align: center; letter-spacing: 3px;" inputmode="numeric" pattern="[0-9]*" />
+          <button id="btn-join-room" class="btn btn-amber" style="width: 100px; margin-top: 0;">JOIN</button>
         </div>
       </div>
     </div>
 
-    <!-- ROOM BRIEFING SCREEN -->
+    <!-- ROOM BRIEFING & SETUP SCREEN (SINGLE-SCREEN FIT) -->
     <div id="screen-room" class="screen">
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <span class="status-badge">
           <div class="status-dot online"></div> LOBBY READY
         </span>
-        <button id="btn-leave-room" style="background:none; border:none; color:var(--red-error); font-weight:800; font-size:0.78rem; cursor:pointer;">EXIT</button>
+        <button id="btn-leave-room" style="background:none; border:none; color:var(--red-error); font-weight:800; font-size:0.75rem; cursor:pointer;">EXIT</button>
       </div>
 
       <div class="room-code-display">
-        <div style="font-size: 0.72rem; letter-spacing: 2px; color: var(--text-muted); font-weight: 800;">ROOM CODE</div>
+        <div style="font-size: 0.65rem; letter-spacing: 2px; color: var(--text-muted); font-weight: 800;">ROOM CODE</div>
         <div id="display-room-code" class="room-code-val">----</div>
       </div>
 
-      <div class="glass-card" style="flex: 1; display: flex; flex-direction: column; gap: 8px; overflow-y: auto;">
+      <div class="glass-card" style="margin-bottom: 6px;">
         <div class="input-label">PLAYERS IN ROOM</div>
         <div id="room-player-list" class="player-list"></div>
+      </div>
 
-        <div id="host-settings-container" style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 8px; display: none;">
-          <div class="input-label">GAME MODE</div>
-          <div style="display: flex; gap: 4px; margin: 4px 0 8px 0;">
-            <button id="btn-mode-classic" class="btn btn-secondary btn-mode active">CLASSIC</button>
-            <button id="btn-mode-sudden" class="btn btn-secondary btn-mode">SUDDEN</button>
-            <button id="btn-mode-blitz" class="btn btn-secondary btn-mode">BLITZ</button>
-          </div>
+      <!-- HOST COMPACT SETUP CONTROLS -->
+      <div id="host-settings-container" class="glass-card" style="display: none; gap: 6px;">
+        <div class="input-label">GAME MODE</div>
+        <div style="display: flex; gap: 4px;">
+          <button id="btn-mode-classic" class="btn btn-secondary btn-mode active">CLASSIC</button>
+          <button id="btn-mode-sudden" class="btn btn-secondary btn-mode">SUDDEN</button>
+          <button id="btn-mode-blitz" class="btn btn-secondary btn-mode">BLITZ</button>
+        </div>
 
-          <div class="input-label">WORD DIFFICULTY CATEGORY</div>
-          <div style="display: flex; gap: 4px; margin: 4px 0 8px 0;">
-            <button id="btn-cat-mixed" class="btn btn-secondary btn-mode active">MIXED</button>
-            <button id="btn-cat-easy" class="btn btn-secondary btn-mode">EASY</button>
-            <button id="btn-cat-medium" class="btn btn-secondary btn-mode">MED</button>
-            <button id="btn-cat-hard" class="btn btn-secondary btn-mode">HARD</button>
-          </div>
+        <div class="input-label" style="margin-top: 2px;">DIFFICULTY CATEGORY</div>
+        <div style="display: flex; gap: 4px;">
+          <button id="btn-cat-mixed" class="btn btn-secondary btn-mode active">MIXED</button>
+          <button id="btn-cat-easy" class="btn btn-secondary btn-mode">EASY</button>
+          <button id="btn-cat-medium" class="btn btn-secondary btn-mode">MED</button>
+          <button id="btn-cat-hard" class="btn btn-secondary btn-mode">HARD</button>
+        </div>
 
-          <div id="duration-setting-wrapper">
-            <div class="input-label">MATCH DURATION</div>
-            <div style="display: flex; gap: 8px; margin-top: 4px;">
-              <button id="btn-dur-120" class="btn btn-amber" style="margin:0; padding:6px; font-size:0.75rem; flex:1;">2 MINS</button>
-              <button id="btn-dur-180" class="btn btn-secondary" style="margin:0; padding:6px; font-size:0.75rem; flex:1;">3 MINS</button>
-            </div>
+        <div id="duration-setting-wrapper" style="margin-top: 2px;">
+          <div class="input-label">MATCH DURATION</div>
+          <div style="display: flex; gap: 6px; margin-top: 2px;">
+            <button id="btn-dur-120" class="btn btn-amber" style="margin:0; padding:5px; font-size:0.7rem; flex:1;">2 MINS</button>
+            <button id="btn-dur-180" class="btn btn-secondary" style="margin:0; padding:5px; font-size:0.7rem; flex:1;">3 MINS</button>
           </div>
         </div>
       </div>
 
-      <div style="display: flex; flex-direction: column; gap: 8px;">
+      <!-- NON-HOST LIVE BRIEFING & RULES PANEL -->
+      <div id="non-host-rules-container" class="glass-card" style="display: none; flex: 1; overflow-y: auto; gap: 6px;">
+        <div class="input-label" style="color: var(--cyan-neon);">MATCH BRIEFING & RULES</div>
+        
+        <div style="background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 4px;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.72rem;">
+            <span style="color: var(--text-muted);">GAME MODE:</span>
+            <span id="brief-mode" style="font-weight: 900; color: var(--amber-warm);">CLASSIC</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.72rem;">
+            <span style="color: var(--text-muted);">DIFFICULTY:</span>
+            <span id="brief-cat" style="font-weight: 900; color: var(--cyan-neon);">MIXED</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.72rem;">
+            <span style="color: var(--text-muted);">MATCH DURATION:</span>
+            <span id="brief-dur" style="font-weight: 900; color: #fff;">2 MINS</span>
+          </div>
+        </div>
+
+        <div style="font-size: 0.7rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 4px; line-height: 1.35; margin-top: 2px;">
+          <div>🔠 <b>Unscramble 12 Words:</b> Type anagrams to score points.</div>
+          <div>🔥 <b>Combo Streaks:</b> Fast solves earn up to 3x multipliers!</div>
+          <div>🌟 <b>Golden Words:</b> First player to claim a Golden Word gets 2x bonus!</div>
+          <div>⚡ <b>Overtime Frenzy:</b> Final 15 seconds double all word point values!</div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 6px; margin-top: auto;">
         <button id="btn-toggle-ready" class="btn btn-secondary">MARK AS READY</button>
         <button id="btn-start-game" class="btn btn-amber" style="display: none;" disabled>START MATCH</button>
       </div>
@@ -510,7 +517,7 @@
     <div id="screen-game" class="screen">
       <div class="game-header">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <div id="game-timer-text" style="font-size: 1.3rem; font-weight: 900; color: var(--amber-warm);">02:00</div>
+          <div id="game-timer-text" style="font-size: 1.2rem; font-weight: 900; color: var(--amber-warm);">02:00</div>
           <div id="game-leader-pill" class="leader-pill">
             <span>👑 Leader: ---</span>
             <span id="game-leader-score" style="margin-left: 6px;">0/12</span>
@@ -530,8 +537,8 @@
 
     <!-- SUMMARY SCREEN -->
     <div id="screen-summary" class="screen">
-      <div style="text-align: center; margin-bottom: 10px;">
-        <h2 class="brand-title" style="font-size: 1.9rem;">MATCH RESULTS</h2>
+      <div style="text-align: center; margin-bottom: 8px;">
+        <h2 class="brand-title" style="font-size: 1.6rem;">MATCH RESULTS</h2>
         <div id="summary-subtitle" class="brand-subtitle">TIME EXPIRED</div>
       </div>
 
@@ -539,13 +546,13 @@
         <div class="input-label">ROUND STANDINGS</div>
         <div id="podium-list" class="podium-list"></div>
 
-        <div class="input-label" style="margin-top: 12px;">TOURNAMENT CUMULATIVE SCORE</div>
+        <div class="input-label" style="margin-top: 8px;">TOURNAMENT CUMULATIVE SCORE</div>
         <div id="tournament-list" class="podium-list"></div>
 
-        <div id="awards-container" style="margin-top: 10px;"></div>
+        <div id="awards-container" style="margin-top: 8px;"></div>
       </div>
 
-     <div id="summary-host-controls" style="display: flex; flex-direction: column; gap: 6px;">
+      <div id="summary-host-controls" style="display: flex; flex-direction: column; gap: 6px;">
         <div id="mid-round-controls" style="display: flex; flex-direction: column; gap: 6px; width: 100%;">
           <button id="btn-next-round" class="btn btn-amber">START NEXT ROUND 🚀</button>
           <button id="btn-end-tournament" class="btn btn-primary" style="background: var(--red-error); border-color: var(--red-error); color: #fff;">🏆 END GAME</button>
@@ -557,7 +564,7 @@
         </div>
       </div>
       <div id="summary-client-wait" style="display: none; flex-direction: column; gap: 6px; text-align: center;">
-        <div style="font-size: 0.8rem; color: var(--text-muted); padding: 4px 0;">Waiting for host to start the next round...</div>
+        <div style="font-size: 0.75rem; color: var(--text-muted); padding: 2px 0;">Waiting for host to start next round...</div>
         <button class="btn btn-primary" onclick="returnToLauncher()">🎮 RETURN TO LAUNCHER</button>
       </div>
     </div>
@@ -565,70 +572,24 @@
   </div>
 
   <script>
-    /* =========================================================================
-       1. PWA INSTALLATION & SILENT KEEP-ALIVE ENGINE
-       ========================================================================= */
-    const PWAInstallEngine = {
-      deferredPrompt: null,
-      init() {
-        window.addEventListener('beforeinstallprompt', (e) => {
-          e.preventDefault();
-          this.deferredPrompt = e;
-          const pwaBtn = document.getElementById('btn-pwa-install');
-          if (pwaBtn) pwaBtn.style.display = 'block';
-        });
-
-        const pwaBtn = document.getElementById('btn-pwa-install');
-        if (pwaBtn) {
-          pwaBtn.addEventListener('click', async () => {
-            if (this.deferredPrompt) {
-              this.deferredPrompt.prompt();
-              const { outcome } = await this.deferredPrompt.userChoice;
-              if (outcome === 'accepted') {
-                pwaBtn.style.display = 'none';
-              }
-              this.deferredPrompt = null;
-            }
-          });
-        }
-      }
-    };
-
+    /* 1. POWER MANAGEMENT ENGINE */
     const PowerManagementEngine = {
-      wakeLock: null, isActive: false, videoEl: null,
+      wakeLock: null, isActive: false,
       init() {
-        this.videoEl = document.getElementById('wake-lock-video');
         document.addEventListener('visibilitychange', async () => {
           if (document.visibilityState === 'visible' && this.isActive) await this.request();
         });
         this.request();
-        this.registerInlineServiceWorker();
       },
       async request() {
         this.isActive = true;
         if ('wakeLock' in navigator) {
           try { if (!this.wakeLock) this.wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {}
         }
-      },
-      release() { if (this.wakeLock) { this.wakeLock.release().catch(() => {}); this.wakeLock = null; } },
-      
-      registerInlineServiceWorker() {
-        if ('serviceWorker' in navigator) {
-          const swCode = `
-            self.addEventListener('install', e => self.skipWaiting());
-            self.addEventListener('activate', e => e.waitUntil(clients.claim()));
-            self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => new Response('Offline'))));
-          `;
-          const blob = new Blob([swCode], { type: 'text/javascript' });
-          const blobUrl = URL.createObjectURL(blob);
-          navigator.serviceWorker.register(blobUrl).catch(() => {});
-        }
       }
     };
 
-    /* =========================================================================
-       2. SUBMISSION ENGINE
-       ========================================================================= */
+    /* 2. SUBMISSION ENGINE */
     const SubmissionQueueEngine = {
       queueKey: 'scramble_panic_pending_queue', isProcessing: false,
       getQueue() { try { return JSON.parse(sessionStorage.getItem(this.queueKey)) || []; } catch (e) { return []; } },
@@ -675,11 +636,9 @@
       }
     };
 
-    /* =========================================================================
-       3. HIGH-OCTANE AUDIO SYNTHESIZER ENGINE
-       ========================================================================= */
+    /* 3. AUDIO SYNTHESIZER & TOAST ENGINE */
     const ToastEngine = {
-      show(message, type = 'info', duration = 3000) {
+      show(message, type = 'info', duration = 2500) {
         const container = document.getElementById('toast-container');
         const toast = document.createElement('div');
         toast.className = `toast toast-${type}`;
@@ -697,7 +656,7 @@
 
     function triggerConfetti(intensity = 'medium') {
       if (typeof confetti !== 'function') return;
-      confetti({ particleCount: intensity === 'high' ? 120 : 60, spread: 80, origin: { y: 0.6 } });
+      confetti({ particleCount: intensity === 'high' ? 100 : 50, spread: 70, origin: { y: 0.6 } });
     }
 
     class SoundEngine {
@@ -790,9 +749,7 @@
     }
     const sound = new SoundEngine();
 
-    /* =========================================================================
-       4. RANDOMIZED DICTIONARY ENGINE
-       ========================================================================= */
+    /* 4. DICTIONARY ENGINE */
     const DictionaryEngine = {
       dictionary: new Set(),
       coreFallbackWords: {
@@ -905,9 +862,7 @@
       isValidWord(word) { return this.dictionary.has(word.trim().toLowerCase()); }
     };
 
-    /* =========================================================================
-       5. FIREBASE NETWORK ENGINE
-       ========================================================================= */
+    /* 5. FIREBASE NETWORK ENGINE */
     const firebaseConfig = {
       apiKey: "AIzaSyBeYg5e99uvqvBcRlkETgbg36VV_Sllclg",
       authDomain: "gamenightpack-44f16.firebaseapp.com",
@@ -966,7 +921,7 @@
           }
         });
 
-        // Direct write on load to guarantee player entry is populated
+        // Direct write guarantees exact PID entry
         if (this.db && roomCode) {
           myPlayerRef.update({
             name: GameState.playerName || 'PLAYER',
@@ -974,27 +929,10 @@
             online: true
           });
 
-          this.db.ref(`master_rooms/${roomCode}/players`).on('child_added', pSnap => {
-            const pid = pSnap.key;
-            const p = pSnap.val() || {};
-            if (GameState.playersRef && pid) {
-              GameState.playersRef.child(pid).once('value', existingSnap => {
-                const existing = existingSnap.val() || {};
-                GameState.playersRef.child(pid).update({
-                  name: p.name || existing.name || (pid === GameState.playerId ? GameState.playerName : 'PLAYER'),
-                  isHost: existing.isHost !== undefined ? existing.isHost : !!p.isHost,
-                  online: true
-                });
-              });
-            }
-          });
-
           this.db.ref(`master_rooms/${roomCode}/status`).on('value', snap => {
             const status = snap.val();
             if (status === 'LOBBY' || status === 'DISBANDED' || !status) {
-              if (!GameState.isHost) {
-                returnToLauncher();
-              }
+              if (!GameState.isHost) returnToLauncher();
             }
           });
         }
@@ -1005,6 +943,8 @@
           GameState.gameMode = meta.gameMode || 'classic';
           GameState.wordCategory = meta.wordCategory || 'mixed';
           GameState.isTournamentOver = !!meta.isTournamentOver;
+
+          UIController.updateBriefingUI(meta);
           
           if (meta.hostId && meta.hostId.trim() !== '') {
             GameState.isHost = (meta.hostId === GameState.playerId);
@@ -1064,9 +1004,7 @@
       }
     };
 
-    /* =========================================================================
-       6. STATE MACHINE
-       ========================================================================= */
+    /* 6. STATE MACHINE */
     const GAME_STATES = { WELCOME: 'WELCOME', LOBBY: 'LOBBY', ROOM: 'ROOM', COUNTDOWN: 'COUNTDOWN', PLAYING: 'PLAYING', ROUND_END: 'ROUND_END' };
 
     class GameFSM {
@@ -1100,9 +1038,7 @@
     };
     sessionStorage.setItem('scramble_panic_pid', GameState.playerId);
 
-    /* =========================================================================
-       7. MATCH & COMBO ENGINE
-       ========================================================================= */
+    /* 7. MATCH ENGINE */
     const StateCalculations = {
       resetLocalState() {
         GameState.playerState = { solvedCount: 0, score: 0, wrongAttempts: 0, submittedAt: null, answers: {} };
@@ -1183,7 +1119,9 @@
           GameState.playerState.score += earnedPoints;
 
           cardEl.classList.add('solved');
-          cardEl.insertAdjacentHTML('beforeend', `<span style="position:absolute; right:12px; bottom:10px; color:var(--cyan-neon); font-size:1.1rem; font-weight:900;">✓</span>`);
+          const checkEl = document.getElementById(`check-${wordObj.id}`);
+          if (checkEl) checkEl.style.display = 'inline';
+
           inputEl.disabled = true;
 
           const countEl = document.getElementById('submit-solved-count');
@@ -1200,8 +1138,13 @@
             triggerConfetti('high');
             this.submitMatch();
           } else {
-            const nextCardInput = document.querySelectorAll('.word-input:not([disabled])')[0];
-            if (nextCardInput) nextCardInput.focus({ preventScroll: true });
+            // RELATIVE ADVANCEMENT FIX: Move strictly to the NEXT unsolved input down the list
+            const allInputs = Array.from(document.querySelectorAll('.word-input'));
+            const currentIdx = allInputs.indexOf(inputEl);
+            const nextInput = allInputs.slice(currentIdx + 1).find(inp => !inp.disabled);
+            if (nextInput) {
+              nextInput.focus({ preventScroll: true });
+            }
           }
         } else {
           GameState.playerState.wrongAttempts++;
@@ -1238,6 +1181,18 @@
           if (remainingMs <= 0) {
             clearInterval(GameState.gameTimerInterval);
             this.submitMatch(true);
+
+            // HOST TRANSITION OVERRIDE FIX
+            if (GameState.isHost && GameState.roomRef) {
+              GameState.roomRef.child('meta').update({ status: 'summary' });
+            }
+
+            // CLIENT FALLBACK TRANSITION FAIL-SAFE
+            setTimeout(() => {
+              if (fsm.currentState !== GAME_STATES.ROUND_END) {
+                fsm.transitionTo(GAME_STATES.ROUND_END);
+              }
+            }, 3000);
           }
         }, 200);
       },
@@ -1340,9 +1295,7 @@
       }
     };
 
-    /* =========================================================================
-       8. UI CONTROLLER
-       ========================================================================= */
+    /* 8. UI CONTROLLER */
     const UIController = {
       showScreen(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -1368,8 +1321,29 @@
       },
 
       updateHostControls() {
-        document.getElementById('host-settings-container').style.display = GameState.isHost ? 'block' : 'none';
-        document.getElementById('btn-start-game').style.display = GameState.isHost ? 'block' : 'none';
+        const hostContainer = document.getElementById('host-settings-container');
+        const nonHostContainer = document.getElementById('non-host-rules-container');
+        const startBtn = document.getElementById('btn-start-game');
+
+        if (GameState.isHost) {
+          hostContainer.style.display = 'flex';
+          nonHostContainer.style.display = 'none';
+          startBtn.style.display = 'block';
+        } else {
+          hostContainer.style.display = 'none';
+          nonHostContainer.style.display = 'flex';
+          startBtn.style.display = 'none';
+        }
+      },
+
+      updateBriefingUI(meta) {
+        const modeEl = document.getElementById('brief-mode');
+        const catEl = document.getElementById('brief-cat');
+        const durEl = document.getElementById('brief-dur');
+
+        if (modeEl) modeEl.textContent = (meta.gameMode || 'CLASSIC').toUpperCase();
+        if (catEl) catEl.textContent = (meta.wordCategory || 'MIXED').toUpperCase();
+        if (durEl) durEl.textContent = `${(meta.durationSeconds || 120) / 60} MINS`;
       },
 
       initRoomView() {
@@ -1380,7 +1354,6 @@
         fsm.transitionTo(GAME_STATES.ROOM);
       },
 
-      // HARDENED PLAYER LIST RENDERER PREVENTS "UNKNOWN" BADGES
       renderPlayerList(playersObj) {
         const container = document.getElementById('room-player-list');
         container.innerHTML = '';
@@ -1390,16 +1363,7 @@
           const pill = document.createElement('div');
           pill.className = 'player-pill';
           
-          // Strict fallback chain prevents UNKNOWN name glitches
-          let resolvedName = p.name;
-          if (!resolvedName || resolvedName.trim() === '' || resolvedName === 'UNKNOWN') {
-            resolvedName = (p.id === GameState.playerId) ? GameState.playerName : 'PLAYER';
-            
-            // Immediate background self-repair write to Firebase
-            if (GameState.playersRef && p.id) {
-              GameState.playersRef.child(p.id).update({ name: resolvedName });
-            }
-          }
+          let resolvedName = p.name || (p.id === GameState.playerId ? GameState.playerName : 'PLAYER');
 
           pill.innerHTML = `
             <div style="display:flex; align-items:center; gap:4px; overflow:hidden;">
@@ -1439,10 +1403,10 @@
 
         if (GameState.isEliminated) {
           container.innerHTML = `
-            <div class="glass-card" style="text-align:center; padding: 40px 20px;">
-              <div style="font-size: 3rem; margin-bottom: 10px;">💀</div>
-              <h3 style="color: var(--red-error); font-weight: 900; margin-bottom: 6px;">YOU WERE ELIMINATED!</h3>
-              <p style="font-size: 0.85rem; color: var(--text-muted);">You are spectating the survivors.</p>
+            <div class="glass-card" style="text-align:center; padding: 30px 16px;">
+              <div style="font-size: 2.5rem; margin-bottom: 8px;">💀</div>
+              <h3 style="color: var(--red-error); font-weight: 900; margin-bottom: 4px;">YOU WERE ELIMINATED!</h3>
+              <p style="font-size: 0.8rem; color: var(--text-muted);">Spectating remaining survivors...</p>
             </div>
           `;
           return;
@@ -1451,7 +1415,7 @@
         const submitBar = document.getElementById('game-submit-bar');
         if (GameState.gameMode === 'blitz') {
           submitBar.innerHTML = `
-            <div style="text-align: center; font-weight: 900; font-size: 0.82rem; color: var(--cyan-neon); letter-spacing: 1px;">
+            <div style="text-align: center; font-weight: 900; font-size: 0.8rem; color: var(--cyan-neon); letter-spacing: 1px;">
               ⚡ BLITZ SPRINT: FIRST TO SOLVE ALL 12 WINS!
             </div>
           `;
@@ -1469,18 +1433,20 @@
           card.id = `card-${w.id}`;
           card.className = `word-card ${w.isGolden ? 'golden-word' : ''}`;
           
-          let goldTag = w.isGolden ? `<span style="color:var(--gold-neon); font-size:0.68rem; font-weight:900;">🌟 2X GOLDEN</span>` : '';
+          let goldTag = w.isGolden ? `<span style="color:var(--gold-neon); font-size:0.65rem; font-weight:900;">🌟 2X GOLD</span>` : '';
           
+          // HEADER INTEGRATED GREEN CHECKMARK
           card.innerHTML = `
             <div class="word-card-header">
               <span class="scrambled-text">${w.scrambled}</span>
               <div style="display:flex; align-items:center; gap:6px;">
+                <span id="check-${w.id}" class="solved-checkmark" style="display:none;">✓</span>
                 ${goldTag}
                 <span class="point-badge">+${w.points} PTS</span>
               </div>
             </div>
             <input type="text" id="input-${w.id}" class="custom-input word-input" data-id="${w.id}" placeholder="TYPE ANSWER..." autocomplete="off" spellcheck="false" maxlength="${w.original.length}" />
-            <div id="claimed-tag-${w.id}" style="font-size:0.72rem; font-weight:800; color:var(--gold-neon); display:none;"></div>
+            <div id="claimed-tag-${w.id}" style="font-size:0.68rem; font-weight:800; color:var(--gold-neon); display:none;"></div>
           `;
           container.appendChild(card);
           const inputEl = card.querySelector('input');
@@ -1587,22 +1553,22 @@
           const speedWinner = validSolvers.sort((a, b) => (a.submittedAt || Infinity) - (b.submittedAt || Infinity))[0];
           const accuracyWinner = [...players].sort((a, b) => (a.wrongAttempts || 0) - (b.wrongAttempts || 0))[0];
 
-          let awardsHTML = `<div class="award-card-styled">
-            <div class="input-label" style="color:var(--cyan-neon); margin-bottom:8px;">🏆 TOURNAMENT HALL OF FAME</div>`;
+          let awardsHTML = `<div class="glass-card" style="border-color:var(--cyan-neon);">
+            <div class="input-label" style="color:var(--cyan-neon); margin-bottom:6px;">🏆 TOURNAMENT HALL OF FAME</div>`;
 
           if (speedWinner && speedWinner.name) {
             awardsHTML += `
-              <div style="background: rgba(255, 200, 42, 0.12); border: 1px solid var(--amber-warm); padding: 8px 12px; border-radius: 10px; margin-bottom: 6px;">
-                <div style="font-weight:900; color:var(--amber-warm); font-size:0.8rem;">⚡ SPEED DEMON</div>
-                <div style="font-size:0.75rem; color:#fff; margin-top:2px;"><b>${speedWinner.name}</b> recorded fastest completions!</div>
+              <div style="background: rgba(255, 200, 42, 0.12); border: 1px solid var(--amber-warm); padding: 6px 10px; border-radius: 8px; margin-bottom: 4px;">
+                <div style="font-weight:900; color:var(--amber-warm); font-size:0.75rem;">⚡ SPEED DEMON</div>
+                <div style="font-size:0.7rem; color:#fff;"><b>${speedWinner.name}</b> recorded fastest completions!</div>
               </div>
             `;
           }
           if (accuracyWinner && accuracyWinner.name) {
             awardsHTML += `
-              <div style="background: rgba(0, 240, 255, 0.12); border: 1px solid var(--cyan-neon); padding: 8px 12px; border-radius: 10px;">
-                <div style="font-weight:900; color:var(--cyan-neon); font-size:0.8rem;">🎯 ACCURACY ACE</div>
-                <div style="font-size:0.75rem; color:#fff; margin-top:2px;"><b>${accuracyWinner.name}</b> made the fewest wrong attempts!</div>
+              <div style="background: rgba(0, 240, 255, 0.12); border: 1px solid var(--cyan-neon); padding: 6px 10px; border-radius: 8px;">
+                <div style="font-weight:900; color:var(--cyan-neon); font-size:0.75rem;">🎯 ACCURACY ACE</div>
+                <div style="font-size:0.7rem; color:#fff;"><b>${accuracyWinner.name}</b> made fewest wrong attempts!</div>
               </div>
             `;
           }
@@ -1740,7 +1706,7 @@
         if (endTourneyBtn) {
           endTourneyBtn.addEventListener('click', () => {
             if (!GameState.isHost) return;
-            if (confirm('End the game and reveal the final standings and awards to everyone?')) {
+            if (confirm('End match and reveal final standings & awards to everyone?')) {
               if (GameState.roomRef) {
                 GameState.roomRef.child('meta').update({
                   status: 'summary',
@@ -1758,7 +1724,6 @@
 function returnToLauncher() {
   try {
     sessionStorage.removeItem('scramble_panic_session');
-    sessionStorage.removeItem('scramble_panic_pid');
     sessionStorage.removeItem('scramble_panic_pending_queue');
   } catch(e) {}
 
@@ -1777,35 +1742,16 @@ function returnToLauncher() {
   window.location.href = `index.html?room=${room}&name=${encodeURIComponent(name)}&isHost=${isHost}`;
 }
 
-(function() {
-  function handleFocusScroll(e) {
-    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
-      setTimeout(() => {
-        e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-      }, 300);
-    }
-  }
-
-  document.addEventListener('focusin', handleFocusScroll);
-
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', () => {
-      const activeEl = document.activeElement;
-      if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
-        activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    });
-  }
-})();
-
 window.addEventListener('DOMContentLoaded', () => {
+  PowerManagementEngine.init();
+
   const urlParams = new URLSearchParams(window.location.search);
   const autoRoom = urlParams.get('room');
   const autoName = urlParams.get('name');
   const autoPid  = urlParams.get('pid');
   const autoHost = urlParams.get('isHost') === 'true';
 
-  // Lock identities immediately before initializing engine or listeners
+  // Lock PID identity before initial database writes
   if (autoPid) {
     GameState.playerId = autoPid;
     sessionStorage.setItem('scramble_panic_pid', autoPid);
@@ -1844,7 +1790,6 @@ window.addEventListener('DOMContentLoaded', () => {
           });
         }
         
-        // Synchronous write guarantees player entry exists before render
         const playerUpdate = {
           name: autoName,
           isHost: autoHost,
