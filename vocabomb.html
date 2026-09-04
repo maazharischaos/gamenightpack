@@ -706,12 +706,14 @@
     .boom-scroll-area {
       flex: 1;
       width: 100%;
+      max-width: 420px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
       align-items: center;
       padding-bottom: 16px;
       -webkit-overflow-scrolling: touch;
+      box-sizing: border-box;
     }
 
     .boom-title {
@@ -754,8 +756,10 @@
 
     .leaderboard-section {
       width: 100%;
+      max-width: 100%;
       margin-bottom: 16px;
       text-align: left;
+      box-sizing: border-box;
     }
 
     .section-header-title {
@@ -773,14 +777,28 @@
     .rank-card-mvp {
       background: linear-gradient(135deg, rgba(255, 184, 0, 0.25), rgba(217, 119, 6, 0.15));
       border: 2px solid var(--gold);
-      box-shadow: 0 0 25px var(--gold-glow);
       border-radius: 16px;
       padding: 14px 16px;
       margin-bottom: 8px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      animation: pulse 1.5s infinite alternate;
+      gap: 12px;
+      min-width: 0;
+      width: 100%;
+      box-sizing: border-box;
+      animation: mvpGlow 1.6s infinite alternate ease-in-out;
+    }
+
+    @keyframes mvpGlow {
+      0% {
+        box-shadow: 0 0 15px var(--gold-glow);
+        border-color: var(--gold);
+      }
+      100% {
+        box-shadow: 0 0 35px var(--gold-glow), 0 0 12px rgba(255, 255, 255, 0.6);
+        border-color: #ffffff;
+      }
     }
 
     .rank-card-mvp .rank-name {
@@ -788,6 +806,8 @@
       font-weight: 900;
       color: #fff;
       letter-spacing: 0.5px;
+      word-break: break-word;
+      overflow-wrap: anywhere;
     }
 
     .rank-card-mvp .rank-badge {
@@ -797,6 +817,7 @@
       background: rgba(0, 0, 0, 0.4);
       padding: 4px 12px;
       border-radius: 20px;
+      flex-shrink: 0;
     }
 
     .rank-list-box {
@@ -813,8 +834,22 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 10px;
       font-size: 0.9rem;
       font-weight: 700;
+      min-width: 0;
+    }
+
+    .rank-item-row span:first-child {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .rank-item-row span:last-child {
+      flex-shrink: 0;
     }
 
     .rank-item-row.lvp-row {
@@ -831,9 +866,10 @@
 
     .awards-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 8px;
       width: 100%;
+      box-sizing: border-box;
     }
 
     .award-card-item {
@@ -842,6 +878,7 @@
       border-radius: 12px;
       padding: 10px;
       text-align: left;
+      min-width: 0;
     }
 
     .award-card-title {
@@ -858,12 +895,16 @@
       font-weight: 800;
       color: #fff;
       line-height: 1.2;
+      word-break: break-word;
+      overflow-wrap: anywhere;
     }
 
     .award-card-sub {
       font-size: 0.72rem;
       color: var(--text-muted);
       margin-top: 2px;
+      word-break: break-word;
+      overflow-wrap: anywhere;
     }
 
     .rule-detail-item {
@@ -940,8 +981,10 @@
       display: flex;
       gap: 10px;
       width: 100%;
+      max-width: 420px;
       padding-top: 12px;
       flex-shrink: 0;
+      box-sizing: border-box;
     }
 
     .compact-btn-row .btn {
@@ -1449,15 +1492,33 @@ window.addEventListener('load', () => {
           return currentHost ? currentHost : null;
         });
 
-        // Sync incoming players instantly from master room into VocaBomb
+        // Sync incoming players instantly from master room into VocaBomb (WITH DEDUPLICATION FIX)
         db.ref(`master_rooms/${currentRoom}/players`).on('child_added', pSnap => {
           const pid = pSnap.key;
           const p = pSnap.val() || {};
-          if (pid && pid !== myPlayerId) {
-            roomRef.child(`players/${pid}`).update({
-              name: p.name || 'PLAYER',
-              isDisconnected: false,
-              isEliminated: false
+          if (pid && p.name) {
+            roomRef.child('players').once('value').then(snap => {
+              const existingPlayers = snap.val() || {};
+              const updates = {};
+              
+              // Purge any stale ghost entry sharing the exact same name under an older PID
+              Object.entries(existingPlayers).forEach(([exPid, exP]) => {
+                if (exP && exP.name === p.name && exPid !== pid) {
+                  updates[exPid] = null;
+                }
+              });
+              
+              if (pid !== myPlayerId) {
+                updates[pid] = {
+                  name: p.name,
+                  isDisconnected: false,
+                  isEliminated: false
+                };
+              }
+              
+              if (Object.keys(updates).length > 0) {
+                roomRef.child('players').update(updates);
+              }
             });
           }
         });
@@ -2219,7 +2280,9 @@ if ('serviceWorker' in navigator) {
 
         // SPATIAL BOMB HANDOFF FLASH ANIMATION
         const gameCard = document.getElementById('active-game-card');
-        if (prevActivePlayerId !== roomData.activePlayerId) {
+        const isFirstTurnTick = (prevActivePlayerId !== roomData.activePlayerId);
+
+        if (isFirstTurnTick) {
           if (isMyTurn && prevActivePlayerId !== null) {
             gameCard.classList.remove('bomb-receive-anim');
             void gameCard.offsetWidth;
@@ -2291,11 +2354,14 @@ if ('serviceWorker' in navigator) {
 
           if (!isCurrentlyFrozen && !isWarningActive && !isIntermission) {
             startActiveTurnVibration();
-            setTimeout(() => { 
-              if (document.activeElement !== input) {
-                input.focus({ preventScroll: true }); 
-              }
-            }, 50);
+            // ONLY REQUEST FOCUS ON INITIAL TURN TRANSITION TO PREVENT KEYBOARD FLICKER
+            if (isFirstTurnTick) {
+              setTimeout(() => { 
+                if (document.activeElement !== input) {
+                  input.focus({ preventScroll: true }); 
+                }
+              }, 50);
+            }
           }
         } else {
           banner.innerText = isCurrentlyFrozen ? `❄️ ${activeName} IS FROZEN!` : `${activeName} HAS THE BOMB!`;
@@ -2528,6 +2594,7 @@ if ('serviceWorker' in navigator) {
 
         document.getElementById('round-stats').innerHTML = statsHtml;
 
+        // SAFE KNOCKOUT CONTINUATION TIMER WITH OBJECT/ARRAY NORMALIZATION
         if (isKnockout && !isGameOver) {
           setTimeout(() => {
             inlineTimerBox.style.display = 'flex';
@@ -2547,9 +2614,11 @@ if ('serviceWorker' in navigator) {
                 clearInterval(inlineTimer);
                 if (isHost) {
                   const survivingIds = getNormalizedPlayerOrder().filter(pid => pid !== roomData.loserId);
-                  const loserIndex = roomData.playerOrder.indexOf(roomData.loserId);
-                  const nextIndex = loserIndex % Math.max(1, survivingIds.length);
-                  const nextPlayerId = survivingIds[nextIndex];
+                  const currentOrder = Array.isArray(roomData.playerOrder) ? roomData.playerOrder : Object.values(roomData.playerOrder || {});
+                  const loserIndex = currentOrder.indexOf(roomData.loserId);
+                  
+                  const safeIndex = (loserIndex >= 0 && survivingIds.length > 0) ? (loserIndex % survivingIds.length) : 0;
+                  const nextPlayerId = survivingIds[safeIndex] || survivingIds[0];
 
                   roomRef.child('players/' + roomData.loserId + '/isEliminated').set(true);
 
@@ -2822,6 +2891,7 @@ if ('serviceWorker' in navigator) {
 
       const activePlayer = roomData.players ? roomData.players[roomData.activePlayerId] : null;
 
+      // SAFE DISCONNECT HANDOFF LOGIC
       if (isHost && activePlayer && activePlayer.isDisconnected && !isProcessingHandoff) {
         isProcessingHandoff = true;
         showError(`⚠️ ${activePlayer.name} DISCONNECTED! PASSING BOMB...`);
@@ -2829,8 +2899,9 @@ if ('serviceWorker' in navigator) {
         if (handoffResetTimeout) clearTimeout(handoffResetTimeout);
         handoffResetTimeout = setTimeout(() => { isProcessingHandoff = false; }, 3000);
         
-        const activeOrderList = getNormalizedPlayerOrder();
-        const survivingIds = activeOrderList.filter(pid => pid !== roomData.activePlayerId);
+        const survivingIds = getNormalizedPlayerOrder();
+        const rawOrder = Array.isArray(roomData.playerOrder) ? roomData.playerOrder : Object.values(roomData.playerOrder || {});
+        const discIndex = rawOrder.indexOf(roomData.activePlayerId);
 
         if (survivingIds.length === 0) {
           roomRef.update({
@@ -2853,9 +2924,17 @@ if ('serviceWorker' in navigator) {
             winnerName: winnerName
           }).finally(() => { isProcessingHandoff = false; });
         } else if (survivingIds.length > 1) {
-          const currentIndex = activeOrderList.indexOf(roomData.activePlayerId);
-          const nextIndex = currentIndex % survivingIds.length;
-          const nextPlayerId = survivingIds[nextIndex];
+          let nextPlayerId = null;
+          if (discIndex !== -1) {
+            for (let i = 1; i <= rawOrder.length; i++) {
+              const checkPid = rawOrder[(discIndex + i) % rawOrder.length];
+              if (survivingIds.includes(checkPid)) {
+                nextPlayerId = checkPid;
+                break;
+              }
+            }
+          }
+          if (!nextPlayerId) nextPlayerId = survivingIds[0];
 
           const banned = roomData.config?.bannedChar || '';
           const nextLetter = getRandomLetter(banned);
@@ -2912,6 +2991,7 @@ if ('serviceWorker' in navigator) {
       const timeExpired = remainingTurnTime <= 0 || (!isSurge && nowServer >= roomData.globalFuseEndTime);
       const secretFuseExpired = isSurge && !roomData.hasRoundFuseFired && roomData.roundSecretFuseEndTime && nowServer >= roomData.roundSecretFuseEndTime;
 
+      // ATOMIC TRANSACTION & STATE TRANSITION
       if ((timeExpired || secretFuseExpired) && !warningActive && !roomData.isSurgeIntermission) {
         if (isHost || (roomData.activePlayerId === myPlayerId && nowServer > roomData.turnEndTime + 1000)) {
           if (isSurge) {
@@ -2926,6 +3006,11 @@ if ('serviceWorker' in navigator) {
           } else {
             roomRef.child('gameState').transaction((currState) => {
               if (currState === 'PLAYING') {
+                return 'BOOM';
+              }
+              return currState;
+            }, (error, committed) => {
+              if (committed) {
                 const loserId = roomData.activePlayerId;
                 const loserName = roomData.players[loserId]?.name || 'Player';
                 
@@ -2943,7 +3028,6 @@ if ('serviceWorker' in navigator) {
                   }
 
                   roomRef.update({
-                    gameState: 'BOOM',
                     loserId: loserId,
                     eliminationRankings: rankings,
                     isGameOver: true,
@@ -2951,15 +3035,12 @@ if ('serviceWorker' in navigator) {
                   });
                 } else {
                   roomRef.update({
-                    gameState: 'BOOM',
                     loserId: loserId,
                     eliminationRankings: rankings,
                     isGameOver: false
                   });
                 }
-                return 'BOOM';
               }
-              return currState;
             });
           }
         }
