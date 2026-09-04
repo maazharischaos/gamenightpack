@@ -66,7 +66,7 @@
       align-items: center;
       justify-content: center;
       min-height: 100dvh;
-      padding: 12px;
+      padding: 16px;
       overflow-x: hidden;
     }
 
@@ -132,12 +132,12 @@
       backdrop-filter: blur(24px);
       -webkit-backdrop-filter: blur(24px);
       border: 1px solid var(--border-color);
-      border-radius: 24px;
-      padding: 20px 16px;
+      border-radius: 28px;
+      padding: 28px 20px;
       width: 100%;
       box-shadow: 0 25px 50px rgba(0, 0, 0, 0.85);
       text-align: center;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
       transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
     }
 
@@ -188,7 +188,7 @@
     }
 
     h1 {
-      font-size: 2.4rem;
+      font-size: 2.8rem;
       font-weight: 900;
       letter-spacing: -0.5px;
       color: #fff;
@@ -197,16 +197,16 @@
     }
 
     .bomb-icon {
-      font-size: 3.8rem;
-      margin: 6px 0;
+      font-size: 4.5rem;
+      margin: 10px 0;
       animation: pulse 1.5s infinite alternate;
     }
 
     .subtitle {
       color: var(--text-muted);
-      font-size: 0.75rem;
+      font-size: 0.8rem;
       font-weight: 800;
-      margin-bottom: 12px;
+      margin-bottom: 20px;
       text-transform: uppercase;
       letter-spacing: 1.5px;
     }
@@ -214,33 +214,33 @@
     .hero-rule-box {
       background: rgba(11, 14, 20, 0.6);
       border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 12px;
-      margin-bottom: 16px;
-      font-size: 0.88rem;
+      border-radius: 18px;
+      padding: 16px;
+      margin-bottom: 24px;
+      font-size: 0.95rem;
       font-weight: 700;
       color: var(--text);
-      line-height: 1.4;
+      line-height: 1.5;
     }
 
     .tab-group {
       display: flex;
       background: rgba(11, 14, 20, 0.6);
-      border-radius: 14px;
+      border-radius: 16px;
       padding: 4px;
-      margin-bottom: 14px;
+      margin-bottom: 20px;
       border: 1px solid var(--border-color);
     }
 
     .tab-btn {
       flex: 1;
-      padding: 10px;
+      padding: 12px;
       border: none;
       background: transparent;
       color: var(--text-muted);
       font-weight: 800;
-      font-size: 0.85rem;
-      border-radius: 10px;
+      font-size: 0.9rem;
+      border-radius: 12px;
       cursor: pointer;
       transition: all 0.2s ease;
     }
@@ -251,48 +251,47 @@
       box-shadow: 0 4px 14px var(--red-glow);
     }
 
-    /* COMPACT SINGLE-SCREEN HOST CONFIGURATION PANEL */
     .config-group {
       text-align: left;
       background: rgba(11, 14, 20, 0.6);
       border: 1px solid var(--border-color);
-      border-radius: 14px;
-      padding: 10px 12px;
-      margin-bottom: 8px;
+      border-radius: 18px;
+      padding: 18px;
+      margin-bottom: 16px;
     }
 
     .config-title {
-      font-size: 0.72rem;
+      font-size: 0.85rem;
       font-weight: 800;
       color: var(--gold);
       text-transform: uppercase;
       letter-spacing: 1px;
-      margin-bottom: 6px;
+      margin-bottom: 14px;
     }
 
     .briefing-disclaimer-header {
       background: rgba(255, 42, 85, 0.18);
-      border: 1.5px solid var(--red);
-      box-shadow: 0 0 15px var(--red-glow);
+      border: 2px solid var(--red);
+      box-shadow: 0 0 20px var(--red-glow);
       color: #fff;
-      font-size: 0.85rem;
+      font-size: 0.95rem;
       font-weight: 900;
-      padding: 10px;
-      border-radius: 14px;
+      padding: 12px;
+      border-radius: 16px;
       text-align: center;
-      margin-bottom: 10px;
+      margin-bottom: 16px;
       letter-spacing: 0.5px;
       animation: pulse 1.5s infinite alternate;
     }
 
     .toggle-row {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: space-between;
-      margin-bottom: 8px;
-      font-size: 0.82rem;
+      margin-bottom: 16px;
+      font-size: 0.95rem;
       font-weight: 700;
-      gap: 8px;
+      gap: 12px;
     }
 
     .toggle-row:last-child {
@@ -305,42 +304,85 @@
     }
 
     .toggle-desc {
-      font-size: 0.7rem;
+      font-size: 0.78rem;
       font-weight: 600;
       color: var(--text-muted);
-      margin-top: 1px;
-      line-height: 1.25;
+      margin-top: 4px;
+      line-height: 1.35;
     }
 
     .toggle-row input[type="checkbox"], .toggle-row input[type="radio"] {
       accent-color: var(--red);
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    /* COMPACT CSS SCOPED EXCLUSIVELY TO HOST SETUP PANEL */
+    #host-config-panel .config-group {
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      border-radius: 14px;
+    }
+
+    #host-config-panel .config-title {
+      font-size: 0.72rem;
+      margin-bottom: 6px;
+    }
+
+    #host-config-panel .toggle-row {
+      margin-bottom: 8px;
+      font-size: 0.82rem;
+      align-items: center;
+    }
+
+    #host-config-panel .toggle-desc {
+      font-size: 0.7rem;
+      margin-top: 1px;
+      line-height: 1.2;
+    }
+
+    #host-config-panel .toggle-row input[type="checkbox"],
+    #host-config-panel .toggle-row input[type="radio"] {
       width: 18px;
       height: 18px;
-      cursor: pointer;
       margin-top: 0;
-      flex-shrink: 0;
+    }
+
+    #host-config-panel .slider-container {
+      margin-top: 4px;
+      margin-bottom: 6px;
+    }
+
+    #host-config-panel #btn-save-rules {
+      padding: 14px;
+      font-size: 0.95rem;
+      margin-top: 4px;
+      margin-bottom: 0;
     }
 
     .surge-rounds-selector {
       display: flex;
       gap: 12px;
-      margin-top: 4px;
-      margin-bottom: 8px;
-      padding-left: 20px;
+      margin-top: 8px;
+      margin-bottom: 16px;
+      padding-left: 28px;
     }
 
     .surge-rounds-selector label {
-      font-size: 0.78rem;
+      font-size: 0.85rem;
       font-weight: 800;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
     }
 
     .slider-container {
-      margin-top: 4px;
-      margin-bottom: 6px;
+      margin-top: 6px;
+      margin-bottom: 14px;
     }
 
     .slider-container input[type="range"] {
@@ -350,15 +392,15 @@
 
     input[type="text"] {
       width: 100%;
-      padding: 14px;
-      border-radius: 14px;
+      padding: 18px;
+      border-radius: 16px;
       border: 2px solid var(--border-color);
       background: rgba(11, 14, 20, 0.8);
       color: #fff;
-      font-size: 1.15rem;
+      font-size: 1.25rem;
       font-weight: 800;
       text-align: center;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       text-transform: uppercase;
       outline: none;
       letter-spacing: 2px;
@@ -372,34 +414,34 @@
 
     .btn {
       width: 100%;
-      padding: 14px;
-      border-radius: 14px;
+      padding: 18px;
+      border-radius: 16px;
       border: none;
       background: var(--red);
       color: #fff;
-      font-size: 1rem;
+      font-size: 1.1rem;
       font-weight: 800;
       letter-spacing: 1px;
       cursor: pointer;
-      box-shadow: 0 8px 20px var(--red-glow), inset 0 2px 0 rgba(255, 255, 255, 0.2);
+      box-shadow: 0 10px 25px var(--red-glow), inset 0 2px 0 rgba(255, 255, 255, 0.2);
       transition: all 0.15s ease;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
 
     .btn-green {
       background: var(--green);
-      box-shadow: 0 8px 20px var(--green-glow);
+      box-shadow: 0 10px 25px var(--green-glow);
     }
 
     .btn-cyan {
       background: var(--cyan);
-      box-shadow: 0 8px 20px var(--cyan-glow);
+      box-shadow: 0 10px 25px var(--cyan-glow);
     }
 
     .btn-gold {
       background: var(--gold);
       color: #000;
-      box-shadow: 0 8px 20px var(--gold-glow);
+      box-shadow: 0 10px 25px var(--gold-glow);
     }
 
     .btn-secondary {
@@ -425,13 +467,13 @@
 
     .status-badge {
       display: inline-block;
-      padding: 8px 20px;
+      padding: 10px 24px;
       border-radius: 30px;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       font-weight: 800;
       letter-spacing: 1.5px;
       text-transform: uppercase;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
     }
 
     .active-turn {
@@ -451,9 +493,9 @@
     .modifier-tag-list {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
       align-items: center;
-      margin-bottom: 14px;
+      margin-bottom: 18px;
       width: 100%;
     }
 
@@ -461,13 +503,13 @@
       background: rgba(255, 42, 85, 0.25);
       border: 2px solid var(--red);
       color: #fff;
-      font-size: 1rem;
+      font-size: 1.1rem;
       font-weight: 900;
-      padding: 6px 14px;
-      border-radius: 10px;
+      padding: 8px 18px;
+      border-radius: 12px;
       text-transform: uppercase;
       letter-spacing: 1.5px;
-      box-shadow: 0 0 15px var(--red-glow);
+      box-shadow: 0 0 20px var(--red-glow);
       width: 100%;
       animation: pulse 1.5s infinite alternate;
     }
@@ -476,13 +518,13 @@
       background: rgba(255, 184, 0, 0.2);
       border: 2px solid var(--gold);
       color: var(--gold);
-      font-size: 0.9rem;
+      font-size: 1rem;
       font-weight: 900;
-      padding: 5px 12px;
-      border-radius: 10px;
+      padding: 6px 16px;
+      border-radius: 12px;
       text-transform: uppercase;
       letter-spacing: 1px;
-      box-shadow: 0 0 12px var(--gold-glow);
+      box-shadow: 0 0 15px var(--gold-glow);
       width: 100%;
     }
 
@@ -499,11 +541,11 @@
 
     .letter-stage {
       position: relative;
-      margin: 6px 0 12px 0;
+      margin: 10px 0 16px 0;
     }
 
     .letter-label {
-      font-size: 0.75rem;
+      font-size: 0.8rem;
       font-weight: 800;
       letter-spacing: 2px;
       color: var(--text-muted);
@@ -511,12 +553,12 @@
     }
 
     .letter-display {
-      font-size: clamp(2.8rem, 12vw, 4.8rem);
+      font-size: clamp(3rem, 14vw, 5.5rem);
       font-weight: 900;
       color: var(--gold);
       line-height: 1;
-      margin-top: 2px;
-      text-shadow: 0 0 35px var(--gold-glow);
+      margin-top: 4px;
+      text-shadow: 0 0 40px var(--gold-glow);
       display: inline-block;
       transition: transform 0.2s ease, text-shadow 0.2s ease;
     }
@@ -527,11 +569,11 @@
 
     .fuse-track {
       width: 100%;
-      height: 10px;
+      height: 12px;
       background: rgba(255, 255, 255, 0.08);
       border-radius: 20px;
       overflow: hidden;
-      margin-bottom: 14px;
+      margin-bottom: 16px;
       border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
@@ -560,12 +602,12 @@
     .history-card {
       background: rgba(11, 14, 20, 0.6);
       border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 12px;
-      max-height: 100px;
+      border-radius: 18px;
+      padding: 16px;
+      max-height: 120px;
       overflow-y: auto;
       text-align: left;
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       color: var(--text-muted);
     }
 
@@ -573,11 +615,11 @@
       display: inline-block;
       background: rgba(255, 255, 255, 0.06);
       border: 1px solid var(--border-color);
-      padding: 6px 12px;
+      padding: 8px 16px;
       border-radius: 30px;
-      font-size: 0.82rem;
+      font-size: 0.9rem;
       font-weight: 700;
-      margin: 3px;
+      margin: 4px;
     }
 
     .player-pill.ready {
@@ -604,16 +646,16 @@
     .toast-msg {
       color: var(--red);
       font-weight: 800;
-      font-size: 0.82rem;
-      min-height: 18px;
-      margin-bottom: 10px;
-      line-height: 1.25;
+      font-size: 0.85rem;
+      min-height: 20px;
+      margin-bottom: 12px;
+      line-height: 1.3;
     }
 
     .dict-status {
       font-size: 0.75rem;
       color: #10b981;
-      margin-bottom: 12px;
+      margin-bottom: 15px;
       font-weight: 700;
     }
 
@@ -622,20 +664,20 @@
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(7, 9, 14, 0.98);
-      border-radius: 24px;
+      border-radius: 28px;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       z-index: 200;
-      padding: 16px;
+      padding: 20px;
       text-align: center;
     }
 
     .countdown-num {
-      font-size: clamp(3.8rem, 16vw, 6.5rem);
+      font-size: clamp(4rem, 18vw, 7rem);
       font-weight: 900;
       color: var(--gold);
-      text-shadow: 0 0 50px var(--gold-glow);
+      text-shadow: 0 0 60px var(--gold-glow);
       animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
@@ -644,36 +686,36 @@
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(7, 9, 14, 0.98);
-      border-radius: 24px;
+      border-radius: 28px;
       border: 2px solid var(--cyan);
-      box-shadow: 0 0 40px var(--cyan-glow);
+      box-shadow: 0 0 50px var(--cyan-glow);
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      padding: 24px;
       text-align: center;
       z-index: 300;
       animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
     .attack-title {
-      font-size: 2rem;
+      font-size: 2.2rem;
       font-weight: 900;
       color: var(--cyan);
-      text-shadow: 0 0 20px var(--cyan-glow);
-      margin-bottom: 6px;
+      text-shadow: 0 0 25px var(--cyan-glow);
+      margin-bottom: 8px;
     }
 
     .attack-desc {
-      font-size: 1rem;
+      font-size: 1.1rem;
       font-weight: 800;
       color: #fff;
-      line-height: 1.35;
-      margin-bottom: 14px;
+      line-height: 1.4;
+      margin-bottom: 16px;
     }
 
     .attack-timer-notice {
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       font-weight: 800;
       color: var(--gold);
       text-transform: uppercase;
@@ -697,7 +739,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: space-between;
-      padding: 16px 16px calc(16px + env(safe-area-inset-bottom)) 16px;
+      padding: 20px 20px calc(20px + env(safe-area-inset-bottom)) 20px;
       text-align: center;
       z-index: 10000;
       animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -712,26 +754,26 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding-bottom: 12px;
+      padding-bottom: 16px;
       -webkit-overflow-scrolling: touch;
       box-sizing: border-box;
     }
 
     .boom-title {
-      font-size: 2.8rem;
+      font-size: 3.2rem;
       font-weight: 900;
       color: var(--red);
       letter-spacing: 2px;
-      text-shadow: 0 0 30px var(--red-glow);
+      text-shadow: 0 0 35px var(--red-glow);
       margin-bottom: 2px;
-      margin-top: 6px;
+      margin-top: 10px;
     }
 
     .boom-desc {
-      font-size: 1.05rem;
+      font-size: 1.15rem;
       font-weight: 800;
       color: #fff;
-      margin-bottom: 14px;
+      margin-bottom: 16px;
     }
 
     /* VERTICALLY CENTERED SLEEK KNOCKOUT INTERMISSION MODAL */
@@ -746,36 +788,36 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      padding: 24px;
       text-align: center;
       animation: popIn 0.3s ease;
     }
 
     .inline-countdown-title {
-      font-size: 1rem;
+      font-size: 1.1rem;
       font-weight: 900;
       color: var(--gold);
-      letter-spacing: 2.5px;
+      letter-spacing: 3px;
       text-transform: uppercase;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       text-shadow: 0 0 20px var(--gold-glow);
     }
 
     .leaderboard-section {
       width: 100%;
       max-width: 100%;
-      margin-bottom: 14px;
+      margin-bottom: 16px;
       text-align: left;
       box-sizing: border-box;
     }
 
     .section-header-title {
-      font-size: 0.75rem;
+      font-size: 0.8rem;
       font-weight: 900;
       color: var(--gold);
       letter-spacing: 1.5px;
       text-transform: uppercase;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
       display: flex;
       align-items: center;
       gap: 6px;
@@ -784,8 +826,8 @@
     .rank-card-mvp {
       background: linear-gradient(135deg, rgba(255, 184, 0, 0.25), rgba(217, 119, 6, 0.15));
       border: 2px solid var(--gold);
-      border-radius: 14px;
-      padding: 12px 14px;
+      border-radius: 16px;
+      padding: 14px 16px;
       margin-bottom: 8px;
       display: flex;
       align-items: center;
@@ -809,7 +851,7 @@
     }
 
     .rank-card-mvp .rank-name {
-      font-size: 1.15rem;
+      font-size: 1.25rem;
       font-weight: 900;
       color: #fff;
       letter-spacing: 0.5px;
@@ -818,11 +860,11 @@
     }
 
     .rank-card-mvp .rank-badge {
-      font-size: 1rem;
+      font-size: 1.1rem;
       font-weight: 900;
       color: var(--gold);
       background: rgba(0, 0, 0, 0.4);
-      padding: 4px 10px;
+      padding: 4px 12px;
       border-radius: 20px;
       flex-shrink: 0;
     }
@@ -837,12 +879,12 @@
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--border-color);
       border-radius: 12px;
-      padding: 8px 12px;
+      padding: 10px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 10px;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       font-weight: 700;
       min-width: 0;
     }
@@ -883,22 +925,22 @@
       background: rgba(11, 14, 20, 0.6);
       border: 1px solid var(--border-color);
       border-radius: 12px;
-      padding: 8px 10px;
+      padding: 10px;
       text-align: left;
       min-width: 0;
     }
 
     .award-card-title {
-      font-size: 0.65rem;
+      font-size: 0.7rem;
       font-weight: 800;
       color: var(--gold);
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      margin-bottom: 2px;
+      margin-bottom: 4px;
     }
 
     .award-card-val {
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       font-weight: 800;
       color: #fff;
       line-height: 1.2;
@@ -907,7 +949,7 @@
     }
 
     .award-card-sub {
-      font-size: 0.68rem;
+      font-size: 0.72rem;
       color: var(--text-muted);
       margin-top: 2px;
       word-break: break-word;
@@ -915,25 +957,25 @@
     }
 
     .rule-detail-item {
-      margin-bottom: 8px;
+      margin-bottom: 10px;
       text-align: left;
-      font-size: 0.78rem;
+      font-size: 0.82rem;
       color: var(--text-muted);
       background: rgba(255, 255, 255, 0.03);
-      padding: 8px 10px;
-      border-radius: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
       border-left: 3px solid var(--gold);
     }
 
     .rule-detail-item b {
       color: #fff;
       display: block;
-      font-size: 0.82rem;
+      font-size: 0.88rem;
       margin-bottom: 2px;
     }
 
     .powerup-box {
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       width: 100%;
     }
 
@@ -941,10 +983,10 @@
       background: rgba(255, 255, 255, 0.03);
       border: 2px dashed rgba(255, 255, 255, 0.15);
       color: var(--text-muted);
-      font-size: 0.78rem;
+      font-size: 0.82rem;
       font-weight: 800;
-      padding: 10px;
-      border-radius: 12px;
+      padding: 14px;
+      border-radius: 14px;
       text-transform: uppercase;
       letter-spacing: 1px;
     }
@@ -952,10 +994,10 @@
     .powerup-btn {
       background: linear-gradient(135deg, var(--gold), #d97706);
       color: #000;
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       font-weight: 900;
-      padding: 12px;
-      border-radius: 12px;
+      padding: 14px;
+      border-radius: 14px;
       border: none;
       width: 100%;
       cursor: pointer;
@@ -973,57 +1015,57 @@
       background: rgba(255, 184, 0, 0.15);
       border: 1px solid var(--gold);
       color: var(--gold);
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       font-weight: 900;
-      padding: 4px 14px;
+      padding: 6px 16px;
       border-radius: 20px;
       letter-spacing: 1.5px;
       text-transform: uppercase;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       display: inline-block;
     }
 
     /* FLUID COMPACT BUTTON ROW STYLING WITH NO SIDE-CLIPPING */
     .compact-btn-row {
       display: flex;
-      gap: 8px;
+      gap: 10px;
       width: 100%;
       max-width: 420px;
-      padding-top: 10px;
+      padding-top: 12px;
       flex-shrink: 0;
       box-sizing: border-box;
     }
 
     .compact-btn-row .btn {
       flex: 1;
-      padding: 14px 6px;
-      font-size: 0.82rem;
+      padding: 16px 8px;
+      font-size: 0.88rem;
       font-weight: 900;
       margin-bottom: 0;
-      border-radius: 14px;
+      border-radius: 16px;
       letter-spacing: 0px;
       white-space: nowrap;
     }
 
     @media (max-width: 360px) {
       .game-box {
-        padding: 14px 10px;
-        border-radius: 18px;
+        padding: 18px 12px;
+        border-radius: 20px;
       }
       h1 {
-        font-size: 2rem;
+        font-size: 2.2rem;
       }
       .btn {
-        padding: 12px;
-        font-size: 0.88rem;
+        padding: 14px;
+        font-size: 0.95rem;
       }
       input[type="text"] {
-        padding: 10px;
-        font-size: 1rem;
+        padding: 12px;
+        font-size: 1.1rem;
       }
       .compact-btn-row .btn {
-        font-size: 0.75rem;
-        padding: 12px 2px;
+        font-size: 0.78rem;
+        padding: 14px 4px;
       }
     }
 
@@ -1948,8 +1990,8 @@ if ('serviceWorker' in navigator) {
         // KEEP DISPLAY AWAKE CONTINUOUSLY WHILE IN ROOM SESSION
         requestScreenWakeLock();
 
-        roomRef.on('value', (snap) => {
-          roomData = snap.val();
+        roomRef.on('value', (sSnap) => {
+          roomData = sSnap.val();
           if (roomData) updateUI();
           else resetToMainMenu();
         });

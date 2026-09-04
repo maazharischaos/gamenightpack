@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gamenight-v81';
+const CACHE_NAME = 'gamenight-v82';
 
 const ASSETS_TO_CACHE = [
   './',
