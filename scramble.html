@@ -243,6 +243,22 @@
     .btn-mode { padding: 6px 8px; font-size: 0.7rem; flex: 1; margin: 0; }
     .btn-mode.active { background: var(--amber-warm); color: #07090e; font-weight: 900; box-shadow: 0 0 10px var(--amber-glow); }
 
+    .btn-shuffle {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--glass-border);
+      color: var(--cyan-neon);
+      border-radius: 8px;
+      padding: 2px 8px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      transition: all 0.15s ease;
+    }
+    .btn-shuffle:active { transform: scale(0.9); background: rgba(0, 240, 255, 0.2); }
+
     .btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
 
     .status-badge {
@@ -368,6 +384,17 @@
       font-weight: 700;
     }
     .podium-item.mvp { background: rgba(255, 200, 42, 0.12); border-color: var(--amber-warm); box-shadow: 0 0 15px var(--amber-glow); }
+
+    /* SOLUTION REVEAL CHIPS */
+    .unsolved-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .unsolved-chip {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-size: 0.7rem;
+      font-weight: 800;
+    }
   </style>
 </head>
 <body>
@@ -558,6 +585,7 @@
         <div id="summary-section-title" class="input-label">ROUND STANDINGS</div>
         <div id="podium-list" class="podium-list"></div>
 
+        <div id="unsolved-reveal-container"></div>
         <div id="awards-container"></div>
       </div>
 
@@ -568,6 +596,7 @@
         </div>
 
         <div id="final-tournament-controls" style="display: none; flex-direction: column; gap: 6px; width: 100%;">
+          <button id="btn-fast-rematch" class="btn btn-amber">⚡ FAST REMATCH</button>
           <button id="btn-return-launcher-final" class="btn btn-primary" onclick="returnToLauncher()">🎮 GAME LAUNCHER</button>
           <button id="btn-replay-match" class="btn btn-secondary">🏠 RETURN TO LOBBY</button>
         </div>
@@ -581,7 +610,15 @@
   </div>
 
   <script>
-    /* 1. POWER MANAGEMENT ENGINE */
+    /* 1. POWER MANAGEMENT & HAPTIC ENGINE */
+    const HapticEngine = {
+      vibrate(pattern) {
+        if ('vibrate' in navigator) {
+          try { navigator.vibrate(pattern); } catch(e){}
+        }
+      }
+    };
+
     const PowerManagementEngine = {
       wakeLock: null, isActive: false,
       init() {
@@ -678,6 +715,7 @@
         if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
       }
       playClick() {
+        HapticEngine.vibrate(12);
         if (!this.ctx) return;
         const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
         osc.type = 'triangle'; osc.frequency.setValueAtTime(340, this.ctx.currentTime);
@@ -686,6 +724,7 @@
         osc.start(); osc.stop(this.ctx.currentTime + 0.04);
       }
       playTypePop() {
+        HapticEngine.vibrate(8);
         if (!this.ctx) return;
         const now = this.ctx.currentTime;
         const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
@@ -698,6 +737,7 @@
         osc.start(now); osc.stop(now + 0.02);
       }
       playSuccess(pitchMultiplier = 1) {
+        HapticEngine.vibrate([20, 30, 40]);
         if (!this.ctx) return;
         const now = this.ctx.currentTime;
         [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => {
@@ -710,6 +750,7 @@
         });
       }
       playGoldenClaim() {
+        HapticEngine.vibrate([40, 40, 80]);
         if (!this.ctx) return;
         const now = this.ctx.currentTime;
         [440, 554.37, 659.25, 880, 1108.73, 1318.51].forEach((f, i) => {
@@ -722,6 +763,7 @@
         });
       }
       playError() {
+        HapticEngine.vibrate([50, 30, 50]);
         if (!this.ctx) return;
         const now = this.ctx.currentTime;
         const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
@@ -733,6 +775,7 @@
         osc.start(now); osc.stop(now + 0.25);
       }
       playHeartbeat() {
+        HapticEngine.vibrate(25);
         if (!this.ctx) return;
         const now = this.ctx.currentTime;
         const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
@@ -744,6 +787,7 @@
         osc.start(now); osc.stop(now + 0.15);
       }
       playGo() {
+        HapticEngine.vibrate([60, 40, 100]);
         if (!this.ctx) return;
         const now = this.ctx.currentTime;
         [523.25, 659.25, 783.99, 1046.50].forEach(f => {
@@ -1002,6 +1046,17 @@
         GameState.matchRef.child('words').on('value', (snap) => {
           const w = snap.val();
           if (w) {
+            // RIVAL EVENT TOAST MONITORING
+            if (fsm.currentState === GAME_STATES.PLAYING) {
+              w.forEach((item, idx) => {
+                const oldItem = GameState.words[idx];
+                if (item.isGolden && item.claimedBy && (!oldItem || !oldItem.claimedBy)) {
+                  if (item.claimedBy !== GameState.playerName) {
+                    ToastEngine.show(`⚡ ${item.claimedBy} claimed a Golden Word!`, "info");
+                  }
+                }
+              });
+            }
             GameState.words = w;
             UIController.updateGoldenWordClaims();
           }
@@ -1070,6 +1125,29 @@
         } else {
           this.startBlitzTimer(startTime);
         }
+      },
+
+      shuffleCardWord(wordId) {
+        const cardIndex = GameState.words.findIndex(w => w.id === wordId);
+        if (cardIndex === -1) return;
+        const wordObj = GameState.words[cardIndex];
+        
+        let newScramble = wordObj.scrambled;
+        let attempts = 0;
+        do {
+          newScramble = DictionaryEngine.scrambleWord(wordObj.original);
+          attempts++;
+        } while (newScramble === wordObj.scrambled && attempts < 10);
+
+        wordObj.scrambled = newScramble;
+        const scrambledEl = document.querySelector(`#card-${wordId} .scrambled-text`);
+        if (scrambledEl) {
+          scrambledEl.textContent = newScramble;
+          scrambledEl.classList.remove('popNum');
+          void scrambledEl.offsetWidth;
+          scrambledEl.style.animation = 'popNum 0.3s ease';
+        }
+        sound.playTypePop();
       },
 
       validateAnswer(wordObj, cardEl, inputEl, explicitEnter) {
@@ -1263,7 +1341,6 @@
         });
       },
 
-      // HARDENED TIE-BREAKER FOR SUDDEN MODE
       processSuddenElimination() {
         if (!GameState.isHost || !GameState.roomRef) return;
         GameState.playersRef.once('value', (snap) => {
@@ -1274,11 +1351,8 @@
 
           if (activePlayers.length > 1) {
             activePlayers.sort((a, b) => {
-              // 1. Lowest score first
               if ((a.score || 0) !== (b.score || 0)) return (a.score || 0) - (b.score || 0);
-              // 2. Lowest solved count next
               if ((a.solvedCount || 0) !== (b.solvedCount || 0)) return (a.solvedCount || 0) - (b.solvedCount || 0);
-              // 3. Slowest submission timestamp (unsubmitted/null = Infinity, so it sorts first for elimination)
               const timeA = a.submittedAt || Infinity;
               const timeB = b.submittedAt || Infinity;
               return timeB - timeA;
@@ -1333,6 +1407,11 @@
           updates['meta/lastEliminatedName'] = null;
           GameState.roomRef.update(updates);
         });
+      },
+
+      fastRematch() {
+        if (!GameState.isHost) return;
+        this.returnToLobby();
       },
 
       returnToLobby() {
@@ -1400,7 +1479,6 @@
         }
       },
 
-      // DYNAMIC NON-HOST BRIEFING & EXPLANATIONS
       updateBriefingUI(meta) {
         const modeEl = document.getElementById('brief-mode');
         const modeDescEl = document.getElementById('brief-mode-desc');
@@ -1529,7 +1607,10 @@
           
           card.innerHTML = `
             <div class="word-card-header">
-              <span class="scrambled-text">${w.scrambled}</span>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span class="scrambled-text">${w.scrambled}</span>
+                <button class="btn-shuffle" data-id="${w.id}">🔠 🔀</button>
+              </div>
               <div style="display:flex; align-items:center; gap:6px;">
                 <span id="check-${w.id}" class="solved-checkmark" style="display:none;">✓</span>
                 ${goldTag}
@@ -1540,6 +1621,16 @@
             <div id="claimed-tag-${w.id}" style="font-size:0.68rem; font-weight:800; color:var(--gold-neon); display:none;"></div>
           `;
           container.appendChild(card);
+
+          const shuffleBtn = card.querySelector('.btn-shuffle');
+          if (shuffleBtn) {
+            shuffleBtn.addEventListener('click', (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              StateCalculations.shuffleCardWord(w.id);
+            });
+          }
+
           const inputEl = card.querySelector('input');
 
           inputEl.addEventListener('input', () => {
@@ -1622,6 +1713,27 @@
               `;
               roundList.appendChild(item);
             });
+          }
+        }
+
+        // UNSOLVED WORD REVEAL PANEL
+        const revealContainer = document.getElementById('unsolved-reveal-container');
+        revealContainer.innerHTML = '';
+
+        if (GameState.words && GameState.words.length > 0) {
+          const unsolvedWords = GameState.words.filter(w => !GameState.playerState.answers[w.id]);
+          if (unsolvedWords.length > 0) {
+            const card = document.createElement('div');
+            card.className = 'glass-card';
+            card.style.cssText = 'margin-top: 8px; border-color: rgba(255,255,255,0.12); padding: 10px;';
+            
+            let chipsHTML = unsolvedWords.map(w => `<span class="unsolved-chip"><b style="color:var(--amber-warm);">${w.scrambled}</b> → <span style="color:var(--cyan-neon);">${w.original}</span></span>`).join('');
+            
+            card.innerHTML = `
+              <div class="input-label" style="color:var(--text-muted); margin-bottom: 4px;">💡 SOLUTION REVEAL (${unsolvedWords.length} MISSED)</div>
+              <div class="unsolved-grid">${chipsHTML}</div>
+            `;
+            revealContainer.appendChild(card);
           }
         }
 
@@ -1795,6 +1907,7 @@
         });
 
         document.getElementById('btn-next-round').addEventListener('click', () => StateCalculations.startNextRound());
+        document.getElementById('btn-fast-rematch').addEventListener('click', () => StateCalculations.fastRematch());
         
         const endTourneyBtn = document.getElementById('btn-end-tournament');
         if (endTourneyBtn) {
