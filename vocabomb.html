@@ -320,7 +320,7 @@
       flex-shrink: 0;
     }
 
-    /* COMPACT CSS SCOPED EXCLUSIVELY TO HOST SETUP PANEL */
+    /* COMPACT CSS STRICTLY ISOLATED INSIDE HOST SETUP PANEL */
     #host-config-panel .config-group {
       padding: 10px 12px;
       margin-bottom: 8px;
@@ -339,7 +339,7 @@
     }
 
     #host-config-panel .toggle-desc {
-      font-size: 0.7rem;
+      font-size: 0.70rem;
       margin-top: 1px;
       line-height: 1.2;
     }
@@ -351,9 +351,24 @@
       margin-top: 0;
     }
 
+    #host-config-panel .surge-rounds-selector {
+      margin-top: 4px;
+      margin-bottom: 8px;
+      padding-left: 20px;
+    }
+
+    #host-config-panel .surge-rounds-selector label {
+      font-size: 0.78rem;
+    }
+
     #host-config-panel .slider-container {
       margin-top: 4px;
       margin-bottom: 6px;
+    }
+
+    #host-config-panel .slider-container div {
+      font-size: 0.72rem !important;
+      margin-bottom: 2px !important;
     }
 
     #host-config-panel #btn-save-rules {
@@ -1154,7 +1169,7 @@
     <!-- 3. HOST CONFIG & PLAYER BRIEFING SCREEN -->
     <div id="room-screen" class="game-box" style="display: none; position: relative;">
       <div class="subtitle" style="margin-bottom: 4px;">ROOM CODE</div>
-      <h2 id="display-room-code" style="color:var(--gold); font-size: 2.2rem; font-weight: 900; letter-spacing: 4px; margin-bottom: 10px;"></h2>
+      <h2 id="display-room-code" style="color:var(--gold); font-size: 2.8rem; font-weight: 900; letter-spacing: 4px; margin-bottom: 16px;"></h2>
       
       <div id="host-config-panel" style="display:none;">
         
@@ -1264,7 +1279,7 @@
           </label>
         </div>
 
-        <button class="btn btn-green" id="btn-save-rules" style="padding: 14px; font-size: 0.95rem; margin-top: 4px; margin-bottom: 0;">LOCK IN RULES & ADVANCE</button>
+        <button class="btn btn-green" id="btn-save-rules">LOCK IN RULES & ADVANCE</button>
       </div>
 
       <div id="player-rules-briefing" style="display:none;">
@@ -1274,17 +1289,17 @@
 
         <div id="briefing-list">Waiting for Host to configure game...</div>
 
-        <button class="btn btn-green" id="btn-ready" style="margin-top: 10px;">I'M READY TO PLAY!</button>
+        <button class="btn btn-green" id="btn-ready" style="margin-top: 12px;">I'M READY TO PLAY!</button>
 
-        <div id="host-start-container" style="display:none; margin-top:10px;">
+        <div id="host-start-container" style="display:none; margin-top:14px;">
           <button class="btn btn-gold" id="btn-plant-bomb">💣 PLANT THE BOMB & START!</button>
         </div>
       </div>
 
-      <div id="players-list" style="margin-top: 14px; margin-bottom: 16px;"></div>
+      <div id="players-list" style="margin-top: 20px; margin-bottom: 24px;"></div>
 
       <div id="countdown-screen">
-        <div id="countdown-label-text" style="font-size: 1.1rem; font-weight: 800; color: #fff; margin-bottom: 8px;">PLANTING BOMB IN</div>
+        <div id="countdown-label-text" style="font-size: 1.2rem; font-weight: 800; color: #fff; margin-bottom: 10px;">PLANTING BOMB IN</div>
         <div id="countdown-val" class="countdown-num">3</div>
       </div>
     </div>
@@ -1300,10 +1315,10 @@
         </div>
 
         <div id="intermission-screen">
-          <div style="font-size: 0.8rem; font-weight: 900; color: var(--gold); letter-spacing: 2px; text-transform: uppercase;">ROUND RECAP</div>
-          <div id="intermission-round-num" style="font-size: 1.6rem; font-weight: 900; color: #fff; margin: 4px 0 6px 0;">ROUND 1 COMPLETE</div>
-          <div id="intermission-highlights" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px; line-height: 1.35;"></div>
-          <div style="font-size: 0.8rem; font-weight: 800; color: var(--gold); margin-bottom: 2px;">NEXT ROUND STARTING IN</div>
+          <div style="font-size: 0.85rem; font-weight: 900; color: var(--gold); letter-spacing: 2px; text-transform: uppercase;">ROUND RECAP</div>
+          <div id="intermission-round-num" style="font-size: 1.8rem; font-weight: 900; color: #fff; margin: 4px 0 8px 0;">ROUND 1 COMPLETE</div>
+          <div id="intermission-highlights" style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;"></div>
+          <div style="font-size: 0.85rem; font-weight: 800; color: var(--gold); margin-bottom: 4px;">NEXT ROUND STARTING IN</div>
           <div id="surge-intermission-num" class="countdown-num">3</div>
         </div>
 
