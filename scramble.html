@@ -480,20 +480,32 @@
         </div>
       </div>
 
-      <!-- NON-HOST LIVE BRIEFING & RULES PANEL -->
+      <!-- NON-HOST LIVE BRIEFING & DYNAMIC EXPLANATIONS PANEL -->
       <div id="non-host-rules-container" class="glass-card" style="display: none; flex: 1; overflow-y: auto; gap: 6px;">
         <div class="input-label" style="color: var(--cyan-neon);">MATCH BRIEFING & RULES</div>
         
-        <div style="background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 4px;">
-          <div style="display: flex; justify-content: space-between; font-size: 0.72rem;">
-            <span style="color: var(--text-muted);">GAME MODE:</span>
-            <span id="brief-mode" style="font-weight: 900; color: var(--amber-warm);">CLASSIC</span>
+        <div style="background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 6px;">
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.72rem;">
+              <span style="color: var(--text-muted);">GAME MODE:</span>
+              <span id="brief-mode" style="font-weight: 900; color: var(--amber-warm);">CLASSIC</span>
+            </div>
+            <div id="brief-mode-desc" style="font-size: 0.68rem; color: var(--text-main); font-weight: 500;">
+              Race against time. Earn points per solve; highest cumulative score wins!
+            </div>
           </div>
-          <div style="display: flex; justify-content: space-between; font-size: 0.72rem;">
-            <span style="color: var(--text-muted);">DIFFICULTY:</span>
-            <span id="brief-cat" style="font-weight: 900; color: var(--cyan-neon);">MIXED</span>
+
+          <div style="display: flex; flex-direction: column; gap: 2px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 4px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.72rem;">
+              <span style="color: var(--text-muted);">DIFFICULTY:</span>
+              <span id="brief-cat" style="font-weight: 900; color: var(--cyan-neon);">MIXED</span>
+            </div>
+            <div id="brief-cat-desc" style="font-size: 0.68rem; color: var(--text-main); font-weight: 500;">
+              Mix of 3 to 6+ letter words (100 to 500 PTS each).
+            </div>
           </div>
-          <div style="display: flex; justify-content: space-between; font-size: 0.72rem;">
+
+          <div style="display: flex; justify-content: space-between; font-size: 0.72rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 4px;">
             <span style="color: var(--text-muted);">MATCH DURATION:</span>
             <span id="brief-dur" style="font-weight: 900; color: #fff;">2 MINS</span>
           </div>
@@ -501,9 +513,9 @@
 
         <div style="font-size: 0.7rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 4px; line-height: 1.35; margin-top: 2px;">
           <div>🔠 <b>Unscramble 12 Words:</b> Type anagrams to score points.</div>
-          <div>🔥 <b>Combo Streaks:</b> Fast solves earn up to 3x multipliers!</div>
-          <div>🌟 <b>Golden Words:</b> First player to claim a Golden Word gets 2x bonus!</div>
-          <div>⚡ <b>Overtime Frenzy:</b> Final 15 seconds double all word point values!</div>
+          <div>🔥 <b>Combo Streaks:</b> Solve fast for up to 3x multipliers!</div>
+          <div>🌟 <b>Golden Words:</b> First player to claim a Golden Word gets 2x base bonus!</div>
+          <div>⚡ <b>Overtime Frenzy:</b> Final 15 seconds double all point values!</div>
         </div>
       </div>
 
@@ -535,7 +547,7 @@
       <div id="game-submit-bar" class="sticky-submit-bar"></div>
     </div>
 
-    <!-- SUMMARY SCREEN WITH UNIFIED SINGLE STANDINGS HEADER -->
+    <!-- SUMMARY SCREEN -->
     <div id="screen-summary" class="screen">
       <div style="text-align: center; margin-bottom: 8px;">
         <h2 class="brand-title" style="font-size: 1.6rem;">MATCH RESULTS</h2>
@@ -953,7 +965,6 @@
           } else if (meta.status === 'playing' && fsm.currentState !== GAME_STATES.PLAYING) {
             fsm.transitionTo(GAME_STATES.PLAYING, { startTime: meta.startTime, endTime: meta.endTime });
           } else if (meta.status === 'summary') {
-            // HOST SUDDEN MODE ELIMINATION EVALUATION
             if (GameState.isHost && GameState.gameMode === 'sudden' && !meta.eliminationProcessedForRound && !meta.isTournamentOver) {
               StateCalculations.processSuddenElimination();
             }
@@ -1085,18 +1096,24 @@
 
           if (GameState.comboStreak > 1) UIController.triggerComboBanner(`${GameState.comboStreak}x COMBO!`);
 
-          let earnedPoints = wordObj.points * Math.min(GameState.comboStreak, 3);
-          if (GameState.isOvertimeActive) earnedPoints *= 2;
-
           const liveWord = GameState.words.find(w => w.id === wordObj.id) || wordObj;
+          const comboMult = Math.min(GameState.comboStreak, 3);
+          const overtimeMult = GameState.isOvertimeActive ? 2 : 1;
+
+          let baseVal = liveWord.points;
+          let earnedPoints = 0;
 
           if (liveWord.isGolden) {
             if (!liveWord.claimedBy) {
-              earnedPoints = liveWord.points * Math.min(GameState.comboStreak, 3);
-              if (GameState.isOvertimeActive) earnedPoints *= 2;
+              earnedPoints = baseVal * comboMult * overtimeMult;
               
               sound.playGoldenClaim();
-              ToastEngine.show(`⚡ GOLDEN WORD CLAIMED! +${earnedPoints} PTS`, "success");
+              
+              let mathDetail = `${baseVal} Base`;
+              if (comboMult > 1) mathDetail += ` x ${comboMult}x Combo`;
+              if (overtimeMult > 1) mathDetail += ` x 2x Overtime`;
+
+              ToastEngine.show(`⚡ GOLDEN CLAIMED! +${earnedPoints} PTS (${mathDetail})`, "success");
               
               if (GameState.matchRef) {
                 const wordIdx = GameState.words.findIndex(w => w.id === wordObj.id);
@@ -1105,15 +1122,27 @@
                 }
               }
             } else {
-              const originalBasePoints = Math.floor(liveWord.points / 2);
-              earnedPoints = originalBasePoints;
-              if (GameState.isOvertimeActive) earnedPoints *= 2;
+              const standardBase = Math.floor(liveWord.points / 2);
+              earnedPoints = standardBase * comboMult * overtimeMult;
               
               sound.playSuccess(1 + (GameState.comboStreak * 0.1));
-              ToastEngine.show("Golden bonus already claimed! Standard points earned.", "info");
+
+              let mathDetail = `${standardBase} Base`;
+              if (comboMult > 1) mathDetail += ` x ${comboMult}x Combo`;
+              if (overtimeMult > 1) mathDetail += ` x 2x Overtime`;
+
+              ToastEngine.show(`Golden claimed by rival! +${earnedPoints} PTS (${mathDetail})`, "info");
             }
           } else {
+            earnedPoints = baseVal * comboMult * overtimeMult;
             sound.playSuccess(1 + (GameState.comboStreak * 0.1));
+
+            if (comboMult > 1 || overtimeMult > 1) {
+              let mathDetail = `${baseVal} Base`;
+              if (comboMult > 1) mathDetail += ` x ${comboMult}x Combo`;
+              if (overtimeMult > 1) mathDetail += ` x 2x Overtime`;
+              ToastEngine.show(`+${earnedPoints} PTS (${mathDetail})`, "success");
+            }
           }
 
           GameState.playerState.answers[wordObj.id] = userVal;
@@ -1234,6 +1263,7 @@
         });
       },
 
+      // HARDENED TIE-BREAKER FOR SUDDEN MODE
       processSuddenElimination() {
         if (!GameState.isHost || !GameState.roomRef) return;
         GameState.playersRef.once('value', (snap) => {
@@ -1244,9 +1274,14 @@
 
           if (activePlayers.length > 1) {
             activePlayers.sort((a, b) => {
+              // 1. Lowest score first
               if ((a.score || 0) !== (b.score || 0)) return (a.score || 0) - (b.score || 0);
+              // 2. Lowest solved count next
               if ((a.solvedCount || 0) !== (b.solvedCount || 0)) return (a.solvedCount || 0) - (b.solvedCount || 0);
-              return (b.submittedAt || 0) - (a.submittedAt || 0);
+              // 3. Slowest submission timestamp (unsubmitted/null = Infinity, so it sorts first for elimination)
+              const timeA = a.submittedAt || Infinity;
+              const timeB = b.submittedAt || Infinity;
+              return timeB - timeA;
             });
 
             const lowest = activePlayers[0];
@@ -1365,13 +1400,41 @@
         }
       },
 
+      // DYNAMIC NON-HOST BRIEFING & EXPLANATIONS
       updateBriefingUI(meta) {
         const modeEl = document.getElementById('brief-mode');
+        const modeDescEl = document.getElementById('brief-mode-desc');
         const catEl = document.getElementById('brief-cat');
+        const catDescEl = document.getElementById('brief-cat-desc');
         const durEl = document.getElementById('brief-dur');
 
-        if (modeEl) modeEl.textContent = (meta.gameMode || 'CLASSIC').toUpperCase();
-        if (catEl) catEl.textContent = (meta.wordCategory || 'MIXED').toUpperCase();
+        const mode = (meta.gameMode || 'classic').toLowerCase();
+        const cat = (meta.wordCategory || 'mixed').toLowerCase();
+
+        if (modeEl) modeEl.textContent = mode.toUpperCase();
+        if (modeDescEl) {
+          if (mode === 'sudden') {
+            modeDescEl.textContent = "Battle Royale! Unscramble words against the clock. Lowest scoring active player gets knocked out each round!";
+          } else if (mode === 'blitz') {
+            modeDescEl.textContent = "Pure speed sprint! First player to solve all 12 words wins instantly!";
+          } else {
+            modeDescEl.textContent = "Race against time. Earn points per solve; highest cumulative score wins!";
+          }
+        }
+
+        if (catEl) catEl.textContent = cat.toUpperCase();
+        if (catDescEl) {
+          if (cat === 'easy') {
+            catDescEl.textContent = "Short 3 to 4 letter words (100 PTS each).";
+          } else if (cat === 'medium') {
+            catDescEl.textContent = "Intermediate 5 to 6 letter words (250 PTS each).";
+          } else if (cat === 'hard') {
+            catDescEl.textContent = "Complex 7+ letter words (500 PTS each).";
+          } else {
+            catDescEl.textContent = "Mix of 3 to 6+ letter words (100 to 500 PTS each).";
+          }
+        }
+
         if (durEl) durEl.textContent = `${(meta.durationSeconds || 120) / 60} MINS`;
       },
 
@@ -1565,7 +1628,7 @@
         const awardsContainer = document.getElementById('awards-container');
         awardsContainer.innerHTML = '';
 
-        // SUDDEN MODE ELIMINATION ANNOUNCEMENT CARD
+        // SUDDEN MODE ELIMINATION CARD
         if (GameState.gameMode === 'sudden' && GameState.lastEliminatedName) {
           const elimCard = document.createElement('div');
           elimCard.className = 'glass-card';
