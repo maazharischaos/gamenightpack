@@ -243,21 +243,34 @@
     .btn-mode { padding: 6px 8px; font-size: 0.7rem; flex: 1; margin: 0; }
     .btn-mode.active { background: var(--amber-warm); color: #07090e; font-weight: 900; box-shadow: 0 0 10px var(--amber-glow); }
 
+    /* HIGH-TECH PROMINENT SHUFFLE BUTTON */
     .btn-shuffle {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid var(--glass-border);
+      background: rgba(0, 240, 255, 0.08);
+      border: 1px solid var(--cyan-neon);
       color: var(--cyan-neon);
-      border-radius: 8px;
-      padding: 2px 8px;
-      font-size: 0.72rem;
-      font-weight: 800;
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 0.65rem;
+      font-weight: 900;
+      letter-spacing: 0.5px;
       cursor: pointer;
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      gap: 3px;
-      transition: all 0.15s ease;
+      gap: 4px;
+      box-shadow: 0 0 8px var(--cyan-glow);
+      transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .btn-shuffle:active { transform: scale(0.9); background: rgba(0, 240, 255, 0.2); }
+    .btn-shuffle:active {
+      transform: scale(0.92);
+      background: var(--cyan-neon);
+      color: #070913;
+      box-shadow: 0 0 15px var(--cyan-neon);
+    }
+    .btn-shuffle svg {
+      width: 12px;
+      height: 12px;
+      fill: currentColor;
+    }
 
     .btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
 
@@ -410,7 +423,10 @@
       </div>
     </div>
 
-    <video id="wake-lock-video" muted playsinline loop style="display:none; position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;"></video>
+    <!-- SILENT KEEP-ALIVE VIDEO FALLBACK FOR SCREEN WAKE-LOCK -->
+    <video id="wake-lock-video" muted playsinline loop style="display:none; position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;">
+      <source src="data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAAA1tZGF0AAAAAAAAAAAAAA=" type="video/mp4">
+    </video>
 
     <div id="countdown-overlay">
       <div id="countdown-val" class="countdown-val">3</div>
@@ -610,7 +626,7 @@
   </div>
 
   <script>
-    /* 1. POWER MANAGEMENT & HAPTIC ENGINE */
+    /* 1. BULLETPROOF ALWAYS-ON SCREEN & POWER MANAGEMENT ENGINE */
     const HapticEngine = {
       vibrate(pattern) {
         if ('vibrate' in navigator) {
@@ -622,15 +638,27 @@
     const PowerManagementEngine = {
       wakeLock: null, isActive: false,
       init() {
-        document.addEventListener('visibilitychange', async () => {
-          if (document.visibilityState === 'visible' && this.isActive) await this.request();
+        const req = () => this.request();
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible' && this.isActive) req();
         });
-        this.request();
+        ['pointerdown', 'touchstart', 'click'].forEach(evt => {
+          document.addEventListener(evt, req, { once: false });
+        });
+        req();
       },
       async request() {
         this.isActive = true;
         if ('wakeLock' in navigator) {
-          try { if (!this.wakeLock) this.wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {}
+          try {
+            if (!this.wakeLock || this.wakeLock.released) {
+              this.wakeLock = await navigator.wakeLock.request('screen');
+            }
+          } catch (err) {}
+        }
+        const videoEl = document.getElementById('wake-lock-video');
+        if (videoEl && videoEl.paused) {
+          videoEl.play().catch(() => {});
         }
       }
     };
@@ -1046,7 +1074,6 @@
         GameState.matchRef.child('words').on('value', (snap) => {
           const w = snap.val();
           if (w) {
-            // RIVAL EVENT TOAST MONITORING
             if (fsm.currentState === GAME_STATES.PLAYING) {
               w.forEach((item, idx) => {
                 const oldItem = GameState.words[idx];
@@ -1609,7 +1636,10 @@
             <div class="word-card-header">
               <div style="display:flex; align-items:center; gap:8px;">
                 <span class="scrambled-text">${w.scrambled}</span>
-                <button class="btn-shuffle" data-id="${w.id}">🔠 🔀</button>
+                <button class="btn-shuffle" data-id="${w.id}" title="Shuffle Letters">
+                  <svg viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.45 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
+                  <span>SHUFFLE</span>
+                </button>
               </div>
               <div style="display:flex; align-items:center; gap:6px;">
                 <span id="check-${w.id}" class="solved-checkmark" style="display:none;">✓</span>
@@ -1716,7 +1746,6 @@
           }
         }
 
-        // UNSOLVED WORD REVEAL PANEL
         const revealContainer = document.getElementById('unsolved-reveal-container');
         revealContainer.innerHTML = '';
 
@@ -1740,7 +1769,6 @@
         const awardsContainer = document.getElementById('awards-container');
         awardsContainer.innerHTML = '';
 
-        // SUDDEN MODE ELIMINATION CARD
         if (GameState.gameMode === 'sudden' && GameState.lastEliminatedName) {
           const elimCard = document.createElement('div');
           elimCard.className = 'glass-card';
