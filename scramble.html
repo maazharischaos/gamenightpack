@@ -283,7 +283,6 @@
       text-transform: uppercase;
     }
 
-    /* HARDENED GAMEPLAY VIEW CSS PREVENTS SUBMIT BAR OVERFLOW */
     #screen-game { 
       display: flex; 
       flex-direction: column; 
@@ -336,7 +335,6 @@
     .scrambled-text { font-size: 1.15rem; font-weight: 900; letter-spacing: 2.5px; color: var(--amber-warm); text-shadow: 0 0 10px var(--amber-glow); }
     .point-badge { font-size: 0.65rem; font-weight: 800; padding: 2px 8px; border-radius: 10px; background: rgba(255, 255, 255, 0.06); color: var(--text-muted); }
 
-    /* GREEN CHECKMARK BADGE FIX */
     .solved-checkmark {
       color: var(--green-success) !important;
       font-weight: 900;
@@ -437,7 +435,7 @@
       </div>
     </div>
 
-    <!-- ROOM BRIEFING & SETUP SCREEN (SINGLE-SCREEN FIT) -->
+    <!-- ROOM BRIEFING & SETUP SCREEN -->
     <div id="screen-room" class="screen">
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <span class="status-badge">
@@ -548,7 +546,7 @@
         <div id="summary-section-title" class="input-label">ROUND STANDINGS</div>
         <div id="podium-list" class="podium-list"></div>
 
-        <div id="awards-container" style="margin-top: 8px;"></div>
+        <div id="awards-container"></div>
       </div>
 
       <div id="summary-host-controls" style="display: flex; flex-direction: column; gap: 6px;">
@@ -920,7 +918,6 @@
           }
         });
 
-        // Direct targeted write prevents player duplication
         if (this.db && roomCode) {
           myPlayerRef.update({
             name: GameState.playerName || 'PLAYER',
@@ -942,6 +939,7 @@
           GameState.gameMode = meta.gameMode || 'classic';
           GameState.wordCategory = meta.wordCategory || 'mixed';
           GameState.isTournamentOver = !!meta.isTournamentOver;
+          GameState.lastEliminatedName = meta.lastEliminatedName || null;
 
           UIController.updateBriefingUI(meta);
           
@@ -955,6 +953,11 @@
           } else if (meta.status === 'playing' && fsm.currentState !== GAME_STATES.PLAYING) {
             fsm.transitionTo(GAME_STATES.PLAYING, { startTime: meta.startTime, endTime: meta.endTime });
           } else if (meta.status === 'summary') {
+            // HOST SUDDEN MODE ELIMINATION EVALUATION
+            if (GameState.isHost && GameState.gameMode === 'sudden' && !meta.eliminationProcessedForRound && !meta.isTournamentOver) {
+              StateCalculations.processSuddenElimination();
+            }
+
             if (fsm.currentState !== GAME_STATES.ROUND_END) {
               fsm.transitionTo(GAME_STATES.ROUND_END);
             } else {
@@ -975,7 +978,6 @@
           UIController.updateLeaderboardPill(playersObj);
           this.checkBlitzConditions(playersObj);
 
-          // ACTIVE ONLINE PLAYER FILTER PREVENTS ROUND FREEZING
           if (GameState.isHost && fsm.currentState === GAME_STATES.PLAYING) {
             const players = Object.values(playersObj);
             const activePlayers = players.filter(p => !p.isEliminated && p.online !== false);
@@ -1034,7 +1036,7 @@
       playerName: '', roomCode: '', isHost: false, isReady: false, matchDuration: 120, gameMode: 'classic', wordCategory: 'mixed',
       joinedAt: null, words: [], playerState: { solvedCount: 0, score: 0, wrongAttempts: 0, submittedAt: null, answers: {} },
       isSubmittingMatch: false, roomRef: null, playersRef: null, matchRef: null, gameTimerInterval: null,
-      lastSolveTime: 0, comboStreak: 0, isEliminated: false, isOvertimeActive: false
+      lastSolveTime: 0, comboStreak: 0, isEliminated: false, isOvertimeActive: false, lastEliminatedName: null
     };
     sessionStorage.setItem('scramble_panic_pid', GameState.playerId);
 
@@ -1138,7 +1140,6 @@
             triggerConfetti('high');
             this.submitMatch();
           } else {
-            // RELATIVE ADVANCEMENT FIX: Move strictly to the NEXT unsolved input down the list
             const allInputs = Array.from(document.querySelectorAll('.word-input'));
             const currentIdx = allInputs.indexOf(inputEl);
             const nextInput = allInputs.slice(currentIdx + 1).find(inp => !inp.disabled);
@@ -1182,12 +1183,10 @@
             clearInterval(GameState.gameTimerInterval);
             this.submitMatch(true);
 
-            // HOST TRANSITION OVERRIDE FIX
             if (GameState.isHost && GameState.roomRef) {
               GameState.roomRef.child('meta').update({ status: 'summary' });
             }
 
-            // CLIENT FALLBACK TRANSITION FAIL-SAFE
             setTimeout(() => {
               if (fsm.currentState !== GAME_STATES.ROUND_END) {
                 fsm.transitionTo(GAME_STATES.ROUND_END);
@@ -1235,6 +1234,38 @@
         });
       },
 
+      processSuddenElimination() {
+        if (!GameState.isHost || !GameState.roomRef) return;
+        GameState.playersRef.once('value', (snap) => {
+          const players = snap.val() || {};
+          const activePlayers = Object.keys(players)
+            .map(k => ({ id: k, ...players[k] }))
+            .filter(p => !p.isEliminated);
+
+          if (activePlayers.length > 1) {
+            activePlayers.sort((a, b) => {
+              if ((a.score || 0) !== (b.score || 0)) return (a.score || 0) - (b.score || 0);
+              if ((a.solvedCount || 0) !== (b.solvedCount || 0)) return (a.solvedCount || 0) - (b.solvedCount || 0);
+              return (b.submittedAt || 0) - (a.submittedAt || 0);
+            });
+
+            const lowest = activePlayers[0];
+            const remainingCount = activePlayers.length - 1;
+
+            const updates = {};
+            updates[`players/${lowest.id}/isEliminated`] = true;
+            updates[`meta/lastEliminatedName`] = lowest.name || 'PLAYER';
+            updates[`meta/eliminationProcessedForRound`] = true;
+
+            if (remainingCount <= 1) {
+              updates[`meta/isTournamentOver`] = true;
+            }
+
+            GameState.roomRef.update(updates);
+          }
+        });
+      },
+
       processRoundSummary() {
         if (GameState.playersRef) {
           GameState.playersRef.once('value', (snap) => UIController.renderSummaryData(snap.val() || {}));
@@ -1250,15 +1281,6 @@
         GameState.playersRef.once('value', (snap) => {
           const players = snap.val() || {};
           const updates = {};
-          const activePlayersList = Object.keys(players)
-            .map(k => ({ id: k, ...players[k] }))
-            .filter(p => !p.isEliminated)
-            .sort((a, b) => (b.score || 0) - (a.score || 0));
-
-          if (GameState.gameMode === 'sudden' && activePlayersList.length > 1) {
-            const lowest = activePlayersList[activePlayersList.length - 1];
-            updates[`players/${lowest.id}/isEliminated`] = true;
-          }
 
           Object.keys(players).forEach(id => {
             const currentCum = players[id].cumulativeScore || 0;
@@ -1269,7 +1291,11 @@
           });
 
           updates['match/words'] = generatedWords;
-          updates['meta/status'] = 'countdown'; updates['meta/startTime'] = now; updates['meta/endTime'] = endTime;
+          updates['meta/status'] = 'countdown'; 
+          updates['meta/startTime'] = now; 
+          updates['meta/endTime'] = endTime;
+          updates['meta/eliminationProcessedForRound'] = false;
+          updates['meta/lastEliminatedName'] = null;
           GameState.roomRef.update(updates);
         });
       },
@@ -1290,6 +1316,9 @@
             updates[`players/${id}/cumulativeScore`] = 0;
           });
           updates['meta/status'] = 'lobby';
+          updates['meta/isTournamentOver'] = false;
+          updates['meta/eliminationProcessedForRound'] = false;
+          updates['meta/lastEliminatedName'] = null;
           GameState.roomRef.update(updates);
         });
       }
@@ -1435,7 +1464,6 @@
           
           let goldTag = w.isGolden ? `<span style="color:var(--gold-neon); font-size:0.65rem; font-weight:900;">🌟 2X GOLD</span>` : '';
           
-          // HEADER INTEGRATED GREEN CHECKMARK
           card.innerHTML = `
             <div class="word-card-header">
               <span class="scrambled-text">${w.scrambled}</span>
@@ -1485,7 +1513,8 @@
 
       renderSummaryData(playersObj) {
         const players = Object.keys(playersObj).map(k => ({ id: k, ...playersObj[k] }));
-        const isTournamentEnd = GameState.isTournamentOver || false;
+        const activePlayers = players.filter(p => !p.isEliminated);
+        const isTournamentEnd = GameState.isTournamentOver || (GameState.gameMode === 'sudden' && activePlayers.length <= 1);
 
         const subtitle = document.getElementById('summary-subtitle');
         if (subtitle) {
@@ -1507,7 +1536,7 @@
               const item = document.createElement('div');
               item.className = `podium-item ${idx === 0 ? 'mvp' : ''}`;
               item.innerHTML = `
-                <div><span style="font-weight:900;">#${idx + 1}</span> <b>${p.name || 'PLAYER'}</b> ${idx === 0 ? '👑 CHAMPION' : ''}</div>
+                <div><span style="font-weight:900;">#${idx + 1}</span> <b>${p.name || 'PLAYER'}</b> ${idx === 0 ? '👑 CHAMPION' : (p.isEliminated ? '💀' : '')}</div>
                 <div style="font-weight:900; color:var(--amber-warm);">${(p.cumulativeScore || 0) + (p.score || 0)} TOTAL PTS</div>
               `;
               roundList.appendChild(item);
@@ -1536,6 +1565,19 @@
         const awardsContainer = document.getElementById('awards-container');
         awardsContainer.innerHTML = '';
 
+        // SUDDEN MODE ELIMINATION ANNOUNCEMENT CARD
+        if (GameState.gameMode === 'sudden' && GameState.lastEliminatedName) {
+          const elimCard = document.createElement('div');
+          elimCard.className = 'glass-card';
+          elimCard.style.cssText = 'border-color: var(--red-error); background: rgba(255, 42, 85, 0.12); margin-top: 8px; text-align: center; padding: 12px; border-radius: var(--radius-md); box-shadow: 0 0 15px var(--red-glow);';
+          elimCard.innerHTML = `
+            <div style="font-size: 1.8rem; margin-bottom: 2px;">💀</div>
+            <div style="font-size: 0.9rem; font-weight: 900; color: var(--red-error); letter-spacing: 1px;">ELIMINATED!</div>
+            <div style="font-size: 0.8rem; font-weight: 800; color: #fff; margin-top: 4px;"><b>${GameState.lastEliminatedName}</b> was knocked out this round!</div>
+          `;
+          awardsContainer.appendChild(elimCard);
+        }
+
         if (isTournamentEnd) {
           const validSolvers = players.filter(p => (p.solvedCount || 0) > 0 && p.submittedAt);
           const speedWinner = validSolvers.sort((a, b) => (a.submittedAt || Infinity) - (b.submittedAt || Infinity))[0];
@@ -1561,7 +1603,7 @@
             `;
           }
           awardsHTML += `</div>`;
-          awardsContainer.innerHTML = awardsHTML;
+          awardsContainer.insertAdjacentHTML('beforeend', awardsHTML);
         }
 
         if (GameState.isHost) {
@@ -1684,7 +1726,8 @@
           GameState.roomRef.child('match').set({ words: generatedWords });
           GameState.roomRef.child('meta').set({
             status: 'countdown', durationSeconds: GameState.matchDuration, gameMode: GameState.gameMode,
-            wordCategory: GameState.wordCategory, startTime: now, endTime: endTime, hostId: GameState.playerId
+            wordCategory: GameState.wordCategory, startTime: now, endTime: endTime, hostId: GameState.playerId,
+            isTournamentOver: false, eliminationProcessedForRound: false, lastEliminatedName: null
           });
         });
 
