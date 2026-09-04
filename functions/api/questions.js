@@ -18,8 +18,9 @@ function buildPrompt({ topic, categories, count, avoid }) {
     subject = 'General Knowledge trivia';
   }
 
+  // Uses .slice(-50) to grab the 50 MOST RECENT questions from the history array
   const avoidLine = (avoid && avoid.length)
-    ? `\nDo NOT repeat or rephrase any of these questions:\n- ${avoid.slice(0, 40).join('\n- ')}\n`
+    ? `\nDo NOT repeat or rephrase any of these questions:\n- ${avoid.slice(-50).join('\n- ')}\n`
     : '';
 
   return `System: You are an ultra-fast, JSON-only trivia generator. Return ONLY a valid JSON array of questions without markdown formatting.
@@ -82,7 +83,6 @@ async function callSingleModel(model, key, prompt) {
     }
   };
 
-  // No fetch timeout abort signal so the worker waits as long as needed for Gemini to return
   const res = await fetch(url, {
     method: 'POST',
     headers: { 
