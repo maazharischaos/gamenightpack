@@ -733,25 +733,31 @@
       margin-bottom: 16px;
     }
 
+    /* VERTICALLY CENTERED SLEEK KNOCKOUT INTERMISSION OVERLAY */
     .inline-countdown-box {
-      margin-top: 10px;
-      background: rgba(255, 184, 0, 0.1);
-      border: 1px solid var(--gold);
-      border-radius: 16px;
-      padding: 16px;
-      width: 100%;
+      position: fixed;
+      inset: 0;
+      background: rgba(7, 9, 14, 0.94);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      z-index: 10005;
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+      animation: popIn 0.3s ease;
     }
 
     .inline-countdown-title {
-      font-size: 0.85rem;
-      font-weight: 800;
+      font-size: 1.1rem;
+      font-weight: 900;
       color: var(--gold);
-      letter-spacing: 2px;
+      letter-spacing: 3px;
       text-transform: uppercase;
-      margin-bottom: 6px;
+      margin-bottom: 12px;
+      text-shadow: 0 0 20px var(--gold-glow);
     }
 
     .leaderboard-section {
@@ -1300,8 +1306,9 @@
       <div id="boom-title-id" class="boom-title">💥 BOOM!</div>
       <div class="boom-desc" id="boom-loser-text">THE BOMB EXPLODED!</div>
       
+      <!-- SLEEK VERTICALLY CENTERED KNOCKOUT INTERMISSION MODAL -->
       <div id="inline-knockout-timer-box" class="inline-countdown-box" style="display:none;">
-        <div class="inline-countdown-title">PLANTING THE BOMB IN</div>
+        <div class="inline-countdown-title">PLANTING BOMB IN</div>
         <div id="inline-countdown-num" class="countdown-num">3</div>
       </div>
 
@@ -1323,6 +1330,49 @@
   </div>
 
   <script>
+    // REAL-TIME HOST CONFIG PUSH TO FIREBASE
+    function pushHostConfigToFirebase() {
+      if (!roomRef || !roomData || roomData.host !== myPlayerId) return;
+      if (roomData.config?.rulesLocked) return;
+
+      const cfgFormat = document.querySelector('input[name="cfgFormat"]:checked')?.value || 'KNOCKOUT';
+      const cfgMode = document.querySelector('input[name="cfgMode"]:checked')?.value || 'RANDOM';
+      const cfgPowerups = document.getElementById('cfg-powerups').checked;
+      const isHardcore = document.getElementById('cfg-hardcore').checked;
+      const minLength = isHardcore ? parseInt(document.getElementById('cfg-min-len').value) : 3;
+      const isBottleneck = document.getElementById('cfg-bottleneck').checked;
+      const baseTurnTime = parseInt(document.getElementById('cfg-turn-timer').value);
+      const isBlockade = document.getElementById('cfg-blockade').checked;
+      const isAcceleration = document.getElementById('cfg-acceleration').checked;
+      const surgeMaxRounds = parseInt(document.querySelector('input[name="cfgSurgeRounds"]:checked')?.value || 5);
+
+      let bannedChar = roomData.config?.bannedChar || '';
+      if (isBlockade && !bannedChar) {
+        bannedChar = COMMON_LETTERS[Math.floor(Math.random() * COMMON_LETTERS.length)];
+      } else if (!isBlockade) {
+        bannedChar = '';
+      }
+
+      roomRef.child('config').update({
+        format: cfgFormat,
+        mode: cfgMode,
+        powerups: cfgPowerups,
+        minLength: minLength,
+        bottleneck: isBottleneck,
+        baseTurnTime: baseTurnTime,
+        bannedChar: bannedChar,
+        acceleration: isAcceleration,
+        surgeMaxRounds: surgeMaxRounds,
+        rulesLocked: false
+      });
+    }
+
+    // ATTACH REAL-TIME CONFIG SYNC LISTENERS TO ALL HOST CONTROLS
+    document.querySelectorAll('input[name="cfgFormat"], input[name="cfgMode"], input[name="cfgSurgeRounds"], #cfg-powerups, #cfg-hardcore, #cfg-min-len, #cfg-bottleneck, #cfg-turn-timer, #cfg-blockade, #cfg-acceleration').forEach(input => {
+      input.addEventListener('change', pushHostConfigToFirebase);
+      input.addEventListener('input', pushHostConfigToFirebase);
+    });
+
     // TOGGLE SURGE ROUNDS SUB-OPTION IN HOST CONFIG
     document.querySelectorAll('input[name="cfgFormat"]').forEach(radio => {
       radio.addEventListener('change', (e) => {
@@ -1492,6 +1542,9 @@ window.addEventListener('load', () => {
           return currentHost ? currentHost : null;
         });
 
+        // KEEP DISPLAY AWAKE CONTINUOUSLY WHILE IN ROOM SESSION
+        requestScreenWakeLock();
+
         // Sync incoming players instantly from master room into VocaBomb (WITH DEDUPLICATION FIX)
         db.ref(`master_rooms/${currentRoom}/players`).on('child_added', pSnap => {
           const pid = pSnap.key;
@@ -1636,7 +1689,7 @@ if ('serviceWorker' in navigator) {
     let roomRef = null;
     let roomData = null;
     let audioCtx = null;
-    let handledBoom = false;
+    let lastHandledBoomKey = '';
     let serverTimeOffset = 0;
     let vibrationInterval = null;
     let countdownStarted = false;
@@ -1669,7 +1722,7 @@ if ('serviceWorker' in navigator) {
 
     async function requestScreenWakeLock() {
       try {
-        if ('wakeLock' in navigator) {
+        if ('wakeLock' in navigator && wakeLockObj === null) {
           wakeLockObj = await navigator.wakeLock.request('screen');
         }
       } catch(e){}
@@ -1933,6 +1986,9 @@ if ('serviceWorker' in navigator) {
           return currentHost ? currentHost : myPlayerId;
         });
 
+        // KEEP DISPLAY AWAKE CONTINUOUSLY WHILE IN ROOM SESSION
+        requestScreenWakeLock();
+
         roomRef.on('value', (snap) => {
           roomData = snap.val();
           if (roomData) updateUI();
@@ -1960,31 +2016,8 @@ if ('serviceWorker' in navigator) {
     });
 
     document.getElementById('btn-save-rules').addEventListener('click', () => {
-      const cfgFormat = document.querySelector('input[name="cfgFormat"]:checked').value;
-      const cfgMode = document.querySelector('input[name="cfgMode"]:checked').value;
-      const cfgPowerups = document.getElementById('cfg-powerups').checked;
-      const isHardcore = document.getElementById('cfg-hardcore').checked;
-      const minLength = isHardcore ? parseInt(document.getElementById('cfg-min-len').value) : 3;
-      const isBottleneck = document.getElementById('cfg-bottleneck').checked;
-      const baseTurnTime = parseInt(document.getElementById('cfg-turn-timer').value);
-      const isBlockade = document.getElementById('cfg-blockade').checked;
-      const isAcceleration = document.getElementById('cfg-acceleration').checked;
-      const surgeMaxRounds = parseInt(document.querySelector('input[name="cfgSurgeRounds"]:checked')?.value || 5);
-
-      const bannedChar = isBlockade ? COMMON_LETTERS[Math.floor(Math.random() * COMMON_LETTERS.length)] : '';
-
-      roomRef.child('config').set({
-        format: cfgFormat,
-        mode: cfgMode,
-        powerups: cfgPowerups,
-        minLength: minLength,
-        bottleneck: isBottleneck,
-        baseTurnTime: baseTurnTime,
-        bannedChar: bannedChar,
-        acceleration: isAcceleration,
-        surgeMaxRounds: surgeMaxRounds,
-        rulesLocked: true
-      });
+      pushHostConfigToFirebase();
+      roomRef.child('config/rulesLocked').set(true);
     });
 
     document.getElementById('btn-ready').addEventListener('click', () => {
@@ -2089,6 +2122,7 @@ if ('serviceWorker' in navigator) {
       roomData = null;
       lastRenderedLetter = '';
       lastUIState = '';
+      lastHandledBoomKey = '';
       prevActivePlayerId = null;
       lastActivePlayerIdForInput = null;
       if (handoffResetTimeout) {
@@ -2103,12 +2137,22 @@ if ('serviceWorker' in navigator) {
     }
 
     function updateUI() {
+      requestScreenWakeLock();
+
       if (lastUIState !== roomData.gameState) {
         document.getElementById('word-input').value = '';
         lastUIState = roomData.gameState;
       }
 
-      // 2. TOGGLE HISTORY LOG VISIBILITY ON GAME OVER / PLAYING
+      // HIDE LEADERBOARD OVERLAY INSTANTLY WHEN RETURNED TO LOBBY
+      if (roomData.gameState === 'LOBBY') {
+        document.getElementById('boom-screen').style.display = 'none';
+        document.getElementById('game-screen').style.display = 'none';
+        document.getElementById('room-screen').style.display = 'block';
+        lastHandledBoomKey = '';
+      }
+
+      // TOGGLE HISTORY LOG VISIBILITY ON GAME OVER / PLAYING
       const historyCard = document.querySelector('.history-card');
       if (historyCard) {
         if (roomData.gameState === 'BOOM') {
@@ -2125,12 +2169,6 @@ if ('serviceWorker' in navigator) {
       }
 
       const isHost = roomData.host === myPlayerId;
-      
-      if (roomData.gameState === 'PLAYING') {
-        requestScreenWakeLock();
-      } else {
-        releaseScreenWakeLock();
-      }
 
       const hostData = roomData.players ? roomData.players[roomData.host] : null;
       if (!hostData || hostData.isDisconnected) {
@@ -2171,11 +2209,11 @@ if ('serviceWorker' in navigator) {
         }
         if (roomData.config.surgeMaxRounds) {
           const surgeRadio = document.querySelector(`input[name="cfgSurgeRounds"][value="${roomData.config.surgeMaxRounds}"]`);
-          if (surgeRadio) surgeRadio.checked = true;
+          if (surgeRadio && document.activeElement !== surgeRadio) surgeRadio.checked = true;
         }
         if (roomData.config.format) {
           const fmtRadio = document.querySelector(`input[name="cfgFormat"][value="${roomData.config.format}"]`);
-          if (fmtRadio) fmtRadio.checked = true;
+          if (fmtRadio && document.activeElement !== fmtRadio) fmtRadio.checked = true;
         }
       }
 
@@ -2187,7 +2225,7 @@ if ('serviceWorker' in navigator) {
         document.getElementById('player-rules-briefing').style.display = 'block';
       }
 
-      // FULLY SYNCHRONIZED BRIEFING SCREEN MIRRORING HOST CONFIG LAYOUT
+      // FULLY SYNCHRONIZED BRIEFING SCREEN MIRRORING LIVE HOST CONFIG UPDATES
       if (roomData.config) {
         const cfg = roomData.config;
         const maxR = cfg.surgeMaxRounds || 5;
@@ -2240,13 +2278,7 @@ if ('serviceWorker' in navigator) {
         document.getElementById('countdown-screen').style.display = 'none';
       }
 
-      if (roomData.gameState === 'LOBBY' && document.getElementById('game-screen').style.display === 'block') {
-        document.getElementById('game-screen').style.display = 'none';
-        document.getElementById('room-screen').style.display = 'block';
-      }
-
       if (roomData.gameState === 'PLAYING') {
-        handledBoom = false;
         document.getElementById('boom-screen').style.display = 'none';
         document.getElementById('room-screen').style.display = 'none';
         document.getElementById('game-screen').style.display = 'block';
@@ -2403,264 +2435,269 @@ if ('serviceWorker' in navigator) {
         }
       }
 
-      if (roomData.gameState === 'BOOM' && !handledBoom) {
-        handledBoom = true;
-        stopActiveTurnVibration();
-        document.getElementById('active-game-card').classList.remove('low-time-shake', 'frozen-box');
-        
-        const isVictim = roomData.loserId === myPlayerId;
+      // DYNAMIC BOOM / LEADERBOARD RE-RENDERER SUPPORTING MID-GAME & FINAL PODIUM
+      if (roomData.gameState === 'BOOM') {
+        const currentBoomKey = (roomData.loserId || 'unknown') + '_' + (roomData.isGameOver ? 'over' : 'cont') + '_' + (roomData.eliminationRankings ? Object.keys(roomData.eliminationRankings).length : 0);
 
-        if (isVictim) {
-          playExplosionSound();
-          if ("vibrate" in navigator) navigator.vibrate([300, 100, 500, 100, 1000]);
-        } else {
-          playSafeTone();
-        }
+        if (lastHandledBoomKey !== currentBoomKey) {
+          lastHandledBoomKey = currentBoomKey;
+          stopActiveTurnVibration();
+          document.getElementById('active-game-card').classList.remove('low-time-shake', 'frozen-box');
+          
+          const isVictim = roomData.loserId === myPlayerId;
 
-        const loser = roomData.players[roomData.loserId]?.name || 'Someone';
-        const isKnockout = roomData.config?.format === 'KNOCKOUT';
-        const isSurge = roomData.config?.format === 'SURGE';
-        const isGameOver = roomData.isGameOver || false;
-
-        document.getElementById('boom-title-id').innerText = isGameOver ? '👑 GAME OVER!' : '💥 BOOM!';
-        
-        if (isSurge && !isGameOver) {
-          document.getElementById('boom-loser-text').innerText = `${loser} DETONATED THE BOMB! (-500 PTS)`;
-        } else {
-          document.getElementById('boom-loser-text').innerText = isGameOver ? `${roomData.winnerName} IS THE MVP!` : `${loser} WAS ELIMINATED!`;
-        }
-
-        const inlineTimerBox = document.getElementById('inline-knockout-timer-box');
-        const inlineTimerNum = document.getElementById('inline-countdown-num');
-        inlineTimerBox.style.display = 'none';
-
-        let statsHtml = '';
-
-        if (isGameOver || (!isKnockout && !isSurge)) {
-          if (isSurge && roomData.surgeScores) {
-            const surgeArray = Object.entries(roomData.surgeScores || {}).map(([pid, score]) => ({
-              pid,
-              name: score.name || 'Player',
-              totalPoints: Number.isFinite(score.totalPoints) ? score.totalPoints : 0,
-              longestWord: score.longestWord || '',
-              highestWordScore: score.highestWordScore || 0,
-              totalTimeTaken: score.totalTimeTaken || 0,
-              turnCount: score.turnCount || 0,
-              explosions: score.explosions || 0
-            }));
-
-            surgeArray.sort((a, b) => {
-              if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
-              if (b.longestWord.length !== a.longestWord.length) return b.longestWord.length - a.longestWord.length;
-              if (b.highestWordScore !== a.highestWordScore) return b.highestWordScore - a.highestWordScore;
-              const avgA = a.turnCount > 0 ? a.totalTimeTaken / a.turnCount : 99999;
-              const avgB = b.turnCount > 0 ? b.totalTimeTaken / b.turnCount : 99999;
-              return avgA - avgB;
-            });
-
-            const mvpPlayer = surgeArray[0];
-
-            statsHtml += `
-              <div class="leaderboard-section">
-                <div class="section-header-title">🏆 FINAL POINT SURGE STANDINGS</div>
-                <div class="rank-card-mvp">
-                  <div>
-                    <div style="font-size:0.75rem; color:var(--gold); font-weight:900; letter-spacing:1px; text-transform:uppercase;">WINNER / MVP</div>
-                    <div class="rank-name">${mvpPlayer ? mvpPlayer.name : 'WINNER'}</div>
-                    <div style="font-size:0.85rem; color:var(--gold); font-weight:800; margin-top:2px;">${mvpPlayer ? mvpPlayer.totalPoints : 0} PTS</div>
-                  </div>
-                  <div class="rank-badge">👑 #1</div>
-                </div>
-                <div class="rank-list-box">
-            `;
-
-            surgeArray.forEach((r, idx) => {
-              if (idx > 0) {
-                const isDisc = roomData.players[r.pid]?.isDisconnected;
-                statsHtml += `
-                  <div class="rank-item-row ${isDisc ? 'disc-row' : ''}">
-                    <span>${idx + 1}. ${r.name} (${r.totalPoints} PTS)</span>
-                    <span style="font-weight:900;">${isDisc ? '🔌 DISCONNECTED' : `#${idx + 1}`}</span>
-                  </div>
-                `;
-              }
-            });
-
-            statsHtml += `</div></div>`;
-          } else if (roomData.eliminationRankings) {
-            const ranks = Object.values(roomData.eliminationRankings).reverse();
-            const mvpPlayer = ranks[0];
-
-            statsHtml += `
-              <div class="leaderboard-section">
-                <div class="section-header-title">🏆 CHAMPION & RANKINGS</div>
-                <div class="rank-card-mvp">
-                  <div>
-                    <div style="font-size:0.75rem; color:var(--gold); font-weight:900; letter-spacing:1px; text-transform:uppercase;">WINNER / MVP</div>
-                    <div class="rank-name">${mvpPlayer ? mvpPlayer.name : 'WINNER'}</div>
-                  </div>
-                  <div class="rank-badge">👑 #1</div>
-                </div>
-                <div class="rank-list-box">
-            `;
-
-            ranks.forEach((r, idx) => {
-              if (idx > 0) {
-                const isDisc = r.isDisconnected;
-                const isLvp = idx === ranks.length - 1 && !isDisc;
-                let badgeLabel = `#${idx + 1}`;
-                if (isDisc) badgeLabel = '🔌 DISCONNECTED';
-                else if (isLvp) badgeLabel = '💀 LVP';
-
-                statsHtml += `
-                  <div class="rank-item-row ${isDisc ? 'disc-row' : (isLvp ? 'lvp-row' : '')}">
-                    <span>${idx + 1}. ${r.name}</span>
-                    <span style="font-weight:900;">${badgeLabel}</span>
-                  </div>
-                `;
-              }
-            });
-
-            statsHtml += `</div></div>`;
+          if (isVictim) {
+            playExplosionSound();
+            if ("vibrate" in navigator) navigator.vibrate([300, 100, 500, 100, 1000]);
+          } else {
+            playSafeTone();
           }
 
-          if (roomData.usedWords) {
-            const wordsArr = Object.values(roomData.usedWords);
-            const longestWord = wordsArr.reduce((max, curr) => curr.word.length > max.word.length ? curr : max, wordsArr[0]);
-            const fastestWord = wordsArr.reduce((min, curr) => (curr.timeTaken || 99999) < (min.timeTaken || 99999) ? curr : min, wordsArr[0]);
-            const closestCall = wordsArr.reduce((min, curr) => (curr.timeRemaining || 99999) < (min.timeRemaining || 99999) ? curr : min, wordsArr[0]);
+          const loser = roomData.loserName || roomData.players[roomData.loserId]?.name || 'A player';
+          const isKnockout = roomData.config?.format === 'KNOCKOUT';
+          const isSurge = roomData.config?.format === 'SURGE';
+          const isGameOver = roomData.isGameOver || false;
 
-            const playerSpeeds = {};
-            wordsArr.forEach(w => {
-              if (!playerSpeeds[w.by]) playerSpeeds[w.by] = { total: 0, count: 0 };
-              playerSpeeds[w.by].total += (w.timeTaken || 0);
-              playerSpeeds[w.by].count += 1;
-            });
-
-            let speedDemonName = '';
-            let speedDemonAvg = 99999;
-            Object.entries(playerSpeeds).forEach(([name, p]) => {
-              const avg = p.total / p.count;
-              if (avg < speedDemonAvg) {
-                speedDemonAvg = avg;
-                speedDemonName = name;
-              }
-            });
-
-            statsHtml += `
-              <div class="leaderboard-section">
-                <div class="section-header-title">⚡ GAME HIGHLIGHTS & AWARDS</div>
-                <div class="awards-grid">
-                  <div class="award-card-item">
-                    <div class="award-card-title">🔤 LEXICON MASTER</div>
-                    <div class="award-card-val">${longestWord.word}</div>
-                    <div class="award-card-sub">${longestWord.by} (${longestWord.word.length} letters)</div>
-                  </div>
-            `;
-
-            if (fastestWord && fastestWord.timeTaken) {
-              statsHtml += `
-                <div class="award-card-item">
-                  <div class="award-card-title">⚡ REFLEX MASTER</div>
-                  <div class="award-card-val">${(fastestWord.timeTaken / 1000).toFixed(2)}s</div>
-                  <div class="award-card-sub">${fastestWord.by}</div>
-                </div>
-              `;
-            }
-
-            if (speedDemonName) {
-              statsHtml += `
-                <div class="award-card-item">
-                  <div class="award-card-title">⏱️ SPEED DEMON</div>
-                  <div class="award-card-val">${(speedDemonAvg / 1000).toFixed(2)}s</div>
-                  <div class="award-card-sub">${speedDemonName} (Avg per turn)</div>
-                </div>
-              `;
-            }
-
-            if (closestCall && closestCall.timeRemaining) {
-              statsHtml += `
-                <div class="award-card-item">
-                  <div class="award-card-title">💥 CLOSE CALL</div>
-                  <div class="award-card-val">${(closestCall.timeRemaining / 1000).toFixed(2)}s left</div>
-                  <div class="award-card-sub">${closestCall.by}</div>
-                </div>
-              `;
-            }
-
-            statsHtml += `</div></div>`;
+          document.getElementById('boom-title-id').innerText = isGameOver ? '👑 GAME OVER!' : '💥 BOOM!';
+          
+          if (isSurge && !isGameOver) {
+            document.getElementById('boom-loser-text').innerText = `${loser} DETONATED THE BOMB! (-500 PTS)`;
+          } else {
+            document.getElementById('boom-loser-text').innerText = isGameOver ? `${roomData.winnerName || 'Winner'} IS THE MVP!` : `${loser} WAS ELIMINATED!`;
           }
-        }
 
-        document.getElementById('round-stats').innerHTML = statsHtml;
+          const inlineTimerBox = document.getElementById('inline-knockout-timer-box');
+          const inlineTimerNum = document.getElementById('inline-countdown-num');
+          inlineTimerBox.style.display = 'none';
 
-        // SAFE KNOCKOUT CONTINUATION TIMER WITH OBJECT/ARRAY NORMALIZATION
-        if (isKnockout && !isGameOver) {
-          setTimeout(() => {
-            inlineTimerBox.style.display = 'flex';
-            let cCount = 3;
-            inlineTimerNum.innerText = cCount;
-            playCountdownTick();
+          let statsHtml = '';
 
-            const inlineTimer = setInterval(() => {
-              cCount--;
-              if (cCount > 0) {
-                inlineTimerNum.innerText = cCount;
-                playCountdownTick();
-              } else if (cCount === 0) {
-                inlineTimerNum.innerText = "GO!";
-                playGoChime();
-              } else {
-                clearInterval(inlineTimer);
-                if (isHost) {
-                  const survivingIds = getNormalizedPlayerOrder().filter(pid => pid !== roomData.loserId);
-                  const currentOrder = Array.isArray(roomData.playerOrder) ? roomData.playerOrder : Object.values(roomData.playerOrder || {});
-                  const loserIndex = currentOrder.indexOf(roomData.loserId);
-                  
-                  const safeIndex = (loserIndex >= 0 && survivingIds.length > 0) ? (loserIndex % survivingIds.length) : 0;
-                  const nextPlayerId = survivingIds[safeIndex] || survivingIds[0];
+          if (isGameOver || (!isKnockout && !isSurge)) {
+            if (isSurge && roomData.surgeScores) {
+              const surgeArray = Object.entries(roomData.surgeScores || {}).map(([pid, score]) => ({
+                pid,
+                name: score.name || 'Player',
+                totalPoints: Number.isFinite(score.totalPoints) ? score.totalPoints : 0,
+                longestWord: score.longestWord || '',
+                highestWordScore: score.highestWordScore || 0,
+                totalTimeTaken: score.totalTimeTaken || 0,
+                turnCount: score.turnCount || 0,
+                explosions: score.explosions || 0
+              }));
 
-                  roomRef.child('players/' + roomData.loserId + '/isEliminated').set(true);
+              surgeArray.sort((a, b) => {
+                if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+                if (b.longestWord.length !== a.longestWord.length) return b.longestWord.length - a.longestWord.length;
+                if (b.highestWordScore !== a.highestWordScore) return b.highestWordScore - a.highestWordScore;
+                const avgA = a.turnCount > 0 ? a.totalTimeTaken / a.turnCount : 99999;
+                const avgB = b.turnCount > 0 ? b.totalTimeTaken / b.turnCount : 99999;
+                return avgA - avgB;
+              });
 
-                  let totalFuseSeconds = survivingIds.length >= 3 
-                    ? (65 + Math.floor(Math.random() * 20) + Math.floor(Math.random() * 21))
-                    : (40 + Math.floor(Math.random() * 26));
+              const mvpPlayer = surgeArray[0];
 
-                  const banned = roomData.config?.bannedChar || '';
-                  const startingLetter = getRandomLetter(banned);
-                  const startNow = getServerTime();
+              statsHtml += `
+                <div class="leaderboard-section">
+                  <div class="section-header-title">🏆 FINAL POINT SURGE STANDINGS</div>
+                  <div class="rank-card-mvp">
+                    <div>
+                      <div style="font-size:0.75rem; color:var(--gold); font-weight:900; letter-spacing:1px; text-transform:uppercase;">WINNER / MVP</div>
+                      <div class="rank-name">${mvpPlayer ? mvpPlayer.name : 'WINNER'}</div>
+                      <div style="font-size:0.85rem; color:var(--gold); font-weight:800; margin-top:2px;">${mvpPlayer ? mvpPlayer.totalPoints : 0} PTS</div>
+                    </div>
+                    <div class="rank-badge">👑 #1</div>
+                  </div>
+                  <div class="rank-list-box">
+              `;
 
-                  roomRef.update({
-                    gameState: 'PLAYING',
-                    activePlayerId: nextPlayerId,
-                    playerOrder: survivingIds,
-                    requiredLetter: startingLetter,
-                    currentTurnTimeCap: roomData.config.baseTurnTime * 1000,
-                    globalFuseEndTime: startNow + (totalFuseSeconds * 1000),
-                    turnEndTime: startNow + (roomData.config.baseTurnTime * 1000),
-                    isFrozen: false,
-                    freezeEndTime: 0,
-                    isPanicClock: false,
-                    activeAttackWarning: null
-                  });
+              surgeArray.forEach((r, idx) => {
+                if (idx > 0) {
+                  const isDisc = roomData.players[r.pid]?.isDisconnected;
+                  statsHtml += `
+                    <div class="rank-item-row ${isDisc ? 'disc-row' : ''}">
+                      <span>${idx + 1}. ${r.name} (${r.totalPoints} PTS)</span>
+                      <span style="font-weight:900;">${isDisc ? '🔌 DISCONNECTED' : `#${idx + 1}`}</span>
+                    </div>
+                  `;
                 }
+              });
+
+              statsHtml += `</div></div>`;
+            } else if (roomData.eliminationRankings) {
+              const ranks = Object.values(roomData.eliminationRankings).reverse();
+              const mvpPlayer = ranks[0];
+
+              statsHtml += `
+                <div class="leaderboard-section">
+                  <div class="section-header-title">🏆 CHAMPION & RANKINGS</div>
+                  <div class="rank-card-mvp">
+                    <div>
+                      <div style="font-size:0.75rem; color:var(--gold); font-weight:900; letter-spacing:1px; text-transform:uppercase;">WINNER / MVP</div>
+                      <div class="rank-name">${mvpPlayer ? mvpPlayer.name : 'WINNER'}</div>
+                    </div>
+                    <div class="rank-badge">👑 #1</div>
+                  </div>
+                  <div class="rank-list-box">
+              `;
+
+              ranks.forEach((r, idx) => {
+                if (idx > 0) {
+                  const isDisc = r.isDisconnected;
+                  const isLvp = idx === ranks.length - 1 && !isDisc;
+                  let badgeLabel = `#${idx + 1}`;
+                  if (isDisc) badgeLabel = '🔌 DISCONNECTED';
+                  else if (isLvp) badgeLabel = '💀 LVP';
+
+                  statsHtml += `
+                    <div class="rank-item-row ${isDisc ? 'disc-row' : (isLvp ? 'lvp-row' : '')}">
+                      <span>${idx + 1}. ${r.name}</span>
+                      <span style="font-weight:900;">${badgeLabel}</span>
+                    </div>
+                  `;
+                }
+              });
+
+              statsHtml += `</div></div>`;
+            }
+
+            if (roomData.usedWords) {
+              const wordsArr = Object.values(roomData.usedWords);
+              const longestWord = wordsArr.reduce((max, curr) => curr.word.length > max.word.length ? curr : max, wordsArr[0]);
+              const fastestWord = wordsArr.reduce((min, curr) => (curr.timeTaken || 99999) < (min.timeTaken || 99999) ? curr : min, wordsArr[0]);
+              const closestCall = wordsArr.reduce((min, curr) => (curr.timeRemaining || 99999) < (min.timeRemaining || 99999) ? curr : min, wordsArr[0]);
+
+              const playerSpeeds = {};
+              wordsArr.forEach(w => {
+                if (!playerSpeeds[w.by]) playerSpeeds[w.by] = { total: 0, count: 0 };
+                playerSpeeds[w.by].total += (w.timeTaken || 0);
+                playerSpeeds[w.by].count += 1;
+              });
+
+              let speedDemonName = '';
+              let speedDemonAvg = 99999;
+              Object.entries(playerSpeeds).forEach(([name, p]) => {
+                const avg = p.total / p.count;
+                if (avg < speedDemonAvg) {
+                  speedDemonAvg = avg;
+                  speedDemonName = name;
+                }
+              });
+
+              statsHtml += `
+                <div class="leaderboard-section">
+                  <div class="section-header-title">⚡ GAME HIGHLIGHTS & AWARDS</div>
+                  <div class="awards-grid">
+                    <div class="award-card-item">
+                      <div class="award-card-title">🔤 LEXICON MASTER</div>
+                      <div class="award-card-val">${longestWord.word}</div>
+                      <div class="award-card-sub">${longestWord.by} (${longestWord.word.length} letters)</div>
+                    </div>
+              `;
+
+              if (fastestWord && fastestWord.timeTaken) {
+                statsHtml += `
+                  <div class="award-card-item">
+                    <div class="award-card-title">⚡ REFLEX MASTER</div>
+                    <div class="award-card-val">${(fastestWord.timeTaken / 1000).toFixed(2)}s</div>
+                    <div class="award-card-sub">${fastestWord.by}</div>
+                  </div>
+                `;
               }
-            }, 800);
-          }, 1500);
-        }
 
-        if (isHost && (isGameOver || (!isKnockout && !isSurge))) {
-          document.getElementById('host-boom-controls').style.display = 'flex';
-          document.getElementById('non-host-boom-msg').style.display = 'none';
-        } else if (!isHost && (isGameOver || (!isKnockout && !isSurge))) {
-          document.getElementById('host-boom-controls').style.display = 'none';
-          document.getElementById('non-host-boom-msg').style.display = 'flex';
-        } else {
-          document.getElementById('host-boom-controls').style.display = 'none';
-          document.getElementById('non-host-boom-msg').style.display = 'none';
-        }
+              if (speedDemonName) {
+                statsHtml += `
+                  <div class="award-card-item">
+                    <div class="award-card-title">⏱️ SPEED DEMON</div>
+                    <div class="award-card-val">${(speedDemonAvg / 1000).toFixed(2)}s</div>
+                    <div class="award-card-sub">${speedDemonName} (Avg per turn)</div>
+                  </div>
+                `;
+              }
 
-        document.getElementById('boom-screen').style.display = 'flex';
+              if (closestCall && closestCall.timeRemaining) {
+                statsHtml += `
+                  <div class="award-card-item">
+                    <div class="award-card-title">💥 CLOSE CALL</div>
+                    <div class="award-card-val">${(closestCall.timeRemaining / 1000).toFixed(2)}s left</div>
+                    <div class="award-card-sub">${closestCall.by}</div>
+                  </div>
+                `;
+              }
+
+              statsHtml += `</div></div>`;
+            }
+          }
+
+          document.getElementById('round-stats').innerHTML = statsHtml;
+
+          // SAFE KNOCKOUT CONTINUATION TIMER WITH CENTERED MODAL OVERLAY
+          if (isKnockout && !isGameOver) {
+            setTimeout(() => {
+              inlineTimerBox.style.display = 'flex';
+              let cCount = 3;
+              inlineTimerNum.innerText = cCount;
+              playCountdownTick();
+
+              const inlineTimer = setInterval(() => {
+                cCount--;
+                if (cCount > 0) {
+                  inlineTimerNum.innerText = cCount;
+                  playCountdownTick();
+                } else if (cCount === 0) {
+                  inlineTimerNum.innerText = "GO!";
+                  playGoChime();
+                } else {
+                  clearInterval(inlineTimer);
+                  if (isHost) {
+                    const survivingIds = getNormalizedPlayerOrder().filter(pid => pid !== roomData.loserId);
+                    const currentOrder = Array.isArray(roomData.playerOrder) ? roomData.playerOrder : Object.values(roomData.playerOrder || {});
+                    const loserIndex = currentOrder.indexOf(roomData.loserId);
+                    
+                    const safeIndex = (loserIndex >= 0 && survivingIds.length > 0) ? (loserIndex % survivingIds.length) : 0;
+                    const nextPlayerId = survivingIds[safeIndex] || survivingIds[0];
+
+                    roomRef.child('players/' + roomData.loserId + '/isEliminated').set(true);
+
+                    let totalFuseSeconds = survivingIds.length >= 3 
+                      ? (65 + Math.floor(Math.random() * 20) + Math.floor(Math.random() * 21))
+                      : (40 + Math.floor(Math.random() * 26));
+
+                    const banned = roomData.config?.bannedChar || '';
+                    const startingLetter = getRandomLetter(banned);
+                    const startNow = getServerTime();
+
+                    roomRef.update({
+                      gameState: 'PLAYING',
+                      activePlayerId: nextPlayerId,
+                      playerOrder: survivingIds,
+                      requiredLetter: startingLetter,
+                      currentTurnTimeCap: roomData.config.baseTurnTime * 1000,
+                      globalFuseEndTime: startNow + (totalFuseSeconds * 1000),
+                      turnEndTime: startNow + (roomData.config.baseTurnTime * 1000),
+                      isFrozen: false,
+                      freezeEndTime: 0,
+                      isPanicClock: false,
+                      activeAttackWarning: null
+                    });
+                  }
+                }
+              }, 800);
+            }, 1500);
+          }
+
+          if (isHost && (isGameOver || (!isKnockout && !isSurge))) {
+            document.getElementById('host-boom-controls').style.display = 'flex';
+            document.getElementById('non-host-boom-msg').style.display = 'none';
+          } else if (!isHost && (isGameOver || (!isKnockout && !isSurge))) {
+            document.getElementById('host-boom-controls').style.display = 'none';
+            document.getElementById('non-host-boom-msg').style.display = 'flex';
+          } else {
+            document.getElementById('host-boom-controls').style.display = 'none';
+            document.getElementById('non-host-boom-msg').style.display = 'none';
+          }
+
+          document.getElementById('boom-screen').style.display = 'flex';
+        }
       }
     }
 
@@ -2781,6 +2818,8 @@ if ('serviceWorker' in navigator) {
 
           roomRef.update({
             gameState: 'BOOM',
+            loserId: explodedPlayerId || roomData.activePlayerId,
+            loserName: roomData.players[explodedPlayerId || roomData.activePlayerId]?.name || 'Player',
             isGameOver: true,
             winnerName: winnerName,
             lastRoundHighlights: highlights
@@ -2919,6 +2958,7 @@ if ('serviceWorker' in navigator) {
           roomRef.update({
             gameState: 'BOOM',
             loserId: roomData.activePlayerId,
+            loserName: activePlayer.name,
             eliminationRankings: rankings,
             isGameOver: true,
             winnerName: winnerName
@@ -3029,6 +3069,7 @@ if ('serviceWorker' in navigator) {
 
                   roomRef.update({
                     loserId: loserId,
+                    loserName: loserName,
                     eliminationRankings: rankings,
                     isGameOver: true,
                     winnerName: winnerName
@@ -3036,6 +3077,7 @@ if ('serviceWorker' in navigator) {
                 } else {
                   roomRef.update({
                     loserId: loserId,
+                    loserName: loserName,
                     eliminationRankings: rankings,
                     isGameOver: false
                   });
