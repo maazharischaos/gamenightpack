@@ -1168,7 +1168,7 @@
 
     <!-- 3. HOST CONFIG & PLAYER BRIEFING SCREEN -->
     <div id="room-screen" class="game-box" style="display: none; position: relative;">
-      <div class="subtitle" style="margin-bottom: 4px;">ROOM CODE</div>
+      <div class="subtitle">ROOM CODE</div>
       <h2 id="display-room-code" style="color:var(--gold); font-size: 2.8rem; font-weight: 900; letter-spacing: 4px; margin-bottom: 16px;"></h2>
       
       <div id="host-config-panel" style="display:none;">
@@ -1245,7 +1245,7 @@
             <input type="checkbox" id="cfg-hardcore" />
           </label>
           <div class="slider-container" id="hardcore-slider-box" style="display:none;">
-            <div style="font-size:0.72rem; color:var(--text-muted); margin-bottom:2px;">Minimum Length: <b id="min-length-val" style="color:#fff;">4</b> Letters</div>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:2px;">Minimum Length: <b id="min-length-val" style="color:#fff;">4</b> Letters</div>
             <input type="range" id="cfg-min-len" min="3" max="6" value="4" />
           </div>
 
@@ -1258,7 +1258,7 @@
           </label>
 
           <div class="slider-container">
-            <div style="font-size:0.72rem; color:var(--text-muted); margin-bottom:2px;">Per-Turn Timer: <b id="timer-val" style="color:#fff;">8s</b></div>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:2px;">Per-Turn Timer: <b id="timer-val" style="color:#fff;">8s</b></div>
             <input type="range" id="cfg-turn-timer" min="3" max="15" value="8" />
           </div>
 
@@ -1439,12 +1439,13 @@
       });
     });
 
-    // HELPER TO RETURN TO GAME LOBBY (HOST RESET TO LOBBY)
+    // HELPER TO RETURN TO GAME LOBBY (HOST RESET TO LOBBY CONFIG)
     function returnToGameLobby() {
       if (!roomData || roomData.host !== myPlayerId) return;
       const updates = { 
         gameState: 'LOBBY', 
         isGameOver: false, 
+        'config/rulesLocked': false, // UNLOCKS CONFIG PANEL FOR HOST
         eliminationRankings: null, 
         usedWords: null, 
         activeAttackWarning: null,
