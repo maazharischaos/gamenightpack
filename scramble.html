@@ -211,7 +211,6 @@
       overflow: hidden;
     }
 
-    /* HARDENED SUMMARY SCREEN SAFE-AREA FLEX LAYOUT */
     #screen-summary {
       display: flex; 
       flex-direction: column;
@@ -220,7 +219,8 @@
       max-height: 100dvh;
       padding: max(10px, env(safe-area-inset-top)) 12px max(16px, env(safe-area-inset-bottom));
       overflow: hidden; 
-      position: relative;
+      position: absolute;
+      top: 0; left: 0; width: 100%;
     }
 
     #summary-host-controls, #summary-client-wait {
@@ -262,7 +262,6 @@
     .btn-mode { padding: 6px 8px; font-size: 0.7rem; flex: 1; margin: 0; }
     .btn-mode.active { background: var(--amber-warm); color: #07090e; font-weight: 900; box-shadow: 0 0 10px var(--amber-glow); }
 
-    /* HIGH-TECH PROMINENT SHUFFLE BUTTON */
     .btn-shuffle {
       background: rgba(0, 240, 255, 0.08);
       border: 1px solid var(--cyan-neon);
@@ -331,16 +330,17 @@
       text-transform: uppercase;
     }
 
+    /* HARDENED GAMEPLAY VIEW CSS PREVENTS SUBMIT BAR FLOAT */
     #screen-game { 
       display: flex; 
       flex-direction: column; 
-      flex: 1 1 auto;
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; 
       height: 100%;
-      max-height: 100dvh;
-      min-height: 0;
+      height: 100dvh;
       overflow: hidden; 
-      padding: 0; 
-      position: relative;
+      padding: 0;
     }
 
     .game-header {
@@ -361,6 +361,7 @@
     .cards-scroll-area { 
       flex: 1 1 0%; 
       min-height: 0;
+      height: 0;
       overflow-y: auto; 
       -webkit-overflow-scrolling: touch;
       padding: 10px 12px 16px 12px; 
@@ -399,8 +400,9 @@
     .sticky-submit-bar {
       flex-shrink: 0; 
       width: 100%;
-      padding: 8px 14px;
-      padding-bottom: max(10px, env(safe-area-inset-bottom));
+      margin-top: auto;
+      padding: 10px 14px;
+      padding-bottom: max(12px, env(safe-area-inset-bottom));
       background: rgba(7, 9, 14, 0.98); 
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
@@ -942,7 +944,6 @@
 
         selectedList.forEach(item => GameState.usedWordHistory.add(item.original));
 
-        // GLOBAL USED WORD HISTORY SYNC TO FIREBASE
         if (GameState.roomRef) {
           GameState.roomRef.child('meta/usedWords').set(Array.from(GameState.usedWordHistory));
         }
@@ -1006,7 +1007,6 @@
         const myPlayerRef = GameState.playersRef.child(GameState.playerId);
         myPlayerRef.onDisconnect().update({ online: false, lastSeen: this.getServerTime() });
 
-        // MID-MATCH RECONNECT HYDRATION
         myPlayerRef.once('value', (pSnap) => {
           const pData = pSnap.val();
           if (pData) {
@@ -1100,7 +1100,6 @@
           UIController.updateLeaderboardPill(playersObj);
           this.checkBlitzConditions(playersObj);
 
-          // STRICT ONLINE PLAYER FILTERING FIX (p.online === true)
           if (GameState.isHost && fsm.currentState === GAME_STATES.PLAYING) {
             const players = Object.values(playersObj);
             const activePlayers = players.filter(p => !p.isEliminated && p.online === true);
@@ -1246,13 +1245,12 @@
           const overtimeMult = GameState.isOvertimeActive ? 2 : 1;
           const baseVal = liveWord.points;
 
-          // ATOMIC GOLDEN WORD CLAIM TRANSACTION
           if (liveWord.isGolden) {
             const wordIdx = GameState.words.findIndex(w => w.id === wordObj.id);
             if (wordIdx !== -1 && GameState.matchRef) {
               GameState.matchRef.child(`words/${wordIdx}/claimedBy`).transaction((currentClaim) => {
                 if (!currentClaim) return GameState.playerName;
-                return; // Abort if already claimed
+                return;
               }, (error, committed, snapshot) => {
                 let earnedPoints = 0;
                 if (committed && snapshot.val() === GameState.playerName) {
@@ -1409,7 +1407,6 @@
         });
       },
 
-      // HARDENED TIE-BREAKER & GRACE ROUND FOR SUDDEN MODE
       processSuddenElimination() {
         if (!GameState.isHost || !GameState.roomRef) return;
         GameState.playersRef.once('value', (snap) => {
@@ -1419,7 +1416,6 @@
             .filter(p => !p.isEliminated);
 
           if (activePlayers.length > 1) {
-            // Sort worst performance first (index 0)
             activePlayers.sort((a, b) => {
               if ((a.score || 0) !== (b.score || 0)) return (a.score || 0) - (b.score || 0);
               if ((a.solvedCount || 0) !== (b.solvedCount || 0)) return (a.solvedCount || 0) - (b.solvedCount || 0);
@@ -1431,7 +1427,6 @@
             const worst = activePlayers[0];
             const secondWorst = activePlayers[1];
 
-            // Check if bottom players tied exactly
             const scoreEqual = (worst.score || 0) === (secondWorst.score || 0);
             const solvedEqual = (worst.solvedCount || 0) === (secondWorst.solvedCount || 0);
             const timeA = (worst.submittedAt && typeof worst.submittedAt === 'number') ? worst.submittedAt : Infinity;
@@ -1855,7 +1850,6 @@
         const awardsContainer = document.getElementById('awards-container');
         awardsContainer.innerHTML = '';
 
-        // SUDDEN MODE TIE GRACE OR ELIMINATION CARD
         if (GameState.gameMode === 'sudden' && GameState.lastEliminatedName) {
           const elimCard = document.createElement('div');
           elimCard.className = 'glass-card';
