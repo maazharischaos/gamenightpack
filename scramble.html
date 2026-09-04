@@ -203,14 +203,20 @@
       display: flex; flex-direction: column;
     }
 
+    /* SCROLLABLE ROOM SETUP SCREEN FOR COMPACT MOBILE VIEWS */
     #screen-room {
-      display: flex; flex-direction: column;
-      justify-content: space-between;
-      height: 100%; max-height: 100dvh;
+      display: flex; 
+      flex-direction: column;
+      height: 100%; 
+      height: 100dvh; 
+      max-height: 100dvh;
       padding: max(10px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
-      overflow: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      position: absolute; top: 0; left: 0; width: 100%;
     }
 
+    /* HARDENED SUMMARY SCREEN SAFE-AREA FLEX LAYOUT */
     #screen-summary {
       display: flex; 
       flex-direction: column;
@@ -262,6 +268,7 @@
     .btn-mode { padding: 6px 8px; font-size: 0.7rem; flex: 1; margin: 0; }
     .btn-mode.active { background: var(--amber-warm); color: #07090e; font-weight: 900; box-shadow: 0 0 10px var(--amber-glow); }
 
+    /* HIGH-TECH PROMINENT SHUFFLE BUTTON */
     .btn-shuffle {
       background: rgba(0, 240, 255, 0.08);
       border: 1px solid var(--cyan-neon);
@@ -646,6 +653,17 @@
   </div>
 
   <script>
+    /* HTML SANITIZATION HELPER FOR PLAYER INPUTS */
+    function escapeHTML(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
     /* 1. POWER MANAGEMENT & HAPTIC ENGINE */
     const HapticEngine = {
       vibrate(pattern) {
@@ -1094,7 +1112,11 @@
         GameState.playersRef.on('value', (snap) => {
           const playersObj = snap.val() || {};
           const me = playersObj[GameState.playerId];
-          if (me) GameState.isEliminated = !!me.isEliminated;
+          if (me) {
+            GameState.isEliminated = !!me.isEliminated;
+          } else {
+            GameState.isEliminated = false;
+          }
 
           UIController.renderPlayerList(playersObj);
           UIController.updateLeaderboardPill(playersObj);
@@ -1118,7 +1140,7 @@
                 const oldItem = GameState.words[idx];
                 if (item.isGolden && item.claimedBy && (!oldItem || !oldItem.claimedBy)) {
                   if (item.claimedBy !== GameState.playerName) {
-                    ToastEngine.show(`⚡ ${item.claimedBy} claimed a Golden Word!`, "info");
+                    ToastEngine.show(`⚡ ${escapeHTML(item.claimedBy)} claimed a Golden Word!`, "info");
                   }
                 }
               });
@@ -1179,6 +1201,7 @@
         GameState.isSubmittingMatch = false;
         GameState.comboStreak = 0;
         GameState.isOvertimeActive = false;
+        GameState.isEliminated = false; // FIX 1: Reset local elimination state
         if (GameState.gameTimerInterval) clearInterval(GameState.gameTimerInterval);
         document.getElementById('app-container').classList.remove('low-timer-active');
       },
@@ -1301,6 +1324,8 @@
         const checkEl = document.getElementById(`check-${wordObj.id}`);
         if (checkEl) checkEl.style.display = 'inline';
 
+        // FIX 4: Blur input before disabling to prevent mobile soft-keyboard layout jumpiness
+        inputEl.blur();
         inputEl.disabled = true;
 
         const countEl = document.getElementById('submit-solved-count');
@@ -1389,7 +1414,16 @@
         GameState.isSubmittingMatch = true;
         GameState.playerState.submittedAt = NetworkEngine.getServerTime();
 
-        document.querySelectorAll('.word-input').forEach(input => input.disabled = true);
+        // FIX 4: Dismiss active soft-keyboard cleanly
+        if (document.activeElement && typeof document.activeElement.blur === 'function') {
+          document.activeElement.blur();
+        }
+
+        document.querySelectorAll('.word-input').forEach(input => {
+          input.blur();
+          input.disabled = true;
+        });
+
         const submitBtn = document.getElementById('btn-submit-match');
         if (submitBtn) {
           submitBtn.disabled = true;
@@ -1619,7 +1653,7 @@
           pill.innerHTML = `
             <div style="display:flex; align-items:center; gap:4px; overflow:hidden;">
               <div class="status-dot online" style="flex-shrink:0;"></div>
-              <span style="font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${resolvedName} ${p.isHost ? '👑' : ''}</span>
+              <span style="font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(resolvedName)} ${p.isHost ? '👑' : ''}</span>
             </div>
             <span style="font-size:0.65rem; font-weight:800; color:${p.isReady ? 'var(--cyan-neon)' : 'var(--text-muted)'}; flex-shrink:0;">
               ${p.isReady ? '✓' : '—'}
@@ -1644,14 +1678,15 @@
         const rival = players.find(p => p.id !== GameState.playerId);
 
         let rivalName = rival ? (rival.name || 'RIVAL') : '';
-        let rivalText = rival ? ` | ⚡ ${rivalName}: ${rival.solvedCount || 0}/12` : '';
-        document.getElementById('game-leader-pill').innerHTML = `<span>👑 #${myRank} ${GameState.playerName || 'YOU'}</span><span style="margin-left:6px;">${rivalText}</span>`;
+        let rivalText = rival ? ` | ⚡ ${escapeHTML(rivalName)}: ${rival.solvedCount || 0}/12` : '';
+        document.getElementById('game-leader-pill').innerHTML = `<span>👑 #${myRank} ${escapeHTML(GameState.playerName) || 'YOU'}</span><span style="margin-left:6px;">${rivalText}</span>`;
       },
 
       renderWordCards() {
         const container = document.getElementById('cards-container');
         container.innerHTML = '';
 
+        // FIX 2: Hide submit bar when spectating
         if (GameState.isEliminated) {
           container.innerHTML = `
             <div class="glass-card" style="text-align:center; padding: 30px 16px;">
@@ -1660,6 +1695,8 @@
               <p style="font-size: 0.8rem; color: var(--text-muted);">Spectating remaining survivors...</p>
             </div>
           `;
+          const submitBar = document.getElementById('game-submit-bar');
+          if (submitBar) submitBar.innerHTML = '';
           return;
         }
 
@@ -1738,7 +1775,7 @@
             }
             if (tag) {
               tag.style.display = 'block';
-              tag.textContent = `🌟 CLAIMED BY ${w.claimedBy}`;
+              tag.textContent = `🌟 CLAIMED BY ${escapeHTML(w.claimedBy)}`;
             }
           }
         });
@@ -1784,7 +1821,7 @@
               const item = document.createElement('div');
               item.className = `podium-item ${currentRank === 1 ? 'mvp' : ''}`;
               item.innerHTML = `
-                <div><span style="font-weight:900;">#${currentRank}</span> <b>${p.name || 'PLAYER'}</b> ${currentRank === 1 ? '👑 CHAMPION' : (p.isEliminated ? '💀' : '')}</div>
+                <div><span style="font-weight:900;">#${currentRank}</span> <b>${escapeHTML(p.name) || 'PLAYER'}</b> ${currentRank === 1 ? '👑 CHAMPION' : (p.isEliminated ? '💀' : '')}</div>
                 <div style="font-weight:900; color:var(--amber-warm);">${(p.cumulativeScore || 0) + (p.score || 0)} TOTAL PTS</div>
               `;
               roundList.appendChild(item);
@@ -1819,7 +1856,7 @@
               const item = document.createElement('div');
               item.className = `podium-item ${currentRank === 1 ? 'mvp' : ''}`;
               item.innerHTML = `
-                <div><span style="font-weight:900;">#${currentRank}</span> <b>${p.name || 'PLAYER'}</b> ${p.isEliminated ? '💀' : ''}</div>
+                <div><span style="font-weight:900;">#${currentRank}</span> <b>${escapeHTML(p.name) || 'PLAYER'}</b> ${p.isEliminated ? '💀' : ''}</div>
                 <div style="font-weight:900; color:var(--cyan-neon);">${p.score || 0} PTS</div>
               `;
               roundList.appendChild(item);
@@ -1866,7 +1903,7 @@
             elimCard.innerHTML = `
               <div style="font-size: 1.8rem; margin-bottom: 2px;">💀</div>
               <div style="font-size: 0.9rem; font-weight: 900; color: var(--red-error); letter-spacing: 1px;">ELIMINATED!</div>
-              <div style="font-size: 0.8rem; font-weight: 800; color: #fff; margin-top: 4px;"><b>${GameState.lastEliminatedName}</b> was knocked out this round!</div>
+              <div style="font-size: 0.8rem; font-weight: 800; color: #fff; margin-top: 4px;"><b>${escapeHTML(GameState.lastEliminatedName)}</b> was knocked out this round!</div>
             `;
           }
           awardsContainer.appendChild(elimCard);
@@ -1884,7 +1921,7 @@
             awardsHTML += `
               <div style="background: rgba(255, 200, 42, 0.12); border: 1px solid var(--amber-warm); padding: 6px 10px; border-radius: 8px; margin-bottom: 4px;">
                 <div style="font-weight:900; color:var(--amber-warm); font-size:0.75rem;">⚡ SPEED DEMON</div>
-                <div style="font-size:0.7rem; color:#fff;"><b>${speedWinner.name}</b> recorded fastest completions!</div>
+                <div style="font-size:0.7rem; color:#fff;"><b>${escapeHTML(speedWinner.name)}</b> recorded fastest completions!</div>
               </div>
             `;
           }
@@ -1892,7 +1929,7 @@
             awardsHTML += `
               <div style="background: rgba(0, 240, 255, 0.12); border: 1px solid var(--cyan-neon); padding: 6px 10px; border-radius: 8px;">
                 <div style="font-weight:900; color:var(--cyan-neon); font-size:0.75rem;">🎯 ACCURACY ACE</div>
-                <div style="font-size:0.7rem; color:#fff;"><b>${accuracyWinner.name}</b> made fewest wrong attempts!</div>
+                <div style="font-size:0.7rem; color:#fff;"><b>${escapeHTML(accuracyWinner.name)}</b> made fewest wrong attempts!</div>
               </div>
             `;
           }
