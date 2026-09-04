@@ -211,6 +211,25 @@
       overflow: hidden;
     }
 
+    /* HARDENED SUMMARY SCREEN SAFE-AREA FLEX LAYOUT */
+    #screen-summary {
+      display: flex; 
+      flex-direction: column;
+      height: 100%; 
+      height: 100dvh; 
+      max-height: 100dvh;
+      padding: max(10px, env(safe-area-inset-top)) 12px max(16px, env(safe-area-inset-bottom));
+      overflow: hidden; 
+      position: relative;
+    }
+
+    #summary-host-controls, #summary-client-wait {
+      flex-shrink: 0;
+      margin-top: auto;
+      padding-top: 6px;
+      padding-bottom: max(4px, env(safe-area-inset-bottom));
+    }
+
     .input-group { margin-bottom: 8px; display: flex; flex-direction: column; gap: 4px; }
     .input-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-muted); font-weight: 800; }
 
@@ -398,7 +417,6 @@
     }
     .podium-item.mvp { background: rgba(255, 200, 42, 0.12); border-color: var(--amber-warm); box-shadow: 0 0 15px var(--amber-glow); }
 
-    /* SOLUTION REVEAL CHIPS */
     .unsolved-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
     .unsolved-chip {
       background: rgba(255, 255, 255, 0.04);
@@ -597,7 +615,7 @@
         <div id="summary-subtitle" class="brand-subtitle">TIME EXPIRED</div>
       </div>
 
-      <div class="glass-card" style="flex: 1; overflow-y: auto;">
+      <div class="glass-card" style="flex: 1 1 0%; min-height: 0; overflow-y: auto;">
         <div id="summary-section-title" class="input-label">ROUND STANDINGS</div>
         <div id="podium-list" class="podium-list"></div>
 
@@ -605,7 +623,7 @@
         <div id="awards-container"></div>
       </div>
 
-      <div id="summary-host-controls" style="display: flex; flex-direction: column; gap: 6px;">
+      <div id="summary-host-controls">
         <div id="mid-round-controls" style="display: flex; flex-direction: column; gap: 6px; width: 100%;">
           <button id="btn-next-round" class="btn btn-amber">START NEXT ROUND 🚀</button>
           <button id="btn-end-tournament" class="btn btn-primary" style="background: var(--red-error); border-color: var(--red-error); color: #fff;">🏆 END GAME</button>
@@ -626,7 +644,7 @@
   </div>
 
   <script>
-    /* 1. BULLETPROOF ALWAYS-ON SCREEN & POWER MANAGEMENT ENGINE */
+    /* 1. POWER MANAGEMENT & HAPTIC ENGINE */
     const HapticEngine = {
       vibrate(pattern) {
         if ('vibrate' in navigator) {
@@ -924,6 +942,11 @@
 
         selectedList.forEach(item => GameState.usedWordHistory.add(item.original));
 
+        // GLOBAL USED WORD HISTORY SYNC TO FIREBASE
+        if (GameState.roomRef) {
+          GameState.roomRef.child('meta/usedWords').set(Array.from(GameState.usedWordHistory));
+        }
+
         const shuffled = this.shuffleArray(selectedList);
         const randomGoldIndices = this.shuffleArray([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]).slice(0, 2);
         shuffled.forEach((item, idx) => {
@@ -983,6 +1006,18 @@
         const myPlayerRef = GameState.playersRef.child(GameState.playerId);
         myPlayerRef.onDisconnect().update({ online: false, lastSeen: this.getServerTime() });
 
+        // MID-MATCH RECONNECT HYDRATION
+        myPlayerRef.once('value', (pSnap) => {
+          const pData = pSnap.val();
+          if (pData) {
+            if (pData.score !== undefined) GameState.playerState.score = pData.score;
+            if (pData.solvedCount !== undefined) GameState.playerState.solvedCount = pData.solvedCount;
+            if (pData.submittedAt !== undefined) GameState.playerState.submittedAt = pData.submittedAt;
+            if (pData.answers) GameState.playerState.answers = pData.answers;
+            if (pData.wrongAttempts) GameState.playerState.wrongAttempts = pData.wrongAttempts;
+          }
+        });
+
         this.db.ref('.info/connected').on('value', (snap) => {
           if (snap.val() === true) {
             myPlayerRef.update({
@@ -1025,6 +1060,10 @@
           GameState.isTournamentOver = !!meta.isTournamentOver;
           GameState.lastEliminatedName = meta.lastEliminatedName || null;
 
+          if (meta.usedWords && Array.isArray(meta.usedWords)) {
+            GameState.usedWordHistory = new Set(meta.usedWords);
+          }
+
           UIController.updateBriefingUI(meta);
           
           if (meta.hostId && meta.hostId.trim() !== '') {
@@ -1061,9 +1100,10 @@
           UIController.updateLeaderboardPill(playersObj);
           this.checkBlitzConditions(playersObj);
 
+          // STRICT ONLINE PLAYER FILTERING FIX (p.online === true)
           if (GameState.isHost && fsm.currentState === GAME_STATES.PLAYING) {
             const players = Object.values(playersObj);
-            const activePlayers = players.filter(p => !p.isEliminated && p.online !== false);
+            const activePlayers = players.filter(p => !p.isEliminated && p.online === true);
             const allSubmitted = activePlayers.length > 0 && activePlayers.every(p => p.submittedAt);
             if (allSubmitted && GameState.roomRef) {
               GameState.roomRef.child('meta').update({ status: 'summary' });
@@ -1204,86 +1244,87 @@
           const liveWord = GameState.words.find(w => w.id === wordObj.id) || wordObj;
           const comboMult = Math.min(GameState.comboStreak, 3);
           const overtimeMult = GameState.isOvertimeActive ? 2 : 1;
+          const baseVal = liveWord.points;
 
-          let baseVal = liveWord.points;
-          let earnedPoints = 0;
-
+          // ATOMIC GOLDEN WORD CLAIM TRANSACTION
           if (liveWord.isGolden) {
-            if (!liveWord.claimedBy) {
-              earnedPoints = baseVal * comboMult * overtimeMult;
-              
-              sound.playGoldenClaim();
-              
-              let mathDetail = `${baseVal} Base`;
-              if (comboMult > 1) mathDetail += ` x ${comboMult}x Combo`;
-              if (overtimeMult > 1) mathDetail += ` x 2x Overtime`;
-
-              ToastEngine.show(`⚡ GOLDEN CLAIMED! +${earnedPoints} PTS (${mathDetail})`, "success");
-              
-              if (GameState.matchRef) {
-                const wordIdx = GameState.words.findIndex(w => w.id === wordObj.id);
-                if (wordIdx !== -1) {
-                  GameState.matchRef.child(`words/${wordIdx}/claimedBy`).set(GameState.playerName);
+            const wordIdx = GameState.words.findIndex(w => w.id === wordObj.id);
+            if (wordIdx !== -1 && GameState.matchRef) {
+              GameState.matchRef.child(`words/${wordIdx}/claimedBy`).transaction((currentClaim) => {
+                if (!currentClaim) return GameState.playerName;
+                return; // Abort if already claimed
+              }, (error, committed, snapshot) => {
+                let earnedPoints = 0;
+                if (committed && snapshot.val() === GameState.playerName) {
+                  earnedPoints = baseVal * comboMult * overtimeMult;
+                  sound.playGoldenClaim();
+                  let mathDetail = `${baseVal} Base`;
+                  if (comboMult > 1) mathDetail += ` x ${comboMult}x Combo`;
+                  if (overtimeMult > 1) mathDetail += ` x 2x Overtime`;
+                  ToastEngine.show(`⚡ GOLDEN CLAIMED! +${earnedPoints} PTS (${mathDetail})`, "success");
+                } else {
+                  const standardBase = Math.floor(liveWord.points / 2);
+                  earnedPoints = standardBase * comboMult * overtimeMult;
+                  sound.playSuccess(1 + (GameState.comboStreak * 0.1));
+                  let mathDetail = `${standardBase} Base`;
+                  if (comboMult > 1) mathDetail += ` x ${comboMult}x Combo`;
+                  if (overtimeMult > 1) mathDetail += ` x 2x Overtime`;
+                  ToastEngine.show(`Golden claimed by rival! +${earnedPoints} PTS (${mathDetail})`, "info");
                 }
-              }
-            } else {
-              const standardBase = Math.floor(liveWord.points / 2);
-              earnedPoints = standardBase * comboMult * overtimeMult;
-              
-              sound.playSuccess(1 + (GameState.comboStreak * 0.1));
-
-              let mathDetail = `${standardBase} Base`;
-              if (comboMult > 1) mathDetail += ` x ${comboMult}x Combo`;
-              if (overtimeMult > 1) mathDetail += ` x 2x Overtime`;
-
-              ToastEngine.show(`Golden claimed by rival! +${earnedPoints} PTS (${mathDetail})`, "info");
-            }
-          } else {
-            earnedPoints = baseVal * comboMult * overtimeMult;
-            sound.playSuccess(1 + (GameState.comboStreak * 0.1));
-
-            if (comboMult > 1 || overtimeMult > 1) {
-              let mathDetail = `${baseVal} Base`;
-              if (comboMult > 1) mathDetail += ` x ${comboMult}x Combo`;
-              if (overtimeMult > 1) mathDetail += ` x 2x Overtime`;
-              ToastEngine.show(`+${earnedPoints} PTS (${mathDetail})`, "success");
+                this.applyValidatedAnswerScore(wordObj, cardEl, inputEl, earnedPoints);
+              });
+              return;
             }
           }
 
-          GameState.playerState.answers[wordObj.id] = userVal;
-          GameState.playerState.solvedCount++;
-          GameState.playerState.score += earnedPoints;
+          let earnedPoints = baseVal * comboMult * overtimeMult;
+          sound.playSuccess(1 + (GameState.comboStreak * 0.1));
 
-          cardEl.classList.add('solved');
-          const checkEl = document.getElementById(`check-${wordObj.id}`);
-          if (checkEl) checkEl.style.display = 'inline';
-
-          inputEl.disabled = true;
-
-          const countEl = document.getElementById('submit-solved-count');
-          if (countEl) countEl.textContent = GameState.playerState.solvedCount;
-
-          triggerConfetti('medium');
-
-          SubmissionQueueEngine.enqueue({
-            type: 'UPDATE_SCORE',
-            payload: { score: GameState.playerState.score, solvedCount: GameState.playerState.solvedCount, answers: GameState.playerState.answers }
-          });
-
-          if (GameState.playerState.solvedCount === 12) {
-            triggerConfetti('high');
-            this.submitMatch();
-          } else {
-            const allInputs = Array.from(document.querySelectorAll('.word-input'));
-            const currentIdx = allInputs.indexOf(inputEl);
-            const nextInput = allInputs.slice(currentIdx + 1).find(inp => !inp.disabled);
-            if (nextInput) {
-              nextInput.focus({ preventScroll: true });
-            }
+          if (comboMult > 1 || overtimeMult > 1) {
+            let mathDetail = `${baseVal} Base`;
+            if (comboMult > 1) mathDetail += ` x ${comboMult}x Combo`;
+            if (overtimeMult > 1) mathDetail += ` x 2x Overtime`;
+            ToastEngine.show(`+${earnedPoints} PTS (${mathDetail})`, "success");
           }
+
+          this.applyValidatedAnswerScore(wordObj, cardEl, inputEl, earnedPoints);
         } else {
           GameState.playerState.wrongAttempts++;
           UIController.triggerErrorCard(cardEl);
+        }
+      },
+
+      applyValidatedAnswerScore(wordObj, cardEl, inputEl, earnedPoints) {
+        GameState.playerState.answers[wordObj.id] = inputEl.value.trim().toUpperCase();
+        GameState.playerState.solvedCount++;
+        GameState.playerState.score += earnedPoints;
+
+        cardEl.classList.add('solved');
+        const checkEl = document.getElementById(`check-${wordObj.id}`);
+        if (checkEl) checkEl.style.display = 'inline';
+
+        inputEl.disabled = true;
+
+        const countEl = document.getElementById('submit-solved-count');
+        if (countEl) countEl.textContent = GameState.playerState.solvedCount;
+
+        triggerConfetti('medium');
+
+        SubmissionQueueEngine.enqueue({
+          type: 'UPDATE_SCORE',
+          payload: { score: GameState.playerState.score, solvedCount: GameState.playerState.solvedCount, answers: GameState.playerState.answers }
+        });
+
+        if (GameState.playerState.solvedCount === 12) {
+          triggerConfetti('high');
+          this.submitMatch();
+        } else {
+          const allInputs = Array.from(document.querySelectorAll('.word-input'));
+          const currentIdx = allInputs.indexOf(inputEl);
+          const nextInput = allInputs.slice(currentIdx + 1).find(inp => !inp.disabled);
+          if (nextInput) {
+            nextInput.focus({ preventScroll: true });
+          }
         }
       },
 
@@ -1368,6 +1409,7 @@
         });
       },
 
+      // HARDENED TIE-BREAKER & GRACE ROUND FOR SUDDEN MODE
       processSuddenElimination() {
         if (!GameState.isHost || !GameState.roomRef) return;
         GameState.playersRef.once('value', (snap) => {
@@ -1377,24 +1419,40 @@
             .filter(p => !p.isEliminated);
 
           if (activePlayers.length > 1) {
+            // Sort worst performance first (index 0)
             activePlayers.sort((a, b) => {
               if ((a.score || 0) !== (b.score || 0)) return (a.score || 0) - (b.score || 0);
               if ((a.solvedCount || 0) !== (b.solvedCount || 0)) return (a.solvedCount || 0) - (b.solvedCount || 0);
-              const timeA = a.submittedAt || Infinity;
-              const timeB = b.submittedAt || Infinity;
+              const timeA = (a.submittedAt && typeof a.submittedAt === 'number') ? a.submittedAt : Infinity;
+              const timeB = (b.submittedAt && typeof b.submittedAt === 'number') ? b.submittedAt : Infinity;
               return timeB - timeA;
             });
 
-            const lowest = activePlayers[0];
-            const remainingCount = activePlayers.length - 1;
+            const worst = activePlayers[0];
+            const secondWorst = activePlayers[1];
+
+            // Check if bottom players tied exactly
+            const scoreEqual = (worst.score || 0) === (secondWorst.score || 0);
+            const solvedEqual = (worst.solvedCount || 0) === (secondWorst.solvedCount || 0);
+            const timeA = (worst.submittedAt && typeof worst.submittedAt === 'number') ? worst.submittedAt : Infinity;
+            const timeB = (secondWorst.submittedAt && typeof secondWorst.submittedAt === 'number') ? secondWorst.submittedAt : Infinity;
+            const timeEqual = timeA === timeB;
+
+            const isTie = scoreEqual && solvedEqual && timeEqual;
 
             const updates = {};
-            updates[`players/${lowest.id}/isEliminated`] = true;
-            updates[`meta/lastEliminatedName`] = lowest.name || 'PLAYER';
-            updates[`meta/eliminationProcessedForRound`] = true;
+            updates['meta/eliminationProcessedForRound'] = true;
 
-            if (remainingCount <= 1) {
-              updates[`meta/isTournamentOver`] = true;
+            if (isTie) {
+              updates['meta/lastEliminatedName'] = 'TIE_GRACE';
+            } else {
+              updates[`players/${worst.id}/isEliminated`] = true;
+              updates['meta/lastEliminatedName'] = worst.name || 'PLAYER';
+
+              const remainingCount = activePlayers.length - 1;
+              if (remainingCount <= 1) {
+                updates['meta/isTournamentOver'] = true;
+              }
             }
 
             GameState.roomRef.update(updates);
@@ -1460,6 +1518,7 @@
           updates['meta/isTournamentOver'] = false;
           updates['meta/eliminationProcessedForRound'] = false;
           updates['meta/lastEliminatedName'] = null;
+          updates['meta/usedWords'] = [];
           GameState.roomRef.update(updates);
         });
       }
@@ -1716,11 +1775,21 @@
             
             players.sort((a, b) => ((b.cumulativeScore || 0) + (b.score || 0)) - ((a.cumulativeScore || 0) + (a.score || 0)));
 
+            let currentRank = 1;
             players.forEach((p, idx) => {
+              if (idx > 0) {
+                const prev = players[idx - 1];
+                const scoreA = (prev.cumulativeScore || 0) + (prev.score || 0);
+                const scoreB = (p.cumulativeScore || 0) + (p.score || 0);
+                if (scoreA !== scoreB) {
+                  currentRank = idx + 1;
+                }
+              }
+
               const item = document.createElement('div');
-              item.className = `podium-item ${idx === 0 ? 'mvp' : ''}`;
+              item.className = `podium-item ${currentRank === 1 ? 'mvp' : ''}`;
               item.innerHTML = `
-                <div><span style="font-weight:900;">#${idx + 1}</span> <b>${p.name || 'PLAYER'}</b> ${idx === 0 ? '👑 CHAMPION' : (p.isEliminated ? '💀' : '')}</div>
+                <div><span style="font-weight:900;">#${currentRank}</span> <b>${p.name || 'PLAYER'}</b> ${currentRank === 1 ? '👑 CHAMPION' : (p.isEliminated ? '💀' : '')}</div>
                 <div style="font-weight:900; color:var(--amber-warm);">${(p.cumulativeScore || 0) + (p.score || 0)} TOTAL PTS</div>
               `;
               roundList.appendChild(item);
@@ -1731,14 +1800,31 @@
             players.sort((a, b) => {
               if ((b.solvedCount || 0) !== (a.solvedCount || 0)) return (b.solvedCount || 0) - (a.solvedCount || 0);
               if ((b.score || 0) !== (a.score || 0)) return (b.score || 0) - (a.score || 0);
-              return (a.submittedAt || Infinity) - (b.submittedAt || Infinity);
+              const timeA = (a.submittedAt && typeof a.submittedAt === 'number') ? a.submittedAt : Infinity;
+              const timeB = (b.submittedAt && typeof b.submittedAt === 'number') ? b.submittedAt : Infinity;
+              return timeA - timeB;
             });
 
+            let currentRank = 1;
             players.forEach((p, idx) => {
+              if (idx > 0) {
+                const prev = players[idx - 1];
+                const scoreA = prev.score || 0;
+                const scoreB = p.score || 0;
+                const solvedA = prev.solvedCount || 0;
+                const solvedB = p.solvedCount || 0;
+                const timeA = (prev.submittedAt && typeof prev.submittedAt === 'number') ? prev.submittedAt : Infinity;
+                const timeB = (p.submittedAt && typeof p.submittedAt === 'number') ? p.submittedAt : Infinity;
+
+                if (scoreA !== scoreB || solvedA !== solvedB || timeA !== timeB) {
+                  currentRank = idx + 1;
+                }
+              }
+
               const item = document.createElement('div');
-              item.className = `podium-item ${idx === 0 ? 'mvp' : ''}`;
+              item.className = `podium-item ${currentRank === 1 ? 'mvp' : ''}`;
               item.innerHTML = `
-                <div><span style="font-weight:900;">#${idx + 1}</span> <b>${p.name || 'PLAYER'}</b> ${p.isEliminated ? '💀' : ''}</div>
+                <div><span style="font-weight:900;">#${currentRank}</span> <b>${p.name || 'PLAYER'}</b> ${p.isEliminated ? '💀' : ''}</div>
                 <div style="font-weight:900; color:var(--cyan-neon);">${p.score || 0} PTS</div>
               `;
               roundList.appendChild(item);
@@ -1769,15 +1855,26 @@
         const awardsContainer = document.getElementById('awards-container');
         awardsContainer.innerHTML = '';
 
+        // SUDDEN MODE TIE GRACE OR ELIMINATION CARD
         if (GameState.gameMode === 'sudden' && GameState.lastEliminatedName) {
           const elimCard = document.createElement('div');
           elimCard.className = 'glass-card';
-          elimCard.style.cssText = 'border-color: var(--red-error); background: rgba(255, 42, 85, 0.12); margin-top: 8px; text-align: center; padding: 12px; border-radius: var(--radius-md); box-shadow: 0 0 15px var(--red-glow);';
-          elimCard.innerHTML = `
-            <div style="font-size: 1.8rem; margin-bottom: 2px;">💀</div>
-            <div style="font-size: 0.9rem; font-weight: 900; color: var(--red-error); letter-spacing: 1px;">ELIMINATED!</div>
-            <div style="font-size: 0.8rem; font-weight: 800; color: #fff; margin-top: 4px;"><b>${GameState.lastEliminatedName}</b> was knocked out this round!</div>
-          `;
+
+          if (GameState.lastEliminatedName === 'TIE_GRACE') {
+            elimCard.style.cssText = 'border-color: var(--amber-warm); background: rgba(255, 200, 42, 0.12); margin-top: 8px; text-align: center; padding: 12px; border-radius: var(--radius-md); box-shadow: 0 0 15px var(--amber-glow);';
+            elimCard.innerHTML = `
+              <div style="font-size: 1.8rem; margin-bottom: 2px;">🤝</div>
+              <div style="font-size: 0.9rem; font-weight: 900; color: var(--amber-warm); letter-spacing: 1px;">TIE GAME! NO ELIMINATION</div>
+              <div style="font-size: 0.8rem; font-weight: 800; color: #fff; margin-top: 4px;">Bottom players tied in performance! All active survivors advance.</div>
+            `;
+          } else {
+            elimCard.style.cssText = 'border-color: var(--red-error); background: rgba(255, 42, 85, 0.12); margin-top: 8px; text-align: center; padding: 12px; border-radius: var(--radius-md); box-shadow: 0 0 15px var(--red-glow);';
+            elimCard.innerHTML = `
+              <div style="font-size: 1.8rem; margin-bottom: 2px;">💀</div>
+              <div style="font-size: 0.9rem; font-weight: 900; color: var(--red-error); letter-spacing: 1px;">ELIMINATED!</div>
+              <div style="font-size: 0.8rem; font-weight: 800; color: #fff; margin-top: 4px;"><b>${GameState.lastEliminatedName}</b> was knocked out this round!</div>
+            `;
+          }
           awardsContainer.appendChild(elimCard);
         }
 
